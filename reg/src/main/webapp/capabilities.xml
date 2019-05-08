@@ -6,19 +6,19 @@
 
   <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
     <interface xsi:type="vs:ParamHTTP" role="std">
-      <accessURL use="full">https://replace.me.com/reg/capabilities</accessURL>
+      <accessURL use="full">https://replace.me.com/@app_name@/capabilities</accessURL>
     </interface>
   </capability>
   
   <capability standardID="ivo://ivoa.net/std/VOSI#availability">
     <interface xsi:type="vs:ParamHTTP" role="std">
-      <accessURL use="full">https://replace.me.com/reg/availability</accessURL>
+      <accessURL use="full">https://replace.me.com/@app_name@/availability</accessURL>
     </interface>
   </capability>
 
   <capability standardID="vos://cadc.nrc.ca~vospace/CADC/std/Logging#control-1.0">
     <interface xsi:type="vs:ParamHTTP" role="std" version="1.0">
-      <accessURL use="full">https://replace.me.com/reg/logControl</accessURL>
+      <accessURL use="full">https://replace.me.com/@app_name@/logControl</accessURL>
       <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
     </interface>
   </capability> 
@@ -26,14 +26,14 @@
   <capability xmlns:vg="http://www.ivoa.net/xml/VORegistry/v1.0" 
         standardID="ivo://ivoa.net/std/Registry" xsi:type="vg:Harvest">
     <interface role="std" xsi:type="vg:OAIHTTP">
-      <accessURL use="base">https://replace.me.com/reg/oai</accessURL>
+      <accessURL use="base">https://replace.me.com/@app_name@/oai</accessURL>
     </interface>
     <maxRecords>100</maxRecords>
   </capability>
 
   <capability standardID="intTest:canned-apps-query-test">
     <interface xsi:type="vs:ParamHTTP" role="std">
-      <accessURL use="full">https://replace.me.com/reg/applications</accessURL>
+      <accessURL use="full">https://replace.me.com/@app_name@/applications</accessURL>
     </interface>
   </capability>
 
