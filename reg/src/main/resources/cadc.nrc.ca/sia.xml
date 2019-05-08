@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <GetRecord>
+    <record>
+      <header>
+        <identifier>ivo://cadc.nrc.ca/sia</identifier>
+        <datestamp>2019-04-05T21:02:00Z</datestamp>
+      </header>
+      <metadata>
+        <ri:Resource created="2016-03-02T10:01:34Z" status="active" updated="2019-04-05T21:02:00Z" 
+                     xmlns:cea="http://www.ivoa.net/xml/CEA/v1.0rc1" 
+                     xmlns:ri="http://www.ivoa.net/xml/RegistryInterface/v1.0" 
+                     xmlns:va="http://www.ivoa.net/xml/VOApplication/v1.0rc1" 
+                     xmlns:vr="http://www.ivoa.net/xml/VOResource/v1.0" 
+                     xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="vs:CatalogService" >
+          <title xmlns="">CADC Image Search (SIA)</title>
+          <identifier xmlns="">ivo://cadc.nrc.ca/sia</identifier>
+          <curation xmlns="">
+            <publisher ivo-id="ivo://cadc.nrc.ca/org">Canadian Astronomy Data Centre</publisher>
+            <creator>
+              <name />
+            </creator>
+            <contact>
+              <name>John Ouellette</name>
+              <address>5071 West Saanich Rd Victoria, BC, Canada V9E 2E7</address>
+              <email>john.ouellette@nrc-cnrc.gc.ca</email>
+            </contact>
+          </curation>
+          <content xmlns="">
+            <subject />
+            <description>Image search and retrieval for CADC imaging data.</description>
+            <referenceURL>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/sia/</referenceURL>
+            <type>Archive</type>
+            <contentLevel>Research</contentLevel>
+          </content>
+          <capability standardID="ivo://ivoa.net/std/VOSI#capabilities" xmlns="">
+            <interface version="1.0" xsi:type="vs:ParamHTTP">
+              <accessURL use="full">https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/sia/capabilities</accessURL>
+            </interface>
+          </capability>
+          <capability standardID="ivo://ivoa.net/std/VOSI#availability" xmlns="">
+            <interface version="1.0" xsi:type="vs:ParamHTTP">
+              <accessURL use="full">https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/sia/availability</accessURL>
+            </interface>
+          </capability>
+          <capability standardID="ivo://ivoa.net/std/SIA" xmlns="">
+            <interface role="std" version="1.0" xsi:type="vs:ParamHTTP">
+              <accessURL>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/sia/query?</accessURL>
+              <param std="false" use="optional">
+                <name>collection</name>
+                <description>Specify the name of a single data collection to search: actual values that can be used are dependent on the presence of calibrated images in the entire archive; the values are given in the output as a field with name="collection". The default is to search all collections.</description>
+                <dataType arraysize="1">string</dataType>
+              </param>
+              <param std="false" use="optional">
+                <name>mode</name>
+                <description>Specify the type of accessURL to include in the output. Recognised values are archive (retrieve the full image) and cutout (retrieve approximately the region-of-interest). The default mode is archive mode.</description>
+                <dataType arraysize="1">string</dataType>
+              </param>
+            </interface>
+          </capability>
+          <capability standardID="ivo://ivoa.net/std/SIA#query-2.0" xmlns="">
+            <interface role="std" version="2.0" xsi:type="vs:ParamHTTP">
+              <accessURL>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/sia/v2query</accessURL>
+              <securityMethod />
+              <securityMethod standardID="ivo://ivoa.net/sso#cookie" />
+              <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate" />
+            </interface>
+          </capability>
+        </ri:Resource>
+      </metadata>
+    </record>
+  </GetRecord>

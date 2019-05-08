@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vosi:capabilities
+    xmlns:vosi="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1">
+
+  <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="full">https://replace.me.com/reg/capabilities</accessURL>
+    </interface>
+  </capability>
+  
+  <capability standardID="ivo://ivoa.net/std/VOSI#availability">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="full">https://replace.me.com/reg/availability</accessURL>
+    </interface>
+  </capability>
+
+  <capability standardID="vos://cadc.nrc.ca~vospace/CADC/std/Logging#control-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std" version="1.0">
+      <accessURL use="full">https://replace.me.com/reg/logControl</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
+    </interface>
+  </capability> 
+
+  <capability xmlns:vg="http://www.ivoa.net/xml/VORegistry/v1.0" 
+        standardID="ivo://ivoa.net/std/Registry" xsi:type="vg:Harvest">
+    <interface role="std" xsi:type="vg:OAIHTTP">
+      <accessURL use="base">https://replace.me.com/reg/oai</accessURL>
+    </interface>
+    <maxRecords>100</maxRecords>
+  </capability>
+
+  <capability standardID="intTest:canned-apps-query-test">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="full">https://replace.me.com/reg/applications</accessURL>
+    </interface>
+  </capability>
+
+</vosi:capabilities>
+

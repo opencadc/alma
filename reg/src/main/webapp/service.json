@@ -1,0 +1,192 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "CADC Registry",
+    "description": "TODO\n",
+    "version": "0.1-"
+  },
+  "host": "www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "basePath": "/reg",
+  "paths": {
+    "/resource-caps": {
+      "get": {
+        "summary": "List of all CADC resources. The output lists resourceID values and the location of the VOSI-capabilities document describing servies for that resource. The output document is in key = value (properties file) format.",
+        "description": "\n",
+        "produces": [
+          "text/plain"
+        ],
+        "responses": {
+          "200": {
+            "description": "A VOSI-capabilities document describing the available services.",
+            "schema": {
+              "$ref": "#/definitions/capabilities"
+            }
+          }
+        }
+      }
+    },
+    "/cadc/capabilities": {
+      "get": {
+        "summary": "Services for CADC Data Collections",
+        "description": "\n",
+        "produces": [
+          "text/xml"
+        ],
+        "responses": {
+          "200": {
+            "description": "A VOSI-capabilities document describing the available services.",
+            "schema": {
+              "$ref": "#/definitions/capabilities"
+            }
+          }
+        }
+      }
+    },
+    "/maq/capabilities": {
+      "get": {
+        "summary": "Services for MAQ Data Collections",
+        "description": "\n",
+        "produces": [
+          "text/xml"
+        ],
+        "responses": {
+          "200": {
+            "description": "A VOSI-capabilities document describing the available services.",
+            "schema": {
+              "$ref": "#/definitions/capabilities"
+            }
+          }
+        }
+      }
+    },
+    "/cadc/sandbox/capabilities": {
+      "get": {
+        "summary": "Services for CADC Data Collections in the CAOM2 sandbox system",
+        "description": "\n",
+        "produces": [
+          "text/xml"
+        ],
+        "responses": {
+          "200": {
+            "description": "A VOSI-capabilities document describing the available services.",
+            "schema": {
+              "$ref": "#/definitions/capabilities"
+            }
+          }
+        }
+      }
+    },
+    "/maq/sandbox/capabilities": {
+      "get": {
+        "summary": "Services for MAQ Data Collections in the CAOM2 sandbox system",
+        "description": "\n",
+        "produces": [
+          "text/xml"
+        ],
+        "responses": {
+          "200": {
+            "description": "A VOSI-capabilities document describing the available services.",
+            "schema": {
+              "$ref": "#/definitions/capabilities"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "availability": {
+      "type": "object",
+      "xml": {
+        "namespace": "http://www.ivoa.net/xml/VOSIAvailability/v1.0",
+        "prefix": "vosi"
+      },
+      "properties": {
+        "available": {
+          "type": "boolean",
+          "xml": {
+            "attribute": true,
+            "prefix": "vosi"
+          }
+        },
+        "note": {
+          "type": "string",
+          "xml": {
+            "attribute": true,
+            "prefix": "vosi"
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/capability"
+      },
+      "xml": {
+        "namespace": "http://www.ivoa.net/xml/VOSICapabilities/v1.0",
+        "prefix": "vosi",
+        "wrapped": true
+      }
+    },
+    "capability": {
+      "type": "object",
+      "properties": {
+        "standardID": {
+          "type": "string",
+          "format": "uri",
+          "xml": {
+            "attribute": true
+          }
+        },
+        "interface": {
+          "type": "object",
+          "properties": {
+            "accessURL": {
+              "type": "string",
+              "properties": {
+                "use": {
+                  "type": "string",
+                  "xml": {
+                    "attribute": true
+                  }
+                }
+              }
+            },
+            "securityMethod": {
+              "type": "string",
+              "properties": {
+                "standardID": {
+                  "type": "string",
+                  "format": "uri",
+                  "xml": {
+                    "attribute": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Error": {
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

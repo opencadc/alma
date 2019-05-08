@@ -1,0 +1,66 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'war'
+}
+
+repositories {
+    jcenter()
+    mavenLocal()
+}
+
+sourceCompatibility = 1.7
+
+group = 'org.opencadc'
+
+version = '1000'
+
+ext {
+    default_app_name = 'reg'
+}
+
+war {
+    if (project.hasProperty('alma_reg_app_name')) {
+        eachFile {
+            if (it.name.equals('capabilities.xml')) {
+                filter(ReplaceTokens, tokens: [app_name: project.alma_reg_app_name])
+            }
+        }
+        archiveName = project.alma_reg_app_name + '##' + project.version + '.war'
+    } else {
+        eachFile {
+            if (it.name.equals('capabilities.xml')) {
+                filter(ReplaceTokens, tokens: [app_name: project.default_app_name])
+            }
+        }
+        archiveName = project.default_app_name + '##' + project.version + '.war'
+    }
+
+    // Include the swagger-ui so that /reg provides the Reg API documentation
+    from(System.getenv('RPS') + '/resources/') {
+        include 'swagger-ui/'
+    }
+}
+
+configurations {
+    intTestCompile.extendsFrom testCompile
+    intTestRuntime.extendsFrom testRuntime
+}
+
+dependencies {
+    compile 'log4j:log4j:1.2.+'
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
+
+    compile 'org.opencadc:cadc-util:1.+'
+    compile 'org.opencadc:cadc-log:1.+'
+    compile 'org.opencadc:cadc-access-control-identity:[1.0,)'
+    compile 'org.opencadc:cadc-vosi:[1.1,2.0)'
+    compile 'org.opencadc:cadc-dali:[1.1,)'
+    compile 'org.opencadc:cadc-uws-server:[1.2.0,)'
+    compile 'org.opencadc:cadc-registry:[1.4.6,)'
+    compile 'org.opencadc:cadc-registry-server:[1.0.0,)'
+
+    testCompile 'junit:junit:[4.0,5.0)'
+
+    intTestCompile 'org.opencadc:cadc-test-vosi:[1.0.2,)'
+}

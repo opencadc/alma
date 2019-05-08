@@ -1,0 +1,105 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'war'
+}
+
+repositories {
+    jcenter()
+    mavenLocal()
+    maven {
+        url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
+    }
+}
+
+sourceCompatibility = 1.7
+group = 'ca.nrc.cadc'
+version = '1000'
+
+ext {
+    default_app_name = 'sia2'
+}
+
+war {
+    if (project.hasProperty('alma_sia_app_name')) {
+        eachFile {
+            if (it.name.equals('capabilities.xml')) {
+                filter(ReplaceTokens, tokens: [app_name: project.alma_sia_app_name])
+            }
+        }
+        archiveName = project.alma_sia_app_name + '##' + project.version + '.war'
+    } else {
+        eachFile {
+            if (it.name.equals('capabilities.xml')) {
+                filter(ReplaceTokens, tokens: [app_name: project.default_app_name])
+            }
+        }
+        archiveName = project.default_app_name + '##' + project.version + '.war'
+    }
+
+    // Include the swagger-ui so that /sia provides the Sia API documentation
+    from(System.getenv('RPS') + '/resources/') {
+        include 'swagger-ui/'
+    }
+}
+
+configurations {
+    intTestCompile.extendsFrom testCompile
+    intTestRuntime.extendsFrom testRuntime
+}
+
+dependencies {
+    compile 'log4j:log4j:1.2.+'
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
+
+    compile 'org.opencadc:cadc-access-control-identity:1.+'
+    compile 'org.opencadc:cadc-cdp:1.+'
+    compile 'org.opencadc:cadc-sia:[1.1.4,)'
+    compile 'org.opencadc:cadc-uws-server:[1.2.0,)'
+    compile 'org.opencadc:cadc-tap:[1.0,2.0)'
+    compile 'ca.nrc.cadc:uws-util:1.+'
+
+    runtime 'org.opencadc:cadc-vosi:1.+'
+    runtime 'org.opencadc:cadc-registry:[1.4.6,)'
+    runtime 'ca.nrc.cadc:ws-util:1.+'
+
+    testCompile 'junit:junit:4.+'
+
+    intTestCompile 'org.opencadc:cadc-test-vosi:[1.0.2,)'
+    intTestCompile 'org.opencadc:cadc-test-uws:[1.1,)'
+    testCompile 'org.opencadc:cadc-test-vosi:[1.0.2,)'
+    testCompile 'org.opencadc:cadc-test-uws:[1.1,)'
+}
+
+sourceSets {
+    intTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/intTest/java')
+        }
+
+        // set the intTest resource directory
+        resources.srcDir file('src/intTest/resources')
+    }
+}
+
+tasks.withType(Test) {
+    // reset the report destinations so that intTests go to their
+    // own page
+    //reports.html.destination = file("${reporting.baseDir}/${name}")
+    reports.html.destination = file(reporting.baseDir.getAbsolutePath() + '/' + name)
+
+    // Assign all Java system properties from
+    // the command line to the tests
+    systemProperties System.properties as Map<String, ?>
+}
+
+task intTest(type: Test) {
+    // set the configuration context
+    testClassesDir = sourceSets.intTest.output.classesDir
+    classpath = sourceSets.intTest.runtimeClasspath
+
+    // run the tests always
+    outputs.upToDateWhen { false }
+}

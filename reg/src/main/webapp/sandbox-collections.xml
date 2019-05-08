@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vosi:capabilities xmlns:vosi="http://www.ivoa.net/xml/VOSICapabilities/v1.0" xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  
+  <!-- capabilities of collections where metadata is in the CAOM2 sandbox and
+    and data is hosted by CADC -->
+  
+  <capability standardID="ivo://ivoa.net/std/DataLink#links-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="base">https://sc2.canfar.net/sc2links/datalink</accessURL>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2links/auth-datalink</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#BasicAA" />
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2links/datalink</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#cookie" />
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2links/datalink</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate" />
+    </interface>
+  </capability>
+  
+  <capability standardID="vos://cadc.nrc.ca~vospace/CADC/std/CAOM2#obs-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="base">https://sc2.canfar.net/sc2meta/meta</accessURL>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2meta/auth-meta</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#BasicAA" />
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2meta/meta</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#cookie" />
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2meta/meta</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate" />
+    </interface>
+  </capability>
+  
+  <capability standardID="vos://cadc.nrc.ca~vospace/CADC/std/Pkg#tar-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="base">https://sc2.canfar.net/sc2pkg/pkg</accessURL>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2pkg/auth-pkg</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#BasicAA" />
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2pkg/pkg</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#cookie" />
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2pkg/pkg</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate" />
+    </interface>
+  </capability>
+  
+  <!-- SODA-1.0 sync -->
+  <capability standardID="ivo://ivoa.net/std/SODA#sync-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="base">https://sc2.canfar.net/sc2soda/sync</accessURL>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2soda/auth-sync</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2soda/sync</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#cookie"/>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2soda/sync</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate"/>
+    </interface>
+  </capability>
+
+  <!-- SODA-1.0 async -->
+  <capability standardID="ivo://ivoa.net/std/SODA#async-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="base">https://sc2.canfar.net/sc2soda/async</accessURL>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2soda/auth-async</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2soda/async</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#cookie"/>
+    </interface>
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="base">https://sc2.canfar.net/sc2soda/async</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate"/>
+    </interface>
+  </capability>
+         
+</vosi:capabilities>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GetRecord>
+    <record>
+      <header>
+        <identifier>ivo://cadc.nrc.ca/registry</identifier>
+        <datestamp>2019-04-05T21:00:00Z</datestamp>
+      </header>
+      <metadata>
+        <ri:Resource created="2011-12-09T14:24:09Z" status="active" updated="2019-04-05T21:00:00Z" 
+                     xmlns:ri="http://www.ivoa.net/xml/RegistryInterface/v1.0" 
+                     xmlns:vg="http://www.ivoa.net/xml/VORegistry/v1.0" 
+                     xmlns:vr="http://www.ivoa.net/xml/VOResource/v1.0"
+                     xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1" xsi:type="vg:Registry" 
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <title xmlns="">CADC Registry</title>
+          <shortName xmlns="">CADC Registry</shortName>
+          <identifier xmlns="">ivo://cadc.nrc.ca/registry</identifier>
+          <curation xmlns="">
+            <publisher>Canadian Astronomy Data Centre</publisher>
+            <contact>
+              <name>CADC</name>
+              <email>cadc@nrc.ca</email>
+            </contact>
+          </curation>
+          <content xmlns="">
+            <subject>registry</subject>
+            <description>CADC Registry</description>
+            <referenceURL>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/reg</referenceURL>
+            <type>Registry</type>
+          </content>
+          <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
+            <interface xsi:type="vs:ParamHTTP" role="std">
+                <accessURL use="full">https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/reg/capabilities</accessURL>
+            </interface>
+          </capability>
+          <capability standardID="ivo://ivoa.net/std/Registry" xsi:type="vg:Harvest">
+            <interface role="std" xsi:type="vg:OAIHTTP">
+              <accessURL>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/reg/oai</accessURL>
+            </interface>
+            <maxRecords>100</maxRecords>
+          </capability>
+          <full xmlns="">false</full>
+          <managedAuthority xmlns="">cadc.nrc.ca</managedAuthority>
+        </ri:Resource>
+      </metadata>
+    </record>
+  </GetRecord>

@@ -1,0 +1,11 @@
+language: java
+
+dist: trusty
+sudo: required
+
+jdk:
+  - openjdk8
+  - openjdk11
+
+script: for mod in sia reg; do cd $mod; gradle assemble check javadoc install || break -1; cd ..; done
+
