@@ -1,0 +1,27 @@
+version: "3.2"
+services:
+  proxy:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    networks:
+      - "tap_obscore"
+    volumes:
+      - "./proxy/default.conf:/etc/nginx/conf.d/default.conf"
+      - "./proxy/html:/usr/share/nginx/html"
+    depends_on:
+      - "obscore"
+  obscore:
+    image: opencadc/alma-tap:1.1.4
+    ports:
+      - "8080:8080"
+      - "5555:5555"
+    networks:
+      - "tap_obscore"
+    env_file:
+      - "./config/alma-tap.properties"
+    # volumes:
+    #   - "./tap.war:/usr/local/tomcat/webapps/tap.war"
+
+networks:
+  tap_obscore:
