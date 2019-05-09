@@ -64,7 +64,6 @@
                 ca.nrc.cadc.uws
                 ca.nrc.cadc.rest
                 ca.nrc.cadc.sia2
-                ca.nrc.cadc.sia2
                 ca.nrc.cadc.vosi
             </param-value>
         </init-param>
