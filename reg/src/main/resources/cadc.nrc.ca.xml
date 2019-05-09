@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <GetRecord>
+    <record>
+      <header>
+        <identifier>ivo://cadc.nrc.ca</identifier>
+        <datestamp>2012-04-26T15:57:14Z</datestamp>
+      </header>
+      <metadata>
+        <ri:Resource created="2005-01-27T21:58:27Z" status="active" updated="2012-04-26T15:57:14Z" xmlns:ri="http://www.ivoa.net/xml/RegistryInterface/v1.0" xmlns:vg="http://www.ivoa.net/xml/VORegistry/v1.0" xmlns:vr="http://www.ivoa.net/xml/VOResource/v1.0" xsi:type="vg:Authority" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <title xmlns="">Canadian Astronomy Data Centre</title>
+          <shortName xmlns="">CADC</shortName>
+          <identifier xmlns="">ivo://cadc.nrc.ca</identifier>
+          <curation xmlns="">
+            <publisher>Canadian Astronomy Data Centre</publisher>
+            <contact>
+              <name>David Schade</name>
+              <address>5071 West Saanich Rd, Victoria, BC, Canada V9E 2E7</address>
+              <email>david.schade@nrc-cnrc.gc.ca</email>
+            </contact>
+          </curation>
+          <content xmlns="">
+            <subject>virtual observatory</subject>
+            <description>authority for CADC</description>
+            <referenceURL>http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/</referenceURL>
+            <type>Other</type>
+            <contentLevel>General</contentLevel>
+          </content>
+          <managingOrg xmlns="">Canadian Astronomy Data Centre</managingOrg>
+        </ri:Resource>
+      </metadata>
+    </record>
+  </GetRecord>

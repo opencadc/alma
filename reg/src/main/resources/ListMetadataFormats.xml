@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListMetadataFormats>
+    <metadataFormat>
+      <metadataPrefix>ivo_vor</metadataPrefix>
+      <schema>http://www.ivoa.net/xml/VOResource/v1.0</schema>
+      <metadataNamespace>http://www.ivoa.net/xml/VOResource/v1.0</metadataNamespace>
+    </metadataFormat>
+    <!--
+    <metadataFormat>
+      <metadataPrefix>oai_dc</metadataPrefix>
+      <schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</schema>
+      <metadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</metadataNamespace>
+    </metadataFormat>
+    -->
+  </ListMetadataFormats>

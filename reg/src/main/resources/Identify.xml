@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Identify>
+    <repositoryName>CADC repository</repositoryName>
+    <baseURL>http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/reg/oai</baseURL>
+    <protocolVersion>2.0</protocolVersion>
+    <adminEmail>cadc@nrc.ca</adminEmail>
+    <earliestDatestamp>2000-01-01T00:00:00Z</earliestDatestamp>
+    <deletedRecord>transient</deletedRecord>
+    <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>
+    <description>
+      <ri:Resource created="2011-12-09T14:24:09Z" status="active" updated="2018-01-24T17:08:34Z" 
+                   xmlns:ri="http://www.ivoa.net/xml/RegistryInterface/v1.0" 
+                   xmlns:vg="http://www.ivoa.net/xml/VORegistry/v1.0" 
+                   xmlns:vr="http://www.ivoa.net/xml/VOResource/v1.0" 
+                   xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1"
+                   xsi:type="vg:Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <title >CADC Registry</title>
+          <shortName>CADC Registry</shortName>
+          <identifier>ivo://cadc.nrc.ca/registry</identifier>
+          <curation>
+            <publisher>Canadian Astronomy Data Centre</publisher>
+            <contact>
+              <name>CADC</name>
+              <email>cadc@nrc.ca</email>
+            </contact>
+          </curation>
+          <content>
+            <subject>registry</subject>
+            <description>CADC Registry</description>
+            <referenceURL>http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/reg</referenceURL>
+            <type>Registry</type>
+          </content>
+          <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
+            <interface xsi:type="vs:ParamHTTP" role="std">
+                <accessURL use="full">http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/reg/capabilities</accessURL>
+            </interface>
+          </capability>
+          <capability standardID="ivo://ivoa.net/std/Registry" xsi:type="vg:Harvest">
+            <interface role="std" xsi:type="vg:OAIHTTP">
+              <accessURL>http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/reg/oai</accessURL>
+            </interface>
+            <maxRecords>100</maxRecords>
+          </capability>
+          <full>false</full>
+          <managedAuthority xmlns="">cadc.nrc.ca</managedAuthority>
+        </ri:Resource>
+    </description>
+  </Identify>

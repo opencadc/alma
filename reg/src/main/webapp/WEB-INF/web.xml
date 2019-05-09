@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         id="target_resolver" version="3.0">
+
+    <display-name>ALMA Registry</display-name>
+
+    <welcome-file-list>
+        <welcome-file>/index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <servlet>
+        <load-on-startup>1</load-on-startup>
+        <servlet-name>logControl</servlet-name>
+        <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
+        <init-param>
+            <param-name>logLevel</param-name>
+            <param-value>info</param-value>
+        </init-param>
+        <init-param>
+            <param-name>logLevelPackages</param-name>
+            <param-value>
+                org.opencadc.reg.oai
+                org.opencadc.reg.server
+                ca.nrc.cadc.vosi
+                ca.nrc.cadc.rest
+                ca.nrc.cadc.uws
+            </param-value>
+        </init-param>
+        <init-param>
+            <param-name>logAccessGroup</param-name>
+            <param-value>ivo://cadc.nrc.ca/gms?CADC</param-value>
+        </init-param>
+        <init-param>
+            <param-name>groupAuthorizer</param-name>
+            <param-value>ca.nrc.cadc.ac.client.GroupAuthorizer</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>PubRegServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
+            <param-value>org.opencadc.reg.server.OAIJobManager</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>2</load-on-startup>
+        <servlet-name>resource-caps</servlet-name>
+        <init-param>
+            <param-name>queryFile</param-name>
+            <param-value>reg-resource-caps.properties</param-value>
+        </init-param>
+        <servlet-class>org.opencadc.reg.server.CannedQueryServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>2</load-on-startup>
+        <servlet-name>applications</servlet-name>
+        <init-param>
+            <param-name>queryFile</param-name>
+            <param-value>reg-applications.properties</param-value>
+        </init-param>
+        <servlet-class>org.opencadc.reg.server.CannedQueryServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>2</load-on-startup>
+        <servlet-name>availability</servlet-name>
+        <servlet-class>ca.nrc.cadc.vosi.AvailabilityServlet</servlet-class>
+        <init-param>
+            <param-name>ca.nrc.cadc.vosi.AvailabilityPlugin</param-name>
+            <param-value>org.opencadc.reg.server.ServiceAvailability</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <servlet-name>capabilities</servlet-name>
+        <servlet-class>ca.nrc.cadc.vosi.CapabilitiesServlet</servlet-class>
+        <init-param>
+            <param-name>input</param-name>
+            <param-value>/capabilities.xml</param-value>
+        </init-param>
+        <load-on-startup>3</load-on-startup>
+    </servlet>
+
+    <!-- URL-to-servlet mapping -->
+
+    <servlet-mapping>
+        <servlet-name>logControl</servlet-name>
+        <url-pattern>/logControl</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>availability</servlet-name>
+        <url-pattern>/availability</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>capabilities</servlet-name>
+        <url-pattern>/capabilities</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>resource-caps</servlet-name>
+        <url-pattern>/resource-caps</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>applications</servlet-name>
+        <url-pattern>/applications</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>PubRegServlet</servlet-name>
+        <url-pattern>/oai/*</url-pattern>
+    </servlet-mapping>
+
+
+    <servlet>
+        <servlet-name>doc</servlet-name>
+        <jsp-file>/index.jsp</jsp-file>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>doc</servlet-name>
+        <url-pattern>/doc</url-pattern>
+    </servlet-mapping>
+
+    <!-- security constraints -->
+
+    <security-role>
+        <description>Public security role</description>
+        <role-name>public</role-name>
+    </security-role>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>auth</web-resource-name>
+            <description/>
+            <url-pattern>/logControl/*</url-pattern>
+            <!-- ALL?
+            <http-method>GET</http-method>
+            <http-method>POST</http-method>
+            <http-method>HEAD</http-method>
+            <http-method>PUT</http-method>
+            <http-method>OPTIONS</http-method>
+            <http-method>TRACE</http-method>
+            <http-method>DELETE</http-method>
+            -->
+        </web-resource-collection>
+        <auth-constraint>
+            <description>force authentication for all requests</description>
+            <role-name>public</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>Canadian Astronomy Data Centre</realm-name>
+    </login-config>
+</web-app>
