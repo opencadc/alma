@@ -19,7 +19,7 @@ A set of HTTP-only set of running services relying on an existing Oracle databas
 [alma-tap.properties](blob/master/obscore/docker/config/alma-tap.properties) for details on specifying the Oracle
 database credentials and location.  Port 80 is open.
 
-### docker-compsoe-no-db-ssl.yml
+### docker-compose-no-db-ssl.yml
 
 A set of HTTPS-only set of running services relying on an existing Oracle database.  This requires a 
 volume called `server_certs` containing `server.crt` and `server.key` to enable NGINX's SSL engine.  Port 443 is open.
