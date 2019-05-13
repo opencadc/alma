@@ -79,7 +79,7 @@
 
     <servlet>
         <servlet-name>CapabilitiesServlet</servlet-name>
-        <servlet-class>org.opencadc.tap.ws.CapabilitiesServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.vosi.CapabilitiesServlet</servlet-class>
         <init-param>
             <param-name>input</param-name>
             <param-value>/capabilities.xml</param-value>
