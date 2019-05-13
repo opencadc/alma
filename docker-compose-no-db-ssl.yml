@@ -22,6 +22,8 @@ services:
       - '15555:5555'
     depends_on:
       - 'obscore.cadc.dao.nrc.ca'
+    volumes:
+      - 'server_certs:/usr/local/share/ca-certificates'
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
   obscore.cadc.dao.nrc.ca:
@@ -33,6 +35,8 @@ services:
       - 'alma'
     env_file:
       - './obscore/docker/config/alma-tap.properties'
+    volumes:
+      - 'server_certs:/usr/local/share/ca-certificates'
   reg.cadc.dao.nrc.ca:
     image: opencadc/alma-reg:SNAPSHOT
     build: ./reg/
@@ -40,6 +44,9 @@ services:
       - 'alma'
     ports:
       - '25555:5555'
+    volumes:
+      - './reg/docker/reg-resource-caps.properties:/root/config/reg-resource-caps.properties'
+      - 'server_certs:/usr/local/share/ca-certificates'
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
 

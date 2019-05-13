@@ -1,184 +1,144 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <vosi:capabilities
-        xmlns:vosi="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1"
-        xmlns:uws="http://www.ivoa.net/xml/UWSRegExt/v0.1">
+    xmlns:vosi="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1"
+    xmlns:uws="http://www.ivoa.net/xml/UWSRegExt/v0.1">
 
-    <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
-        <interface xsi:type="vs:ParamHTTP" role="std">
-            <accessURL use="full">http://replace.me.com/@app_name@/capabilities</accessURL>
-        </interface>
-    </capability>
+  <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="full">http://replace.me.com/@app_name@/capabilities</accessURL>
+    </interface>
+  </capability>
 
-    <capability standardID="ivo://ivoa.net/std/VOSI#availability">
-        <interface xsi:type="vs:ParamHTTP" role="std">
-            <accessURL use="full">http://replace.me.com/@app_name@/availability</accessURL>
-        </interface>
-    </capability>
+  <capability standardID="ivo://ivoa.net/std/VOSI#availability">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="full">http://replace.me.com/@app_name@/availability</accessURL>
+    </interface>
+  </capability>
+  
+  <capability standardID="vos://cadc.nrc.ca~vospace/CADC/std/Logging#control-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std" version="1.0">
+      <accessURL use="full">http://replace.me.com/@app_name@/logControl</accessURL>
+      <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
+    </interface>
+  </capability> 
 
-    <capability standardID="vos://cadc.nrc.ca~vospace/CADC/std/Logging#control-1.0">
-        <interface xsi:type="vs:ParamHTTP" role="std" version="1.0">
-            <accessURL use="full">http://replace.me.com/@app_name@/logControl</accessURL>
-        </interface>
-    </capability>
+  <capability standardID="ivo://ivoa.net/std/VOSI#tables-1.1">
+    <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
+      <accessURL use="base">http://replace.me.com/@app_name@/tables</accessURL>
+    </interface>
+  </capability>
 
-    <capability standardID="ivo://ivoa.net/std/VOSI#tables-1.1">
-        <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
-            <accessURL use="base">http://replace.me.com/@app_name@/tables</accessURL>
-        </interface>
-        <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
-            <accessURL use="base">http://replace.me.com/@app_name@/auth-tables</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
-        </interface>
-        <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
-            <accessURL use="base">http://replace.me.com/@app_name@/tables</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#cookie"/>
-        </interface>
-        <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
-            <accessURL use="base">https://replace.me.com/@app_name@/tables</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate"/>
-        </interface>
-    </capability>
+  <!-- TAP-1.1 -->
+  <capability standardID="ivo://ivoa.net/std/TAP" 
+        xmlns:tr="http://www.ivoa.net/xml/TAPRegExt/v1.0" xsi:type="tr:TableAccess">
 
-    <!-- TAP-1.1 -->
-    <capability standardID="ivo://ivoa.net/std/TAP"
-                xmlns:tr="http://www.ivoa.net/xml/TAPRegExt/v1.0" xsi:type="tr:TableAccess">
-        <!-- anonymous base URL to support TAP-1.0 clients -->
-        <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
-            <accessURL use="base">http://replace.me.com/@app_name@</accessURL>
-        </interface>
+    <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
+      <accessURL use="base">http://replace.me.com/@app_name@</accessURL>
+      <securityMethod/>
+      <securityMethod standardID="ivo://ivoa.net/sso#cookie"/>
+      <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate"/>
+    </interface>
 
-        <interface xsi:type="uws:Async" role="std" version="1.1">
-            <accessURL use="base">http://example.net/@app_name@/async</accessURL>
-        </interface>
-        <interface xsi:type="uws:Async" role="std" version="1.1">
-            <accessURL use="base">http://example.net/@app_name@/auth-async</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
-        </interface>
-        <interface xsi:type="uws:Async" role="std" version="1.1">
-            <accessURL use="base">https://example.net/@app_name@/async</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate"/>
-        </interface>
-        <interface xsi:type="uws:Async" role="std" version="1.1">
-            <accessURL use="base">http://example.net/@app_name@/async</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#cookie"/>
-        </interface>
+    <dataModel ivo-id="ivo://ivoa.net/std/ObsCore/v1.1">ObsCore-1.1</dataModel>
 
-        <interface xsi:type="uws:Sync" role="std" version="1.1">
-            <accessURL use="base">http://example.net/@app_name@/sync</accessURL>
-        </interface>
-        <interface xsi:type="uws:Sync" role="std" version="1.1">
-            <accessURL use="base">http://example.net/@app_name@/auth-sync</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
-        </interface>
-        <interface xsi:type="uws:Sync" role="std" version="1.1">
-            <accessURL use="base">https://example.net/@app_name@/sync</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate"/>
-        </interface>
-        <interface xsi:type="uws:Sync" role="std" version="1.1">
-            <accessURL use="base">http://example.net/@app_name@/sync</accessURL>
-            <securityMethod standardID="ivo://ivoa.net/sso#cookie"/>
-        </interface>
+    <language>
+        <name>ADQL</name>
+        <version ivo-id="ivo://ivoa.net/std/ADQL#v2.0">2.0</version>
+        <description>ADQL-2.0</description>
+        <languageFeatures type="ivo://ivoa.net/std/TAPRegExt#features-adqlgeo">
+            <feature>
+                <form>POINT</form>
+            </feature>
+            <feature>
+                <form>CIRCLE</form>
+            </feature>
+            <feature>
+                <form>BOX</form>
+            </feature>
+            <feature>
+                <form>POLYGON</form>
+            </feature>
+            <feature>
+                <form>REGION</form>
+            </feature>
+            <feature>
+                <form>CONTAINS</form>
+            </feature>
+            <feature>
+                <form>INTERSECTS</form>
+            </feature>
+            <feature>
+                <form>AREA</form>
+            </feature>
+            <feature>
+                <form>CENTROID</form>
+            </feature>
+            <feature>
+                <form>COORDSYS</form>
+            </feature>
+            <feature>
+                <form>COORD1</form>
+            </feature>
+            <feature>
+                <form>COORD2</form>
+            </feature>
+        </languageFeatures>
+    </language>
 
-        <dataModel ivo-id="ivo://ivoa.net/std/ObsCore/v1.1">ObsCore-1.1</dataModel>
+    <language>
+        <name>PQL</name>
+        <version>0.1</version>
+        <description>non-standard experimental PQL</description>
+    </language>
 
-        <language>
-            <name>ADQL</name>
-            <version ivo-id="ivo://ivoa.net/std/ADQL#v2.0">2.0</version>
-            <description>ADQL-2.0</description>
-            <languageFeatures type="ivo://ivoa.net/std/TAPRegExt#features-adqlgeo">
-                <feature>
-                    <form>POINT</form>
-                </feature>
-                <feature>
-                    <form>CIRCLE</form>
-                </feature>
-                <feature>
-                    <form>BOX</form>
-                </feature>
-                <feature>
-                    <form>POLYGON</form>
-                </feature>
-                <feature>
-                    <form>REGION</form>
-                </feature>
-                <feature>
-                    <form>CONTAINS</form>
-                </feature>
-                <feature>
-                    <form>INTERSECTS</form>
-                </feature>
-                <feature>
-                    <form>AREA</form>
-                </feature>
-                <feature>
-                    <form>CENTROID</form>
-                </feature>
-                <feature>
-                    <form>COORDSYS</form>
-                </feature>
-                <feature>
-                    <form>COORD1</form>
-                </feature>
-                <feature>
-                    <form>COORD2</form>
-                </feature>
-            </languageFeatures>
-        </language>
+    <outputFormat ivo-id="ivo://ivoa.net/std/TAPRegExt#output-votable-td">
+        <mime>application/x-votable+xml</mime>
+        <alias>votable</alias>
+    </outputFormat>
+    
+    <outputFormat  ivo-id="ivo://ivoa.net/std/TAPRegExt#output-votable-td">
+        <mime>text/xml</mime>
+    </outputFormat>
 
-        <language>
-            <name>PQL</name>
-            <version>0.1</version>
-            <description>non-standard experimental PQL</description>
-        </language>
+    <outputFormat>
+        <mime>text/csv</mime>
+        <alias>csv</alias>
+    </outputFormat>
 
-        <outputFormat ivo-id="ivo://ivoa.net/std/TAPRegExt#output-votable-td">
-            <mime>application/x-votable+xml</mime>
-            <alias>votable</alias>
-        </outputFormat>
+    <outputFormat>
+        <mime>text/tab-separated-values</mime>
+        <alias>tsv</alias>
+    </outputFormat>
 
-        <outputFormat ivo-id="ivo://ivoa.net/std/TAPRegExt#output-votable-td">
-            <mime>text/xml</mime>
-        </outputFormat>
+    <uploadMethod ivo-id="ivo://ivoa.net/std/TAPRegExt#upload-inline"/>
+    <uploadMethod ivo-id="ivo://ivoa.net/std/TAPRegExt#upload-http"/>
+    <uploadMethod ivo-id="ivo://ivoa.net/std/TAPRegExt#upload-https"/>
 
-        <outputFormat>
-            <mime>text/csv</mime>
-            <alias>csv</alias>
-        </outputFormat>
+    <retentionPeriod>
+        <default>604800</default>
+        <hard>604800</hard>
+    </retentionPeriod>
 
-        <outputFormat>
-            <mime>text/tab-separated-values</mime>
-            <alias>tsv</alias>
-        </outputFormat>
+    <executionDuration>
+        <default>600</default>
+        <hard>600</hard>
+    </executionDuration>
 
-        <uploadMethod ivo-id="ivo://ivoa.net/std/TAPRegExt#upload-inline"/>
-        <uploadMethod ivo-id="ivo://ivoa.net/std/TAPRegExt#upload-http"/>
-        <uploadMethod ivo-id="ivo://ivoa.net/std/TAPRegExt#upload-https"/>
+    <!-- outputLimit for async queries: 128MB -->
+    <outputLimit>
+        <default unit="byte">134217728</default>
+        <hard unit="byte">134217728</hard>
+    </outputLimit>
+    <!-- outputLimit for sync queries: no limit -->
 
-        <retentionPeriod>
-            <default>604800</default>
-            <hard>604800</hard>
-        </retentionPeriod>
+    <uploadLimit>
+        <default unit="row">100000</default>
+        <hard unit="row">100000</hard>
+    </uploadLimit>
 
-        <executionDuration>
-            <default>600</default>
-            <hard>600</hard>
-        </executionDuration>
-
-        <!-- outputLimit for async queries: 128MB -->
-        <outputLimit>
-            <default unit="byte">134217728</default>
-            <hard unit="byte">134217728</hard>
-        </outputLimit>
-        <!-- outputLimit for sync queries: no limit -->
-
-        <uploadLimit>
-            <default unit="row">100000</default>
-            <hard unit="row">100000</hard>
-        </uploadLimit>
-
-    </capability>
-
+  </capability>
+  
 </vosi:capabilities>
 
