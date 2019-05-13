@@ -7,26 +7,26 @@
 
   <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
     <interface xsi:type="vs:ParamHTTP" role="std">
-      <accessURL use="full">http://replace.me.com:8080/@app_name@/capabilities</accessURL>
+      <accessURL use="full">https://replace.me.com/@app_name@/capabilities</accessURL>
     </interface>
   </capability>
 
   <capability standardID="ivo://ivoa.net/std/VOSI#availability">
     <interface xsi:type="vs:ParamHTTP" role="std">
-      <accessURL use="full">http://replace.me.com:8080/@app_name@/availability</accessURL>
+      <accessURL use="full">https://replace.me.com/@app_name@/availability</accessURL>
     </interface>
   </capability>
   
   <capability standardID="vos://cadc.nrc.ca~vospace/CADC/std/Logging#control-1.0">
     <interface xsi:type="vs:ParamHTTP" role="std" version="1.0">
-      <accessURL use="full">http://replace.me.com:8080/@app_name@/logControl</accessURL>
+      <accessURL use="full">https://replace.me.com/@app_name@/logControl</accessURL>
       <securityMethod standardID="ivo://ivoa.net/sso#BasicAA"/>
     </interface>
   </capability> 
 
   <capability standardID="ivo://ivoa.net/std/VOSI#tables-1.1">
     <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
-      <accessURL use="base">http://replace.me.com:8080/@app_name@/tables</accessURL>
+      <accessURL use="base">https://replace.me.com/@app_name@/tables</accessURL>
     </interface>
   </capability>
 
@@ -35,7 +35,7 @@
         xmlns:tr="http://www.ivoa.net/xml/TAPRegExt/v1.0" xsi:type="tr:TableAccess">
 
     <interface xsi:type="vs:ParamHTTP" role="std" version="1.1">
-      <accessURL use="base">http://replace.me.com:8080/@app_name@</accessURL>
+      <accessURL use="base">https://replace.me.com/@app_name@</accessURL>
       <securityMethod/>
       <securityMethod standardID="ivo://ivoa.net/sso#cookie"/>
       <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate"/>
