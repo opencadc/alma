@@ -13,7 +13,7 @@ services:
       - "sia"
       - "reg"
   sia:
-    image: opencadc/alma-sia:SNAPSHOT
+    image: opencadc/alma-sia:1.0.0
     build: ./sia/
     networks:
       - "alma"
@@ -24,7 +24,7 @@ services:
     environment: 
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
   obscore:
-    image: opencadc/alma-tap:SNAPSHOT
+    image: opencadc/alma-tap:1.1.5
     build: ./obscore/
     depends_on:
       - "obscoredb"
@@ -44,7 +44,7 @@ services:
     volumes:
       - "./obscore/docker/sql:/docker-entrypoint-initdb.d/startup"
   reg:
-    image: opencadc/alma-reg:SNAPSHOT
+    image: opencadc/alma-reg:1.0.0
     build: ./reg/
     networks:
       - "alma"

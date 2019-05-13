@@ -13,7 +13,7 @@ services:
       - 'sia.cadc.dao.nrc.ca'
       - 'reg.cadc.dao.nrc.ca'
   sia.cadc.dao.nrc.ca:
-    image: opencadc/alma-sia:SNAPSHOT
+    image: opencadc/alma-sia:1.0.0
     build: ./sia/
     networks:
       - 'alma'
@@ -24,7 +24,7 @@ services:
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
   obscore.cadc.dao.nrc.ca:
-    image: opencadc/alma-tap:SNAPSHOT
+    image: opencadc/alma-tap:1.1.5
     build: ./obscore/
     ports:
       - '35555:5555'
@@ -33,7 +33,7 @@ services:
     env_file:
       - './obscore/docker/config/alma-tap.properties'
   reg.cadc.dao.nrc.ca:
-    image: opencadc/alma-reg:SNAPSHOT
+    image: opencadc/alma-reg:1.0.0
     build: ./reg/
     networks:
       - 'alma'
