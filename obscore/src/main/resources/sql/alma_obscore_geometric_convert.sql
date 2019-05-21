@@ -62,6 +62,30 @@ return SDO_GEOMETRY is
 	end;
 /
 
+create or replace function TO_UNION(in_coordinate_string in varchar2)
+return SDO_GEOMETRY is
+	pattern varchar2(64) := '((Polygon|Circle)(\ -?[0-9]\d*(\.\d+))*)+';
+	cursor c_shapes is
+	select regexp_substr(in_coordinate_string, pattern, 1, level) as SHAPE from DUAL
+	connect by regexp_substr(in_coordinate_string, pattern, 1, level) is not null;
+	union_geo SDO_GEOMETRY;
+	next_shape SDO_GEOMETRY;
+	begin
+		for i in c_shapes loop
+			if LOWER(i.SHAPE) LIKE 'circle%'
+			then
+				next_shape := TO_CIRCLE(i.SHAPE);
+			elsif LOWER(i.SHAPE) LIKE 'polygon%'
+			then
+				next_shape := TO_POLYGON(i.SHAPE);
+			else
+			 	RAISE_APPLICATION_ERROR(-20000, 'Unsupported shape in UNION"' || i.SHAPE || '".  Only "CIRCLE" or "POLYGON" are supported.');
+			end if;      		
+      		select SDO_GEOM.SDO_UNION(union_geo, next_shape, 0.05) into union_geo from DUAL;
+      	end loop;
+		return union_geo;
+	end;
+/
 
 
 create or replace function TO_GEOMETRIC_OBJECT(in_footprint_icrs in varchar2)
@@ -80,11 +104,14 @@ return SDO_GEOMETRY is
 		elsif footprint_type = 'polygon'
 		then
 			geo_shape := TO_POLYGON(parsed_footprint);
+		elsif footprint_type = 'union'
+		then
+		     geo_shape := TO_UNION(parsed_footprint);
 		elsif footprint_type = '' or footprint_type is null
 		then
 			geo_shape := null;
 		else
-		 	RAISE_APPLICATION_ERROR(-20000, 'Unsupported shape "' || footprint_type || '".  Only "CIRCLE" or "POLYGON" are supported.');
+		 	RAISE_APPLICATION_ERROR(-20000, 'Unsupported shape "' || footprint_type || '".  Only "CIRCLE", "POLYGON", or "UNION" are supported.');
 		end if;
 		return geo_shape;
      end;
