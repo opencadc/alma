@@ -91,13 +91,11 @@ return SDO_GEOMETRY is
 create or replace function TO_GEOMETRIC_OBJECT(in_footprint_icrs in varchar2)
 return SDO_GEOMETRY is
 	geo_shape SDO_GEOMETRY;
-	parsed_footprint_between_paren varchar2(2048);
 	footprint_type varchar2(8);
 	parsed_footprint varchar2(2048);
 	begin
-		select replace(replace(regexp_substr(in_footprint_icrs, '\(.*\)'), '(', ''), ')', '') into parsed_footprint_between_paren from DUAL;
-		select lower(regexp_substr(parsed_footprint_between_paren, '^\w+')) into footprint_type from DUAL;
-		select trim(substr(parsed_footprint_between_paren, length(footprint_type) + 1)) into parsed_footprint from DUAL;
+		select lower(regexp_substr(in_footprint_icrs, '^\w+')) into footprint_type from DUAL;
+		select trim(substr(in_footprint_icrs, length(footprint_type) + 1)) into parsed_footprint from DUAL;
 		if footprint_type = 'circle'
 		then
 			geo_shape := TO_CIRCLE(parsed_footprint);
