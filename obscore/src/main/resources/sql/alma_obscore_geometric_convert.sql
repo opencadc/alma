@@ -18,13 +18,13 @@ return SDO_GEOMETRY is
 			RAISE_APPLICATION_ERROR(-20001, 'Circles require three (3) values: (x, y, radius)');
 		end if;
 		-- Set the X value as entered.
-		select to_number(replace(regexp_substr(in_coordinate_string, pattern), '.', ',')) into x_val from DUAL;
+		select to_number(regexp_substr(in_coordinate_string, pattern)) into x_val from DUAL;
 		select trim(substr(in_coordinate_string, length(x_val) + 1)) into buff from DUAL;
 		-- Set the Y value as entered.
-		select to_number(replace(regexp_substr(buff, pattern), '.', ',')) into y_val from DUAL;
+		select to_number(regexp_substr(buff, pattern)) into y_val from DUAL;
 		select trim(substr(in_coordinate_string, length(y_val) + 1)) into buff from DUAL;
 		-- Set the Radius value as entered.
-		select to_number(replace(regexp_substr(buff, pattern), '.', ',')) into radius_val from DUAL;
+		select to_number(regexp_substr(buff, pattern)) into radius_val from DUAL;
 		select x_val - radius_val into point_1_x from DUAL;
 		select y_val into point_1_y from DUAL;
 		select x_val into point_2_x from DUAL;
@@ -53,7 +53,7 @@ return SDO_GEOMETRY is
 		end if;
 		for i in c_vertices loop
       		counter := counter + 1;
-      		next_vert := to_number(replace(i.VERT, '.', ','));
+      		next_vert := to_number(i.VERT);
       		vertices.extend;
       		vertices(counter) := next_vert;
       	end loop;
