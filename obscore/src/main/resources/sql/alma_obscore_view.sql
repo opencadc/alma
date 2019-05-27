@@ -30,6 +30,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     gal_latitude,
     band_list,
     em_resolution,
+    antenna_arrays,
     is_mosaic,
     obs_release_date,
     frequency_support,
@@ -87,8 +88,11 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     science.gal_latitude,
     science.band_list,
     science.frequency_resolution,
+    science.antenna_string,
     science.is_mosaic,
-    (case when ads.release_date is null then null when ads.release_date is null then '3000-01-01' else to_char(ads.release_date, 'YYYY-MM-DD') end) AS obs_release_date,
+    (case when ads.release_date is null then null
+          when ads.release_date is null then '3000-01-01'
+          else to_char(ads.release_date, 'YYYY-MM-DD') end),
     science.frequency_support,
     science.velocity_resolution,
     asap.pi_name,
