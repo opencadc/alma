@@ -23,14 +23,14 @@ ext {
 war {
     if (project.hasProperty('alma_sia_app_name')) {
         eachFile {
-            if (it.name.equals('capabilities.xml')) {
+            if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
                 filter(ReplaceTokens, tokens: [app_name: project.alma_sia_app_name])
             }
         }
         archiveName = project.alma_sia_app_name + '##' + project.version + '.war'
     } else {
         eachFile {
-            if (it.name.equals('capabilities.xml')) {
+            if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
                 filter(ReplaceTokens, tokens: [app_name: project.default_app_name])
             }
         }
@@ -38,7 +38,7 @@ war {
     }
 
     // Include the swagger-ui so that /sia2 provides the Sia API documentation
-    from(System.getenv('RPS') + '/resources/') {
+    from('../') {
         include 'swagger-ui/'
     }
 }

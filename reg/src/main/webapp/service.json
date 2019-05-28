@@ -3,14 +3,14 @@
   "info": {
     "title": "CADC Registry",
     "description": "TODO\n",
-    "version": "0.1-"
+    "version": "1.0.0"
   },
-  "host": "www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca",
+  "host": "almascience.nrao.edu",
   "schemes": [
     "http",
     "https"
   ],
-  "basePath": "/reg",
+  "basePath": "/@app_name@",
   "paths": {
     "/resource-caps": {
       "get": {
