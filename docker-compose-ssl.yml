@@ -25,7 +25,7 @@ services:
     environment: 
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
   obscore:
-    image: opencadc/alma-tap:1.1.5
+    image: opencadc/alma-tap:1.1.6
     build: ./obscore/
     depends_on:
       - "obscoredb"

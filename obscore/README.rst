@@ -1,4 +1,4 @@
-ALMA TAP (1.1.5)
+ALMA TAP (1.1.6)
 ================
 
 `IVOA TAP`_ service for the `ALMA Science Archive`_.

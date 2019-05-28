@@ -2,11 +2,17 @@
 Change Log
 ==========
 
+1.1.6 (Released)
+-------------------------
+
+* Fix all docker-compose files for volume mounts.
+* Fix Travis builds with JDK 11.
+* Added Gradle Wrapper (./gradlew).
+
 1.1.5 (Released)
 -------------------------
 
 * Fix YOU SHOULD NOT SEE THIS MESSAGE in logs.
-* Fix all docker-compose files for volume mounts.
 * Add TO_UNION function and modify TO_GEOMETRIC_OBJECT to use it.
 * Add SSL options in Docker deployment.
 
