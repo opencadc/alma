@@ -18,13 +18,13 @@ return SDO_GEOMETRY is
 			RAISE_APPLICATION_ERROR(-20001, 'Circles require three (3) values: (x, y, radius)');
 		end if;
 		-- Set the X value as entered.
-		select to_number(replace(regexp_substr(in_coordinate_string, pattern), '.', ',')) into x_val from DUAL;
+		select to_number(regexp_substr(in_coordinate_string, pattern)) into x_val from DUAL;
 		select trim(substr(in_coordinate_string, length(x_val) + 1)) into buff from DUAL;
 		-- Set the Y value as entered.
-		select to_number(replace(regexp_substr(buff, pattern), '.', ',')) into y_val from DUAL;
+		select to_number(regexp_substr(buff, pattern)) into y_val from DUAL;
 		select trim(substr(in_coordinate_string, length(y_val) + 1)) into buff from DUAL;
 		-- Set the Radius value as entered.
-		select to_number(replace(regexp_substr(buff, pattern), '.', ',')) into radius_val from DUAL;
+		select to_number(regexp_substr(buff, pattern)) into radius_val from DUAL;
 		select x_val - radius_val into point_1_x from DUAL;
 		select y_val into point_1_y from DUAL;
 		select x_val into point_2_x from DUAL;
@@ -53,7 +53,7 @@ return SDO_GEOMETRY is
 		end if;
 		for i in c_vertices loop
       		counter := counter + 1;
-      		next_vert := to_number(replace(i.VERT, '.', ','));
+      		next_vert := to_number(i.VERT);
       		vertices.extend;
       		vertices(counter) := next_vert;
       	end loop;
@@ -91,13 +91,11 @@ return SDO_GEOMETRY is
 create or replace function TO_GEOMETRIC_OBJECT(in_footprint_icrs in varchar2)
 return SDO_GEOMETRY is
 	geo_shape SDO_GEOMETRY;
-	parsed_footprint_between_paren varchar2(2048);
 	footprint_type varchar2(8);
 	parsed_footprint varchar2(2048);
 	begin
-		select replace(replace(regexp_substr(in_footprint_icrs, '\(.*\)'), '(', ''), ')', '') into parsed_footprint_between_paren from DUAL;
-		select lower(regexp_substr(parsed_footprint_between_paren, '^\w+')) into footprint_type from DUAL;
-		select trim(substr(parsed_footprint_between_paren, length(footprint_type) + 1)) into parsed_footprint from DUAL;
+		select lower(regexp_substr(in_footprint_icrs, '^\w+')) into footprint_type from DUAL;
+		select trim(substr(in_footprint_icrs, length(footprint_type) + 1)) into parsed_footprint from DUAL;
 		if footprint_type = 'circle'
 		then
 			geo_shape := TO_CIRCLE(parsed_footprint);

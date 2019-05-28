@@ -31,7 +31,7 @@ repositories {
 
 group = 'org.opencadc'
 sourceCompatibility = 1.7
-version = '1005'
+version = '1006'
 
 ext {
     default_app_name = 'tap'
@@ -40,18 +40,23 @@ ext {
 war {
     if (project.hasProperty('alma_tap_app_name')) {
         eachFile {
-            if (it.name.equals('capabilities.xml')) {
+            if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
                 filter(ReplaceTokens, tokens: [app_name: project.alma_tap_app_name])
             }
         }
         archiveName = project.alma_tap_app_name + '##' + project.version + '.war'
     } else {
         eachFile {
-            if (it.name.equals('capabilities.xml')) {
+            if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
                 filter(ReplaceTokens, tokens: [app_name: project.default_app_name])
             }
         }
         archiveName = project.default_app_name + '##' + project.version + '.war'
+    }
+
+    // Include the swagger-ui so that /tap provides the TAP API documentation
+    from('../') {
+        include 'swagger-ui/'
     }
 }
 
@@ -95,13 +100,10 @@ sourceSets {
 }
 
 tasks.withType(Test) {
-    // reset the report destinations so that intTests go to their
-    // own page
-    //reports.html.destination = file("${reporting.baseDir}/${name}")
+    // Reset the report destinations so that intTests go to their own page
     reports.html.destination = file(reporting.baseDir.getAbsolutePath() + '/' + name)
 
-    // Assign all Java system properties from
-    // the command line to the tests
+    // Assign all Java system properties from the command line to the tests
     systemProperties System.properties as Map<String, ?>
 }
 

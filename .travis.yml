@@ -7,5 +7,4 @@ jdk:
   - openjdk8
   - openjdk11
 
-script: for mod in sia reg; do cd $mod; gradle assemble check javadoc || break -1; cd ..; done
-
+script: ./gradlew -i assemble check javadoc

@@ -1,16 +1,16 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.0",
-        "title": "CAT (CATALOGUE) web service",
-        "description": "This page contains technical API information. For content, please refer to:\n\n\n<a href=\"http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/megapipe/cfhtls/uc.html\" target=\"_blank\">MegaPipe image stacking pipeline</a>\n\n\n<a href=\"http://www.canfar.phys.uvic.ca/data/pub/vospace/rcslens/README_catalogs_release.txt\" target=\"_blank\">RCSLenS CATALOGUE DATA DESCRIPTION</a>\n\n\n<a href=\"http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/community/CFHTLens/README_catalogs_release.txt\" target=\"_blank\">CFTHTLenS CATALOGUE DATA DESCRIPTION</a>\n\n\nThis service implements the IVOA TAP-1.0 recommendation.\n\n\n<a href=\"http://www.ivoa.net/documents/TAP/\" target=\"_blank\">IVOA TAP Specification</a>\n\n\nThe synchronous and asynchronous service endpoints conform the the IVOA UWS (Universal Worker Service) Framework.\n\n\n<a href=\"http://www.ivoa.net/documents/UWS/\" target=\"_blank\">IVOA UWS Specification</a>\n\n\n### Authentication\nSome catalogues have proprietary metadata. Users may authenticate using https and client-side X.509 certficate, in which case they will see both public metadata and proprietary metadata they are authorized to view. Authentication is supported for sync, async, and tables. Clients can get the appropriate url(s) from the /capabilities output. For anonymous queries, the service will automatically restrict access to public tables only.\n\n\n### Unsupported ADQL Constructs\nThe following ADQL Functions are not currently supported: ALL and DISTINCT within an aggregate function (AVG, COUNT, MIN, MAX, COUNT) PI RAND TRUNCATE\n"
+        "version": "1.1",
+    "title": "ObsCore TAP (Table Access Protocol) web service",
+    "description": "The ObsCore (TAP) web service.\n<a href=\"http://www.ivoa.net/documents/TAP/\" target=\"_blank\">IVOA TAP Specification</a>\n\nThe synchronous and asynchronous service endpoints conform the the IVOA UWS (Universal Worker Service) Framework.\n<a href=\"http://www.ivoa.net/documents/UWS/\" target=\"_blank\">IVOA UWS Specification</a>\n\nThis service implements the ObsCore data model.  The main tables are:\n- ivoa.ObsCore: supports <a href=\"http://www.ivoa.net/documents/ObsCore/index.html\" target=\"_blank\">ObsCore-1.1</a> physical model from the ObsTAP project\n### Downloading Data\nThe planeURI column in the caom2.Plane table can be used to query the related DataLink service to get details about files that can be downloaded and related services that can operate on a product.\nThe obs_publisher_did column in the ivoa.ObsCore table contains the same identifiers for use with a DataLink service.\n### Unsupported ADQL Constructs\nThe following ADQL Functions are not currently supported: ALL and DISTINCT within an aggregate function (AVG, COUNT, MIN, MAX, COUNT) PI RAND TRUNCATE\n"
     },
-    "host": "www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca",
+    "host": "http://almascience.nrao.edu/",
     "schemes": [
         "http",
         "https"
     ],
-    "basePath": "/cat",
+    "basePath": "/@app_name@",
     "paths": {
         "/async": {
             "post": {

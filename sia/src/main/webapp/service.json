@@ -5,135 +5,10 @@
         "title": "SIA (Simple Image Access) web service",
         "description": "The SIA (Simple Image Access) web service.\n\n\nSIA services for the Common Archive Observation Model (CAOM).\n\n\n<a href=\"http://www.ivoa.net/Documents/SIA/20091116/\">IVOA SIA v1</a>\n\n\n<a href=\"http://www.ivoa.net/Documents/SIA/\">IVOA SIA v2</a>\n\n\n\n\nThe SIA-2.0 query endpoint implements all the query parameters described in the latest SIA-2.0 specification: POS, BAND, TIME, POL, FOV, SPATRES, EXPTIME, ID, COLLECTION, FACILITY, INSTRUMENT, DPTYPE, CALIB, TARGET, TIMERES, SPECRP, FORMAT.\n"
     },
-    "host": "www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca",
+    "host": "almascience.nrao.edu",
+    "basePath": "/@app_name@",
     "paths": {
-        "/sia/query": {
-            "get": {
-                "description": "SIA-1.0 query of all collections. |\nParameter names are not case sensitive; parameter values are case sensitive.\nThe SIA-1.0 service enforces a maximum SIZE of 10 degrees.\n",
-                "tags": [
-                    "Simple Image Access 1.0"
-                ],
-                "schemes": [
-                    "http",
-                    "https"
-                ],
-                "produces": [
-                    "text/xml"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful response",
-                        "schema": {
-                            "$ref": "#/definitions/VOTable"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized - User not authenticated"
-                    },
-                    "404": {
-                        "description": "Not Found - User not found"
-                    },
-                    "500": {
-                        "description": "Internal error"
-                    },
-                    "503": {
-                        "description": "Service busy"
-                    },
-                    "default": {
-                        "description": "Unexpeced error",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    }
-                },
-                "parameters": [
-                    {
-                        "name": "POS",
-                        "in": "query",
-                        "description": "The POS parameter specifies the target coodinates (RA,DEC in degrees, ICRS) to search.",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "SIZE",
-                        "in": "query",
-                        "description": "The SIZE parameter specifies the size (angle in degrees) of the region to search. The value can be a single number or a pair of numbers separated by comma; in either case, this service takes the larger of the two values and searches using a circle.",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "COLLECTION",
-                        "in": "query",
-                        "description": "The collection parameter may be used to constrain the results to a specific data collection. If the collection parameter is not included in the query, images from all collections may be found. Values that could return content: BLAST, CFHT, HST, JCMT. The special value ALL may be used to search all CADC images; this is the default behaviour when no collection parameter is included in the request.",
-                        "required": false,
-                        "type": "string"
-                    }
-                ]
-            },
-            "post": {
-                "description": "SIA-1.0 query of all collections. |\nParameter names are not case sensitive; parameter values are case sensitive.\nThe SIA-1.0 service enforces a maximum SIZE of 10 degrees.\n",
-                "tags": [
-                    "Simple Image Access 1.0"
-                ],
-                "schemes": [
-                    "http",
-                    "https"
-                ],
-                "produces": [
-                    "text/xml"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful response",
-                        "schema": {
-                            "$ref": "#/definitions/VOTable"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized - User not authenticated"
-                    },
-                    "404": {
-                        "description": "Not Found - User not found"
-                    },
-                    "500": {
-                        "description": "Internal error"
-                    },
-                    "503": {
-                        "description": "Service busy"
-                    },
-                    "default": {
-                        "description": "Unexpeced error",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    }
-                },
-                "parameters": [
-                    {
-                        "name": "POS",
-                        "in": "query",
-                        "description": "The POS parameter specifies the target coodinates (RA,DEC in degrees, ICRS) to search.",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "SIZE",
-                        "in": "query",
-                        "description": "The SIZE parameter specifies the size (angle in degrees) of the region to search. The value can be a single number or a pair of numbers separated by comma; in either case, this service takes the larger of the two values and searches using a circle.",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "COLLECTION",
-                        "in": "query",
-                        "description": "The collection parameter may be used to constrain the results to a specific data collection. If the collection parameter is not included in the query, images from all collections may be found. Values that could return content: BLAST, CFHT, HST, JCMT. The special value ALL may be used to search all CADC images; this is the default behaviour when no collection parameter is included in the request.",
-                        "required": false,
-                        "type": "string"
-                    }
-                ]
-            }
-        },
-        "/sia/v2query": {
+        "/query": {
             "get": {
                 "description": "SIA-2.0 query of all collections. |\nThe SIA-2.0 implements all the query parameters described in the latest SIA-2.0 specification: POS, BAND, TIME, POL, FOV, SPATRES, EXPTIME, ID, COLLECTION, FACILITY, INSTRUMENT, DPTYPE, CALIB, TARGET, TIMERES, SPECRP, FORMAT.\n",
                 "tags": [
@@ -469,7 +344,7 @@
                 ]
             }
         },
-        "/sia/availability": {
+        "/availability": {
             "get": {
                 "tags": [
                     "Support Interfaces"
@@ -492,7 +367,7 @@
                 }
             }
         },
-        "/sia/capabilities": {
+        "/capabilities": {
             "get": {
                 "summary": "VOSI Capabilities",
                 "tags": [

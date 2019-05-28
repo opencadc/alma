@@ -1,4 +1,4 @@
-ALMA Registry Service
+ALMA Registry Service (1.0.1)
 ---------------------
 
 This project is the base for a future IVOA registry service at ALMA. It could support:

@@ -1,4 +1,4 @@
-ALMA TAP (1.1.4)
+ALMA TAP (1.1.6)
 ================
 
 `IVOA TAP`_ service for the `ALMA Science Archive`_.
@@ -7,7 +7,7 @@ Build
 -----
 
 Building the service creates a WAR artifact. From the root fo the
-``alma-tap`` folder, run:
+``alma.git/obscore`` folder, run:
 
 ``gradle --info clean build``
 
@@ -28,8 +28,7 @@ Deployment
 Docker
 ~~~~~~
 
-This is a working prototype using a TAP implementation with an Oracle 11
-*g* database.
+This is a working prototype using a TAP implementation with an Oracle 11/12 *g* database.
 
 After the `Build`_ step above, we can create a Docker deployment like
 so:
@@ -65,4 +64,5 @@ already, run the `Build`_ step above, then copy the WAR artifact from
 .. _ALMA Science Archive: http://almascience.nrao.edu/
 .. _build.gradle: build.gradle
 .. _Build: #build
+.. _WAR File: tap
 .. _Tomcat: http://tomcat.apache.org
