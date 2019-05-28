@@ -95,13 +95,10 @@ sourceSets {
 }
 
 tasks.withType(Test) {
-    // reset the report destinations so that intTests go to their
-    // own page
-    //reports.html.destination = file("${reporting.baseDir}/${name}")
+    // Reset the report destinations so that intTests go to their own page
     reports.html.destination = file(reporting.baseDir.getAbsolutePath() + '/' + name)
 
-    // Assign all Java system properties from
-    // the command line to the tests
+    // Assign all Java system properties from the command line to the tests
     systemProperties System.properties as Map<String, ?>
 }
 
