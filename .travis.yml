@@ -7,4 +7,9 @@ jdk:
   - openjdk8
   - openjdk11
 
+before_install:
+  - git clone https://github.com/gradle-guides/gradle-site-plugin.git
+  - cd gradle-site-plugin
+  - ./gradlew build
+
 script: for mod in obscore sia reg; do cd $mod; gradlew -i assemble check javadoc || break -1; cd ..; done
