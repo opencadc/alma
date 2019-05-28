@@ -11,7 +11,8 @@ services:
     depends_on:
       - "reg"
   reg:
-    image: opencadc/alma-reg:1.0.0
+    image: opencadc/alma-reg:1.0.1
+    build: ./
     networks:
       - "reg"
     ports:

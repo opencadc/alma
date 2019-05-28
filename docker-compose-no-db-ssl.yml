@@ -14,7 +14,7 @@ services:
       - 'sia.cadc.dao.nrc.ca'
       - 'reg.cadc.dao.nrc.ca'
   sia.cadc.dao.nrc.ca:
-    image: opencadc/alma-sia:1.0.0
+    image: opencadc/alma-sia:1.0.1
     build: ./sia/
     networks:
       - 'alma'
@@ -38,7 +38,7 @@ services:
     volumes:
       - 'server_certs:/usr/local/share/ca-certificates'
   reg.cadc.dao.nrc.ca:
-    image: opencadc/alma-reg:1.0.0
+    image: opencadc/alma-reg:1.0.1
     build: ./reg/
     networks:
       - 'alma'

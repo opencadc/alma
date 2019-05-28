@@ -13,7 +13,7 @@ services:
       - "sia"
       - "reg"
   sia:
-    image: opencadc/alma-sia:1.0.0
+    image: opencadc/alma-sia:1.0.1
     build: ./sia/
     networks:
       - "alma"
@@ -44,7 +44,7 @@ services:
     volumes:
       - "./obscore/docker/sql:/docker-entrypoint-initdb.d/startup"
   reg:
-    image: opencadc/alma-reg:1.0.0
+    image: opencadc/alma-reg:1.0.1
     build: ./reg/
     networks:
       - "alma"
