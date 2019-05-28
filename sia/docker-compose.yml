@@ -13,6 +13,7 @@ services:
       - "sia"
   sia:
     image: opencadc/alma-sia:1.0.1
+    build: ./
     networks:
       - "sia_obscore"
     ports:

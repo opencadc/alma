@@ -5,9 +5,10 @@ Change Log
 1.1.6 (Released)
 -------------------------
 
-* Fix all docker-compose files for volume mounts.
-* Fix Travis builds with JDK 11.
+* Fixed all docker-compose files for volume mounts.
+* Fixed Travis builds with JDK 11.
 * Added Gradle Wrapper (./gradlew).
+* Added Swagger documentation
 
 1.1.5 (Released)
 -------------------------

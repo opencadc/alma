@@ -37,7 +37,7 @@ war {
         archiveName = project.default_app_name + '##' + project.version + '.war'
     }
 
-    // Include the swagger-ui so that /sia provides the Sia API documentation
+    // Include the swagger-ui so that /sia2 provides the Sia API documentation
     from(System.getenv('RPS') + '/resources/') {
         include 'swagger-ui/'
     }
