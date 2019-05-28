@@ -7,7 +7,7 @@ services:
     networks:
       - "reg"
     volumes:
-      - "./proxy/default.conf:/etc/nginx/conf.d/default.conf"
+      - "./docker/proxy/default.conf:/etc/nginx/conf.d/default.conf"
     depends_on:
       - "reg"
   reg:
@@ -17,7 +17,7 @@ services:
     ports:
       - "5555:5555"
 #    volumes:
-#      - "./reg.war:/usr/local/tomcat/webapps/reg.war"
+#      - "./build/libs/reg#1000.war:/usr/local/tomcat/webapps/reg.war"
 
 networks:
   reg:

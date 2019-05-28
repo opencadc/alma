@@ -7,8 +7,8 @@ services:
     networks:
       - "tap_obscore"
     volumes:
-      - "./proxy/default.conf:/etc/nginx/conf.d/default.conf"
-      - "./proxy/html:/usr/share/nginx/html"
+      - "./docker/proxy/default.conf:/etc/nginx/conf.d/default.conf"
+      - "./docker/proxy/html:/usr/share/nginx/html"
     depends_on:
       - "obscore"
   obscore:
@@ -21,14 +21,14 @@ services:
     networks:
       - "tap_obscore"
     env_file:
-      - "./config/alma-tap.properties"
+      - "./docker/config/alma-tap.properties"
   tapdb:
     image: opencadc/tap-oracle:11-xe
     shm_size: 1gb
     networks:
       - "tap_obscore"
     volumes:
-      - "./sql:/docker-entrypoint-initdb.d/startup"
+      - "./docker/sql:/docker-entrypoint-initdb.d/startup"
 
 networks:
   tap_obscore:
