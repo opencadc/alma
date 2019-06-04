@@ -1,4 +1,4 @@
-ALMA SIA (1.0.0)
+ALMA SIA (1.0.1)
 ================
 
 `IVOA SIA`_ service for the `ALMA Science Archive`_.
@@ -32,8 +32,7 @@ This is a working prototype using an SIA implementation with an Oracle 11 *g* da
 
 After the `Build`_ step above, we can create a Docker deployment like so:
 
--  ``cp build/libs/*.war docker/``
--  ``cd docker/``
+-  ``docker build -t opencadc/alma-sia:1.0.1 .``
 -  ``docker-compose up -d && ./waitForContainersReady.sh``
 
 The necessary Docker images will be downloaded, including the large

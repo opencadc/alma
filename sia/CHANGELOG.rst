@@ -7,3 +7,4 @@ ALMA SIA Change Log
 
 * Clean up docker-compose files for proper volume mount locations.
 * Add Swagger documentation
+* Simplify README instructions.
