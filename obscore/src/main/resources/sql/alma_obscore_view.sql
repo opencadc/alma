@@ -90,9 +90,8 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     science.frequency_resolution,
     science.antenna_string,
     science.is_mosaic,
-    (case when ads.release_date is null then null
-          when ads.release_date is null then '3000-01-01'
-          else to_char(ads.release_date, 'YYYY-MM-DD') end),
+    (case when ads.release_date is null then TO_TIMESTAMP('3000-01-01T00:00:00.000Z', 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"')
+          else TO_TIMESTAMP(ads.release_date, 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"') end),
     science.frequency_support,
     science.velocity_resolution,
     asap.pi_name,

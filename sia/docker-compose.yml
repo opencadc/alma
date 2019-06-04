@@ -13,14 +13,13 @@ services:
       - "sia"
   sia:
     image: opencadc/alma-sia:1.0.1
-    build: ./
     networks:
       - "sia_obscore"
     ports:
       - "8080:8080"
       - "5555:5555"
-    volumes:
-      - "./build/libs/sia#1000.war:/usr/local/tomcat/webapps/sia.war"
+#    volumes:
+#      - "./build/libs/sia#1000.war:/usr/local/tomcat/webapps/sia.war"
 
 networks:
   sia_obscore:

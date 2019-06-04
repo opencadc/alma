@@ -12,7 +12,6 @@ services:
       - "reg"
   reg:
     image: opencadc/alma-reg:1.0.1
-    build: ./
     networks:
       - "reg"
     ports:
