@@ -1,4 +1,4 @@
-ALMA TAP (1.1.6)
+ALMA TAP (1.1.7)
 ================
 
 `IVOA TAP`_ service for the `ALMA Science Archive`_.
@@ -33,8 +33,7 @@ This is a working prototype using a TAP implementation with an Oracle 11/12 *g* 
 After the `Build`_ step above, we can create a Docker deployment like
 so:
 
--  ``cp build/libs/*.war docker/``
--  ``cd docker/``
+-  ``docker build -t opencadc/alma-tap:1.1.7 .``
 -  ``docker-compose up -d && ./waitForContainersReady.sh``
 
 The necessary Docker images will be downloaded, including the large

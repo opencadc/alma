@@ -2,6 +2,12 @@
 Change Log
 ==========
 
+1.1.7 (Released)
+-------------------------
+
+* Convert ``DATE`` types to ``TIMESTAMP`` types for IVOA compatibility.
+
+
 1.1.6 (Released)
 -------------------------
 
