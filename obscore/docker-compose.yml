@@ -12,8 +12,7 @@ services:
     depends_on:
       - "obscore"
   obscore:
-    image: opencadc/alma-tap:1.1.6
-    build: ./
+    image: opencadc/alma-tap:1.1.7
     depends_on:
       - "tapdb"
     ports:

@@ -1,6 +1,6 @@
 version: "3.2"
 services:
-  proxy:
+  proxy.cadc.dao.nrc.ca:
     image: nginx:alpine
     ports:
       - "80:80"
@@ -12,9 +12,8 @@ services:
       - "obscore"
       - "sia"
       - "reg"
-  sia:
+  sia.cadc.dao.nrc.ca:
     image: opencadc/alma-sia:1.0.1
-    build: ./sia/
     networks:
       - "alma"
     ports:
@@ -23,9 +22,8 @@ services:
       - "obscore"
     environment: 
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
-  obscore:
-    image: opencadc/alma-tap:1.1.6
-    build: ./obscore/
+  obscore.cadc.dao.nrc.ca:
+    image: opencadc/alma-tap:1.1.7
     depends_on:
       - "obscoredb"
     ports:
@@ -36,16 +34,15 @@ services:
       - "./obscore/docker/config/alma-tap.properties"
     environment: 
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
-  obscoredb:
+  obscoredb.cadc.dao.nrc.ca:
     image: opencadc/tap-oracle:11-xe
     shm_size: 1gb
     networks:
       - "alma"
     volumes:
       - "./obscore/docker/sql:/docker-entrypoint-initdb.d/startup"
-  reg:
+  reg.cadc.dao.nrc.ca:
     image: opencadc/alma-reg:1.0.1
-    build: ./reg/
     networks:
       - "alma"
     ports:
