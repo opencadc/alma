@@ -2,8 +2,7 @@
 <vosi:capabilities
     xmlns:vosi="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1"
-    xmlns:uws="http://www.ivoa.net/xml/UWSRegExt/v0.1">
+    xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1">
 
   <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
     <interface xsi:type="vs:ParamHTTP" role="std">
