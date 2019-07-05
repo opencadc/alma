@@ -168,13 +168,18 @@ public class DataLinkIterator implements Iterator<DataLink> {
             // If it's invalid, then just don't set it.
         }
 
-        dataLink.contentLength = deliverableInfo.getSizeInBytes();
+        dataLink.contentLength = determineSizeInBytes(deliverableInfo);
         dataLink.contentType = determineContentType(deliverableInfo);
 
         // TODO: How to determine this?
         dataLink.readable = true;
 
         return dataLink;
+    }
+
+    private Long determineSizeInBytes(final DeliverableInfo deliverableInfo) {
+        final long configuredSizeInBytes = deliverableInfo.getSizeInBytes();
+        return configuredSizeInBytes >= 0 ? configuredSizeInBytes : null;
     }
 
     private String determineContentType(final DeliverableInfo deliverableInfo) {
