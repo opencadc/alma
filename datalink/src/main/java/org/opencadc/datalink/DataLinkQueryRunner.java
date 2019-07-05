@@ -109,7 +109,7 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
     private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/datalink";
 
     private static final String ANONYMOUS_USER = "anonymous";
-    private static final String REQUEST_ID_PARAMETER = "REQUEST_ID";
+    private static final String REQUEST_ID_PARAMETER = "REQUESTID";
     private static final String PARAMETER_KEY = "ID";
 
     private DataPacker dataPacker;

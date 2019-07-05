@@ -74,7 +74,6 @@ import alma.asdm.domain.DeliverableInfo;
 
 import ca.nrc.cadc.util.PropertiesReader;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -91,12 +90,12 @@ public class DataLinkURLBuilderTest {
         final DataLinkURLBuilder testSubject = new DataLinkURLBuilder("anon");
 
         when(mockDeliverableInfo.getDisplayName()).thenReturn("nosuchfile.tmp");
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid://C71/C72/C73");
+        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C71_C72_C73");
 
         final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo, "9987");
 
         Assert.assertEquals("Wrong URL.",
-                            "https://myhost.com/mydataportal/ALMA/requests/anon/9987" +
+                            "https://myhost.com/mydataportal/requests/anon/9987/ALMA" +
                                     "/uid___C71_C72_C73/nosuchfile.tmp",
                             downloadURL);
 
@@ -112,12 +111,12 @@ public class DataLinkURLBuilderTest {
         final DataLinkURLBuilder testSubject = new DataLinkURLBuilder("anonymous");
 
         when(mockDeliverableInfo.getDisplayName()).thenReturn(null);
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid://C81/C82/C83");
+        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C81_C82_C83");
 
         final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo, "88");
 
         Assert.assertEquals("Wrong URL.",
-                            "https://myhost.com/mydataportal/ALMA/requests/anonymous/88/uid___C81_C82_C83/",
+                            "https://myhost.com/mydataportal/requests/anonymous/88/ALMA/uid___C81_C82_C83/",
                             downloadURL);
 
         verify(mockDeliverableInfo, times(1)).getIdentifier();

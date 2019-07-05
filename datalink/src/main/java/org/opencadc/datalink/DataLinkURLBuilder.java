@@ -70,7 +70,6 @@
 package org.opencadc.datalink;
 
 import alma.asdm.domain.DeliverableInfo;
-import alma.asdm.domain.identifiers.AsdmUid;
 import ca.nrc.cadc.util.StringUtil;
 
 import java.net.MalformedURLException;
@@ -96,7 +95,6 @@ public class DataLinkURLBuilder {
         final String sanitizedURL = String.join("/", new String[] {
             sanitizePath(secureSchemeHost),
             sanitizePath(dataPortalContextPath),
-            ARCHIVE_NAME,
             REQUESTS_ENDPOINT,
             username
         });
@@ -109,7 +107,8 @@ public class DataLinkURLBuilder {
         return String.join("/", new String[] {
                 sanitizePath(downloadURLPrefix.toExternalForm()),
                 requestID,
-                sanitizePath(new AsdmUid(deliverableInfo.getIdentifier()).getSanitisedUid()),
+                ARCHIVE_NAME,
+                sanitizePath(deliverableInfo.getIdentifier()),
                 sanitizePath(deliverableInfo.getDisplayName())
         });
     }

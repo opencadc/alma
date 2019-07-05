@@ -101,7 +101,7 @@ public class DataLinkIteratorTest {
                                                                             Deliverable.PROJECT);
         final DeliverableInfo deliverableInfoMOUS = new DeliverableInfo(deliverableInfoMOUS1ID,
                                                                         Deliverable.MOUS);
-        final DeliverableInfo deliverableInfoMOUSTAR = new DeliverableInfo("uid://C7/C8/C9",
+        final DeliverableInfo deliverableInfoMOUSTAR = new DeliverableInfo("uid___C7_C8_C9",
                                                                            Deliverable.PIPELINE_PRODUCT);
         deliverableInfoMOUSTAR.setDisplayName("mous.tar");
         deliverableInfoMOUSTAR.setOwner(deliverableInfoMOUS);
@@ -115,7 +115,7 @@ public class DataLinkIteratorTest {
                                                                             Deliverable.PROJECT);
         final DeliverableInfo deliverableInfoSubMOUS = new DeliverableInfo(deliverableInfoMOUS2ID,
                                                                            Deliverable.MOUS);
-        final DeliverableInfo deliverableInfoSubMOUSAux = new DeliverableInfo("uid://C10/C11/C12",
+        final DeliverableInfo deliverableInfoSubMOUSAux = new DeliverableInfo("uid___C10_C11_C12",
                                                                               Deliverable.PIPELINE_AUXILIARY);
         deliverableInfoSubMOUSAux.setDisplayName("mous-aux.tar");
         deliverableInfoSubMOUSAux.setOwner(deliverableInfoSubMOUS);
@@ -136,8 +136,8 @@ public class DataLinkIteratorTest {
         when(mockDataPacker.expand(new Uid(deliverableInfoMOUS2ID), false)).thenReturn(deliverableInfoSubMOUS);
 
         final String[] expectedAccessURLs = new String[] {
-                "https://myhost.com/mydataportal/ALMA/requests/ANON/88/uid___C7_C8_C9/mous.tar",
-                "https://myhost.com/mydataportal/ALMA/requests/ANON/88/uid___C10_C11_C12/mous-aux.tar"
+                "https://myhost.com/mydataportal/requests/ANON/88/ALMA/uid___C7_C8_C9/mous.tar",
+                "https://myhost.com/mydataportal/requests/ANON/88/ALMA/uid___C10_C11_C12/mous-aux.tar"
         };
 
         final String[] resultAccessURLs = new String[expectedAccessURLs.length];
@@ -148,6 +148,7 @@ public class DataLinkIteratorTest {
              testSubject.hasNext(); ) {
             final DataLink nextDataLink = testSubject.next();
             resultAccessURLs[index++] = nextDataLink.accessURL.toExternalForm();
+            Assert.assertEquals("Wrong content type.", "application/x-tar", nextDataLink.contentType);
         }
 
         Assert.assertArrayEquals("Wrong access URLs.", expectedAccessURLs, resultAccessURLs);

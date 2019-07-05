@@ -71,21 +71,28 @@ package org.opencadc.datalink;
 
 import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.DeliverableInfo;
-import alma.asdm.domain.identifiers.AsdmUid;
 import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
 
+import ca.nrc.cadc.util.StringUtil;
+
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.Queue;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
+/**
+ * Iterator to provide streaming over the DeliverableInfo items that the DataPacker expands.
+ */
 public class DataLinkIterator implements Iterator<DataLink> {
 
-    static final String DEFAULT_CONTENT_TYPE = "application/x-tar";
-    static final String README_CONTENT_TYPE = "text/plain";
+    private static final String DEFAULT_UNKNOWN_CONTENT_TYPE = "application/octet-stream";
 
     private final Queue<DeliverableInfo> currentDeliverableInfoStack = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
@@ -94,8 +101,8 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private final String requestID;
 
 
-    public DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
-                            final DataPacker dataPacker, final String requestID) {
+    DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
+                     final DataPacker dataPacker, final String requestID) {
         this.dataLinkURLBuilder = dataLinkURLBuilder;
         this.datasetIDIterator = datasetIDIterator;
         this.dataPacker = dataPacker;
@@ -104,7 +111,18 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
     @Override
     public boolean hasNext() {
-        return datasetIDIterator.hasNext() || !currentDeliverableInfoStack.isEmpty();
+        if (currentDeliverableInfoStack.isEmpty()) {
+            if (datasetIDIterator.hasNext()) {
+                final DeliverableInfo currentTopLevelDeliverableInfo =
+                        dataPacker.expand(new Uid(datasetIDIterator.next()), false);
+                visitSubDeliverables(currentTopLevelDeliverableInfo);
+                return !currentDeliverableInfoStack.isEmpty();
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 
     private boolean isMOUS(final DeliverableInfo deliverableInfo) {
@@ -112,43 +130,77 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     private void visitSubDeliverables(final DeliverableInfo deliverableInfo) {
-        if (!isMOUS(deliverableInfo)) {
-            for (final DeliverableInfo nextDeliverableInfo : deliverableInfo.getSubDeliverables()) {
-                visitSubDeliverables(nextDeliverableInfo);
+        if (deliverableInfo != null) {
+            if (!isMOUS(deliverableInfo)) {
+                for (final DeliverableInfo nextDeliverableInfo : deliverableInfo.getSubDeliverables()) {
+                    visitSubDeliverables(nextDeliverableInfo);
+                }
+            } else {
+                // MOUS sub-deliverables should be TAR Files.  Add them, and their children (leaf files).
+                for (final DeliverableInfo mousChildFile : deliverableInfo.getSubDeliverables()) {
+                    if (mousChildFile != null) {
+                        currentDeliverableInfoStack.add(mousChildFile);
+                        final Stream<DeliverableInfo> filterStream =
+                                mousChildFile.getSubDeliverables().stream().filter(Objects::nonNull);
+                        currentDeliverableInfoStack.addAll(filterStream.collect(Collectors.toList()));
+                    }
+                }
             }
-        } else {
-            currentDeliverableInfoStack.addAll(deliverableInfo.getSubDeliverables());
         }
     }
 
+    /**
+     * This next method will simply take from the current stack.
+     *
+     * @return DataLink     Next DataLink created from the next DeliverableInfo in the Queue.
+     */
     @Override
     public DataLink next() {
-        final DataLink nextDataLink;
-        if (currentDeliverableInfoStack.isEmpty()) {
-            final String nextDatasetID = datasetIDIterator.next();
-            final DeliverableInfo nextDeliverableInfo = dataPacker.expand(new Uid(nextDatasetID), false);
+        return createDataLink(Objects.requireNonNull(currentDeliverableInfoStack.poll()));
+    }
 
-            visitSubDeliverables(nextDeliverableInfo);
-            nextDataLink = this.next();
-        } else {
-            final DeliverableInfo deliverableInfo = currentDeliverableInfoStack.poll();
-            final DataLink.Term term = deliverableInfo.getType().isAuxiliary()
-                    ? DataLink.Term.AUXILIARY : DataLink.Term.THIS;
-            nextDataLink = new DataLink(deliverableInfo.getIdentifier(), term);
-            try {
-                nextDataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo, requestID));
-            } catch (MalformedURLException e) {
-                // If it's invalid, then just don't set it.
-            }
-
-            nextDataLink.contentLength = deliverableInfo.getSizeInBytes();
-            nextDataLink.contentType = deliverableInfo.getType() == Deliverable.PIPELINE_AUXILIARY_README ?
-                    README_CONTENT_TYPE : DEFAULT_CONTENT_TYPE;
-
-            // TODO: How to determine this?
-            nextDataLink.readable = true;
+    private DataLink createDataLink(final DeliverableInfo deliverableInfo) {
+        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(),
+                                               determineTerm(deliverableInfo.getType()));
+        try {
+            dataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo, requestID));
+        } catch (MalformedURLException e) {
+            // If it's invalid, then just don't set it.
         }
 
-        return nextDataLink;
+        dataLink.contentLength = deliverableInfo.getSizeInBytes();
+        dataLink.contentType = determineContentType(deliverableInfo);
+
+        // TODO: How to determine this?
+        dataLink.readable = true;
+
+        return dataLink;
+    }
+
+    private String determineContentType(final DeliverableInfo deliverableInfo) {
+        final String displayFileName = deliverableInfo.getDisplayName();
+        final String contentType;
+
+        if (StringUtil.hasText(displayFileName)) {
+            final String guessedContentType = URLConnection.guessContentTypeFromName(deliverableInfo.getDisplayName());
+            contentType = StringUtil.hasText(guessedContentType) ? guessedContentType : DEFAULT_UNKNOWN_CONTENT_TYPE;
+        } else {
+            contentType = DEFAULT_UNKNOWN_CONTENT_TYPE;
+        }
+
+        return contentType;
+    }
+
+    private DataLink.Term determineTerm(final Deliverable deliverableType) {
+        final DataLink.Term dataLinkTerm;
+        if (deliverableType.isTarfile()) {
+            dataLinkTerm = DataLink.Term.PKG;
+        } else if (deliverableType.isAuxiliary()) {
+            dataLinkTerm = DataLink.Term.AUXILIARY;
+        } else {
+            dataLinkTerm = DataLink.Term.THIS;
+        }
+
+        return dataLinkTerm;
     }
 }
