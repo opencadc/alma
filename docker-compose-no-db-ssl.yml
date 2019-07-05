@@ -13,6 +13,7 @@ services:
       - 'obscore.cadc.dao.nrc.ca'
       - 'sia.cadc.dao.nrc.ca'
       - 'reg.cadc.dao.nrc.ca'
+      - 'datalink.cadc.dao.nrc.ca'
   sia.cadc.dao.nrc.ca:
     image: opencadc/alma-sia:1.0.1
     networks:
@@ -46,6 +47,14 @@ services:
       - 'server_certs:/usr/local/share/ca-certificates'
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
+  datalink.cadc.dao.nrc.ca:
+    image: opencadc/alma-datalink:1.0.0
+    networks:
+      - "alma"
+    env_file:
+      - "./datalink/docker/config/alma-datalink.properties"
+    ports:
+      - "45555:5555"
 
 networks:
   alma:

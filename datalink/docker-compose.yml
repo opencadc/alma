@@ -1,0 +1,33 @@
+version: "3.2"
+services:
+  proxy:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    networks:
+      - "datalink"
+    volumes:
+      - "./docker/proxy/default.conf:/etc/nginx/conf.d/default.conf"
+      - "./docker/proxy/html:/usr/share/nginx/html"
+    depends_on:
+      - "datalink"
+  datalink:
+    image: opencadc/alma-datalink:1.0.0
+    depends_on:
+      - "datalinkdb"
+    ports:
+      - "5555:5555"
+    networks:
+      - "datalink"
+    env_file:
+      - "./docker/config/alma-datalink.properties"
+  datalinkdb:
+    image: opencadc/tap-oracle:11-xe
+    shm_size: 1gb
+    networks:
+      - "datalink"
+    volumes:
+      - "./docker/sql:/docker-entrypoint-initdb.d/startup"
+
+networks:
+  datalink:

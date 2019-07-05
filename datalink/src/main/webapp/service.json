@@ -1,0 +1,340 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "IVOA DataLink",
+        "description": "Service for Data Access\n\n This service implements the IVOA DataLink-1.0 service specification. To use this service, the caller must use a dataset identifier found through some means (for example, querying the ALMA TAP ObsCore Service). The DataLink service provides a drill-down mechanism to access the data files and associated resources.\n",
+        "version": "1.0.0"
+    },
+    "host": "almascience.nrao.edu",
+    "schemes": [
+        "https",
+        "http"
+    ],
+    "basePath": "/@app_name",
+    "paths": {
+        "/": {
+            "get": {
+                "summary": "IVOA DataLink v1.0",
+                "tags": [
+                    "Datalink"
+                ],
+                "description": "The linking of data discovery metadata to access to the data itself, further\ndetailed metadata, related resources, and to services that perform operations of \nthe data.\n",
+                "parameters": [
+                    {
+                        "name": "ID",
+                        "in": "query",
+                        "collectionFormat": "multi",
+                        "description": "MOUS ID from a data discovery service.",
+                        "required": true,
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    {
+                        "name": "RUNID",
+                        "in": "query",
+                        "description": "Arbitrary string (maximum length 64) that is attached to any logging of this request.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "REQUEST",
+                        "in": "query",
+                        "description": "get download links only (REQUEST=downloads-only) ",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/x-votable+xml;content=datalink"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A VOTable with one row per link (downloadable item or resource).",
+                        "schema": {
+                            "$ref": "#/definitions/SuccessVOTable"
+                        }
+                    },
+                    "400": {
+                        "description": "(bad request) with a VOTable and an INFO element with an error message.\n",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorVOTable"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "503": {
+                        "description": "Service too busy"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/availability": {
+            "get": {
+                "tags": [
+                    "Support Interfaces"
+                ],
+                "summary": "VOSI Availability",
+                "description": "Indicates whether the service is operable and the reliability of the service for extended and scheduled requests.\n",
+                "produces": [
+                    "text/xml"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A VOSI availability document in XML.",
+                        "schema": {
+                            "$ref": "#/definitions/availability"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/capabilities": {
+            "get": {
+                "summary": "VOSI Capabilities",
+                "tags": [
+                    "Support Interfaces"
+                ],
+                "description": "Provides the service metadata in the form of a list of Capability descriptions.  Each of these descriptions is an \nXML element that:\n<ul>\n<li>states that the service provides a particular, IVOA-standard function;</li>\n<li>lists the interfaces for invoking that function;</li>\n<li>records any details of the implementation of the function that are not defined as default or constant in the standard for that function.</li>\n</ul>\n",
+                "produces": [
+                    "text/xml"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A VOSI Capabilities document in XML.",
+                        "schema": {
+                            "$ref": "#/definitions/capabilities"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "503": {
+                        "description": "Service too busy"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ErrorVOTable": {
+            "type": "object",
+            "properties": {
+                "VOTABLE": {
+                    "type": "string",
+                    "xml": {
+                        "namespace": "http://www.ivoa.net/xml/VOTable/v1.2",
+                        "name": "VOTABLE"
+                    },
+                    "properties": {
+                        "RESOURCE": {
+                            "type": "string",
+                            "xml": {
+                                "namespace": "http://www.ivoa.net/xml/VOTable/v1.2",
+                                "name": "RESOURCE"
+                            },
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "format": "string",
+                                    "xml": {
+                                        "attribute": true,
+                                        "name": "type"
+                                    }
+                                },
+                                "INFO": {
+                                    "type": "string",
+                                    "xml": {
+                                        "namespace": "http://www.ivoa.net/xml/VOTable/v1.2",
+                                        "name": "INFO"
+                                    },
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "format": "string",
+                                            "xml": {
+                                                "attribute": true,
+                                                "name": "name"
+                                            }
+                                        },
+                                        "value": {
+                                            "type": "string",
+                                            "format": "string",
+                                            "xml": {
+                                                "attribute": true,
+                                                "name": "value"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "SuccessVOTable": {
+            "type": "object",
+            "properties": {
+                "VOTABLE": {
+                    "type": "string",
+                    "xml": {
+                        "namespace": "http://www.ivoa.net/xml/VOTable/v1.2",
+                        "name": "VOTABLE"
+                    },
+                    "properties": {
+                        "RESOURCE": {
+                            "type": "string",
+                            "xml": {
+                                "namespace": "http://www.ivoa.net/xml/VOTable/v1.2",
+                                "name": "RESOURCE"
+                            },
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "format": "string",
+                                    "xml": {
+                                        "attribute": true,
+                                        "name": "type"
+                                    }
+                                },
+                                "INFO": {
+                                    "type": "string",
+                                    "xml": {
+                                        "namespace": "http://www.ivoa.net/xml/VOTable/v1.2",
+                                        "name": "INFO"
+                                    },
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "format": "string",
+                                            "xml": {
+                                                "attribute": true,
+                                                "name": "name"
+                                            }
+                                        },
+                                        "value": {
+                                            "type": "string",
+                                            "format": "string",
+                                            "xml": {
+                                                "attribute": true,
+                                                "name": "value"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "availability": {
+            "type": "object",
+            "xml": {
+                "namespace": "http://www.ivoa.net/xml/VOSIAvailability/v1.0",
+                "prefix": "vosi"
+            },
+            "properties": {
+                "available": {
+                    "type": "boolean",
+                    "xml": {
+                        "attribute": true,
+                        "prefix": "vosi"
+                    }
+                },
+                "note": {
+                    "type": "string",
+                    "xml": {
+                        "attribute": true,
+                        "prefix": "vosi"
+                    }
+                }
+            }
+        },
+        "capabilities": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/capability"
+            },
+            "xml": {
+                "namespace": "http://www.ivoa.net/xml/VOSICapabilities/v1.0",
+                "prefix": "vosi",
+                "wrapped": true
+            }
+        },
+        "capability": {
+            "type": "object",
+            "properties": {
+                "standardID": {
+                    "type": "string",
+                    "format": "uri",
+                    "xml": {
+                        "attribute": true
+                    }
+                },
+                "interface": {
+                    "type": "object",
+                    "properties": {
+                        "accessURL": {
+                            "type": "string",
+                            "properties": {
+                                "use": {
+                                    "type": "string",
+                                    "xml": {
+                                        "attribute": true
+                                    }
+                                }
+                            }
+                        },
+                        "securityMethod": {
+                            "type": "string",
+                            "properties": {
+                                "standardID": {
+                                    "type": "string",
+                                    "format": "uri",
+                                    "xml": {
+                                        "attribute": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Error": {
+            "required": [
+                "code",
+                "message"
+            ],
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
