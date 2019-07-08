@@ -69,6 +69,7 @@
 
 package org.opencadc.datalink;
 
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vosi.AvailabilityPlugin;
 import ca.nrc.cadc.vosi.AvailabilityStatus;
 
@@ -98,7 +99,8 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
     @Override
     public AvailabilityStatus getStatus() {
         return new AvailabilityStatus(true, null, null, null,
-                                      String.format("%s state: %s", applicationName, state));
+                                      String.format("%s state: %s", applicationName, StringUtil.hasText(state) ?
+                                              state : "ACTIVE"));
     }
 
     /**

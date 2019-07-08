@@ -1,25 +1,26 @@
-ALMA TAP (1.1.7)
+ALMA DataLink (1.0.0)
 ================
 
-`IVOA TAP`_ service for the `ALMA Science Archive`_.
+`IVOA DataLink`_ service for the `ALMA Science Archive`_.
 
 Build
 -----
 
 Building the service creates a WAR artifact. From the root fo the
-``alma.git/obscore`` folder, run:
+``alma.git/datalink`` folder, run:
 
 ``gradle --info clean build``
 
-to create the ``build/libs/tap##%VERSION%.war`` file, where the
+to create the ``build/libs/datalink##%VERSION%.war`` file, where the
 ``%VERSION%`` will be replaced with the actual version number declared
 in the `build.gradle`_ file.
 
-Alternatively, there is an ``alma_tap_app_name`` parameter that will replace the name of the output file.
+Alternatively, there is an ``alma_datalink_app_name`` parameter that will replace the name of the output file.
 
-``gradle -info -Palma_tap_app_name=my_alma_tap clean build``
+``gradle -info -Palma_datalink_app_name=my_alma_datalink clean build``
 
-will create the ``build/libs/my_alma_tap##%VERSION%.war`` file.  This can also be set in a local ``gradle.properties``,
+will create the ``build/libs/my_alma_datalink##%VERSION%.war`` file.  This can also be set in a local ``gradle
+.properties``,
 or in you ``~/.gradle/gradle.properties`` file.
 
 Deployment
@@ -28,29 +29,33 @@ Deployment
 Docker
 ~~~~~~
 
-This is a working prototype using a TAP implementation with an Oracle 11/12 *g* database.
+This is a working prototype using a DataLink implementation with an Oracle 11/12 database.  An existing image can be
+found here:
+
+``docker pull opencadc/alma-datalink:1.0.0``
+
+Building for Docker
+~~~~~~~~~~~~~~~~~~~
 
 After the `Build`_ step above, we can create a Docker deployment like
 so:
 
--  ``docker build -t opencadc/alma-tap:1.1.7 .``
--  ``docker-compose up -d && ./waitForContainersReady.sh``
+-  ``docker build -t alma-datalink-image:1.0 .``
 
 The necessary Docker images will be downloaded, including the large
 Oracle one, then the service will be available on port ``8080``. You can
 then issue a request like:
 
-http://localhost:8080/tap/availability
+http://localhost:8080/datalink/availability
 
 Which will provide you with an XML document as to the health of the
 service. If it reads with the message:
 
-``The TAP ObsCore service is accepting queries``
+``DataLink state: ACTIVE``
 
-Then the TAP service is running properly. You can then issue a query to
-the sample ObsCore table:
+Then the DataLinkj service is running properly. You can then request the URLs for data for an MOUS ID:
 
-``curl -L -d 'QUERY=SELECT+TOP+1+*+FROM+TAP_SCHEMA.obscore&LANG=ADQL' http://localhost:8080/tap/sync``
+``curl -L http://localhost:8080/datalink/sync?ID=uid://A001/X87c/X3f1``
 
 Dedicated web server
 ~~~~~~~~~~~~~~~~~~~~
@@ -59,9 +64,9 @@ If you have a dedicated Servlet Container (i.e. `Tomcat`_) running
 already, run the `Build`_ step above, then copy the WAR artifact from
 ``build/libs/`` to your Servlet Container’s webapp deployment directory.
 
-.. _IVOA TAP: http://ivoa.net/Documents/TAP/
+.. _IVOA DataLink: http://www.ivoa.net/documents/DataLink/
 .. _ALMA Science Archive: http://almascience.nrao.edu/
 .. _build.gradle: build.gradle
 .. _Build: #build
-.. _WAR File: tap
+.. _WAR File: datalink
 .. _Tomcat: http://tomcat.apache.org
