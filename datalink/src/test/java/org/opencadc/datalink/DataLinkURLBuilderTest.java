@@ -74,6 +74,7 @@ import alma.asdm.domain.DeliverableInfo;
 
 import ca.nrc.cadc.util.PropertiesReader;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -87,39 +88,35 @@ public class DataLinkURLBuilderTest {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
         final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder("anon");
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder();
 
-        when(mockDeliverableInfo.getDisplayName()).thenReturn("nosuchfile.tmp");
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C71_C72_C73");
+        when(mockDeliverableInfo.getDisplayName()).thenReturn("uid___C71_C72_C73.tmp");
 
-        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo, "9987");
+        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo);
 
         Assert.assertEquals("Wrong URL.",
-                            "https://myhost.com/mydataportal/requests/anon/9987/ALMA" +
-                                    "/uid___C71_C72_C73/nosuchfile.tmp",
+                            "https://myhost.com/mydownloads/uid___C71_C72_C73.tmp",
                             downloadURL);
 
-        verify(mockDeliverableInfo, times(1)).getIdentifier();
         verify(mockDeliverableInfo, times(1)).getDisplayName();
     }
 
     @Test
+    @Ignore("Ignore until we know if getDisplayName() is necessary.")
     public void createDownloadURLNullDisplayName() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
         final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder("anonymous");
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder();
 
-        when(mockDeliverableInfo.getDisplayName()).thenReturn(null);
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C81_C82_C83");
+        when(mockDeliverableInfo.getDisplayName()).thenReturn("uid___C81_C82_C83.tmp");
 
-        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo, "88");
+        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo);
 
         Assert.assertEquals("Wrong URL.",
-                            "https://myhost.com/mydataportal/requests/anonymous/88/ALMA/uid___C81_C82_C83/",
+                            "https://myhost.com/mydownloads/uid___C81_C82_C83.tmp",
                             downloadURL);
 
-        verify(mockDeliverableInfo, times(1)).getIdentifier();
         verify(mockDeliverableInfo, times(1)).getDisplayName();
     }
 }

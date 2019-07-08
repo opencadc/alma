@@ -55,6 +55,8 @@ services:
       - "./datalink/docker/config/alma-datalink.properties"
     ports:
       - "45555:5555"
+    volumes:
+      - 'server_certs:/usr/local/share/ca-certificates'
 
 networks:
   alma:

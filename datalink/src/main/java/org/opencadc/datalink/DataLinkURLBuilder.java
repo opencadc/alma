@@ -78,37 +78,29 @@ import java.net.URL;
 
 public class DataLinkURLBuilder {
 
-    private static final String ARCHIVE_NAME = "ALMA";
-    private static final String REQUESTS_ENDPOINT = "requests";
-
     private final URL downloadURLPrefix;
 
 
-    public DataLinkURLBuilder(final String username) throws MalformedURLException {
-        this(new DataLinkProperties(), username);
+    public DataLinkURLBuilder() throws MalformedURLException {
+        this(new DataLinkProperties());
     }
 
-    public DataLinkURLBuilder(final DataLinkProperties dataLinkProperties, final String username) throws MalformedURLException {
+    public DataLinkURLBuilder(final DataLinkProperties dataLinkProperties) throws MalformedURLException {
         final String secureSchemeHost = dataLinkProperties.getFirstPropertyValue("secureSchemeHost");
-        final String dataPortalContextPath = dataLinkProperties.getFirstPropertyValue("dataPortalContextPath");
+        final String downloadPath = dataLinkProperties.getFirstPropertyValue("downloadPath");
 
         final String sanitizedURL = String.join("/", new String[] {
             sanitizePath(secureSchemeHost),
-            sanitizePath(dataPortalContextPath),
-            REQUESTS_ENDPOINT,
-            username
+            sanitizePath(downloadPath)
         });
 
         downloadURLPrefix = new URL(sanitizedURL);
     }
 
 
-    public String createDownloadURL(final DeliverableInfo deliverableInfo, final String requestID) {
+    public String createDownloadURL(final DeliverableInfo deliverableInfo) {
         return String.join("/", new String[] {
                 sanitizePath(downloadURLPrefix.toExternalForm()),
-                requestID,
-                ARCHIVE_NAME,
-                sanitizePath(deliverableInfo.getIdentifier()),
                 sanitizePath(deliverableInfo.getDisplayName())
         });
     }

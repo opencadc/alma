@@ -93,7 +93,6 @@ public class DataLinkIteratorTest {
     public void runThrough() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
-        final String requestID = "88";
         final String deliverableInfoMOUS1ID = "uid://C1/C2/C3";
         final String deliverableInfoMOUS2ID = "uid://C4/C5/C6";
 
@@ -101,9 +100,9 @@ public class DataLinkIteratorTest {
                                                                             Deliverable.PROJECT);
         final DeliverableInfo deliverableInfoMOUS = new DeliverableInfo(deliverableInfoMOUS1ID,
                                                                         Deliverable.MOUS);
-        final DeliverableInfo deliverableInfoMOUSTAR = new DeliverableInfo("uid___C7_C8_C9",
+        final DeliverableInfo deliverableInfoMOUSTAR = new DeliverableInfo("uid___C7_C8_C9.tar",
                                                                            Deliverable.PIPELINE_PRODUCT);
-        deliverableInfoMOUSTAR.setDisplayName("mous.tar");
+        deliverableInfoMOUSTAR.setDisplayName("uid___C7_C8_C9.tar");
         deliverableInfoMOUSTAR.setOwner(deliverableInfoMOUS);
 
         deliverableInfoMOUS.setOwner(deliverableInfoProject1);
@@ -115,9 +114,9 @@ public class DataLinkIteratorTest {
                                                                             Deliverable.PROJECT);
         final DeliverableInfo deliverableInfoSubMOUS = new DeliverableInfo(deliverableInfoMOUS2ID,
                                                                            Deliverable.MOUS);
-        final DeliverableInfo deliverableInfoSubMOUSAux = new DeliverableInfo("uid___C10_C11_C12",
+        final DeliverableInfo deliverableInfoSubMOUSAux = new DeliverableInfo("uid___C10_C11_C12.tar",
                                                                               Deliverable.PIPELINE_AUXILIARY);
-        deliverableInfoSubMOUSAux.setDisplayName("mous-aux.tar");
+        deliverableInfoSubMOUSAux.setDisplayName("uid___C10_C11_C12.tar");
         deliverableInfoSubMOUSAux.setOwner(deliverableInfoSubMOUS);
 
         deliverableInfoSubMOUS.setOwner(deliverableInfoProject2);
@@ -130,21 +129,21 @@ public class DataLinkIteratorTest {
 
         final DataPacker mockDataPacker = mock(DataPacker.class);
 
-        final DataLinkURLBuilder dataLinkURLBuilder = new DataLinkURLBuilder("ANON");
+        final DataLinkURLBuilder dataLinkURLBuilder = new DataLinkURLBuilder();
 
         when(mockDataPacker.expand(new Uid(deliverableInfoMOUS1ID), false)).thenReturn(deliverableInfoMOUS);
         when(mockDataPacker.expand(new Uid(deliverableInfoMOUS2ID), false)).thenReturn(deliverableInfoSubMOUS);
 
         final String[] expectedAccessURLs = new String[] {
-                "https://myhost.com/mydataportal/requests/ANON/88/ALMA/uid___C7_C8_C9/mous.tar",
-                "https://myhost.com/mydataportal/requests/ANON/88/ALMA/uid___C10_C11_C12/mous-aux.tar"
+                "https://myhost.com/mydownloads/uid___C7_C8_C9.tar",
+                "https://myhost.com/mydownloads/uid___C10_C11_C12.tar"
         };
 
         final String[] resultAccessURLs = new String[expectedAccessURLs.length];
 
         int index = 0;
         for (final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, uidIterator,
-                                                                       mockDataPacker, requestID);
+                                                                       mockDataPacker);
              testSubject.hasNext(); ) {
             final DataLink nextDataLink = testSubject.next();
             resultAccessURLs[index++] = nextDataLink.accessURL.toExternalForm();

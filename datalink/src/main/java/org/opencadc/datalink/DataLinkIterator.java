@@ -83,8 +83,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 
 /**
@@ -98,23 +97,22 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private final DataLinkURLBuilder dataLinkURLBuilder;
     private final Iterator<String> datasetIDIterator;
     private final DataPacker dataPacker;
-    private final String requestID;
 
 
     DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
-                     final DataPacker dataPacker, final String requestID) {
+                     final DataPacker dataPacker) {
         this.dataLinkURLBuilder = dataLinkURLBuilder;
         this.datasetIDIterator = datasetIDIterator;
         this.dataPacker = dataPacker;
-        this.requestID = requestID;
     }
 
     @Override
     public boolean hasNext() {
         if (currentDeliverableInfoStack.isEmpty()) {
             if (datasetIDIterator.hasNext()) {
+                final Uid nextUID = new Uid(datasetIDIterator.next());
                 final DeliverableInfo currentTopLevelDeliverableInfo =
-                        dataPacker.expand(new Uid(datasetIDIterator.next()), false);
+                        dataPacker.expand(nextUID, false);
                 visitSubDeliverables(currentTopLevelDeliverableInfo);
                 return !currentDeliverableInfoStack.isEmpty();
             } else {
@@ -125,25 +123,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
         }
     }
 
-    private boolean isMOUS(final DeliverableInfo deliverableInfo) {
-        return deliverableInfo.getType() == Deliverable.MOUS;
-    }
-
     private void visitSubDeliverables(final DeliverableInfo deliverableInfo) {
         if (deliverableInfo != null) {
-            if (!isMOUS(deliverableInfo)) {
-                for (final DeliverableInfo nextDeliverableInfo : deliverableInfo.getSubDeliverables()) {
-                    visitSubDeliverables(nextDeliverableInfo);
-                }
+            final Set<DeliverableInfo> subDeliverables = deliverableInfo.getSubDeliverables();
+            if (deliverableInfo.getType().isTarfile() || subDeliverables.isEmpty()) {
+                currentDeliverableInfoStack.add(deliverableInfo);
             } else {
-                // MOUS sub-deliverables should be TAR Files.  Add them, and their children (leaf files).
-                for (final DeliverableInfo mousChildFile : deliverableInfo.getSubDeliverables()) {
-                    if (mousChildFile != null) {
-                        currentDeliverableInfoStack.add(mousChildFile);
-                        final Stream<DeliverableInfo> filterStream =
-                                mousChildFile.getSubDeliverables().stream().filter(Objects::nonNull);
-                        currentDeliverableInfoStack.addAll(filterStream.collect(Collectors.toList()));
-                    }
+                for (final DeliverableInfo nextDeliverableInfo : subDeliverables) {
+                    visitSubDeliverables(nextDeliverableInfo);
                 }
             }
         }
@@ -163,7 +150,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
         final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(),
                                                determineTerm(deliverableInfo.getType()));
         try {
-            dataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo, requestID));
+            dataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo));
         } catch (MalformedURLException e) {
             // If it's invalid, then just don't set it.
         }

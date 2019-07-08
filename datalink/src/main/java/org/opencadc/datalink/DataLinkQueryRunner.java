@@ -107,9 +107,6 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
     private static final String NGAS_TIMEOUT_SECONDS_PROPERTY_NAME = "ngasTimeoutSeconds";
     private static final String ALMA_DB_JNDI_NAME_KEY = "almaJDBCName";
     private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/datalink";
-
-    private static final String ANONYMOUS_USER = "anonymous";
-    private static final String REQUEST_ID_PARAMETER = "REQUESTID";
     private static final String PARAMETER_KEY = "ID";
 
     private DataPacker dataPacker;
@@ -140,12 +137,12 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
         final List<Parameter> jobParameterList = job.getParameterList();
         return new DataLinkIterator(createDataLinkURLBuilder(),
                                     ParameterUtil.findParameterValues(PARAMETER_KEY, jobParameterList).iterator(),
-                                    dataPacker,
-                                    ParameterUtil.findParameterValue(REQUEST_ID_PARAMETER, jobParameterList));
+                                    dataPacker
+        );
     }
 
     DataLinkURLBuilder createDataLinkURLBuilder() throws MalformedURLException {
-        return new DataLinkURLBuilder(ANONYMOUS_USER);
+        return new DataLinkURLBuilder();
     }
 
     DataPacker createDataPacker() {
