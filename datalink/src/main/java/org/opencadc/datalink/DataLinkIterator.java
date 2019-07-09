@@ -69,7 +69,6 @@
 
 package org.opencadc.datalink;
 
-import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.DeliverableInfo;
 import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
@@ -128,10 +127,10 @@ public class DataLinkIterator implements Iterator<DataLink> {
             final Set<DeliverableInfo> subDeliverables = deliverableInfo.getSubDeliverables();
             if (deliverableInfo.getType().isTarfile() || subDeliverables.isEmpty()) {
                 currentDeliverableInfoStack.add(deliverableInfo);
-            } else {
-                for (final DeliverableInfo nextDeliverableInfo : subDeliverables) {
-                    visitSubDeliverables(nextDeliverableInfo);
-                }
+            }
+
+            for (final DeliverableInfo nextDeliverableInfo : subDeliverables) {
+                visitSubDeliverables(nextDeliverableInfo);
             }
         }
     }
@@ -146,9 +145,9 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return createDataLink(Objects.requireNonNull(currentDeliverableInfoStack.poll()));
     }
 
-    private DataLink createDataLink(final DeliverableInfo deliverableInfo) {
+    DataLink createDataLink(final DeliverableInfo deliverableInfo) {
         final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(),
-                                               determineTerm(deliverableInfo.getType()));
+                                               determineTerm(deliverableInfo));
         try {
             dataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo));
         } catch (MalformedURLException e) {
@@ -170,11 +169,11 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     private String determineContentType(final DeliverableInfo deliverableInfo) {
-        final String displayFileName = deliverableInfo.getDisplayName();
+        final String identifier = deliverableInfo.getIdentifier();
         final String contentType;
 
-        if (StringUtil.hasText(displayFileName)) {
-            final String guessedContentType = URLConnection.guessContentTypeFromName(deliverableInfo.getDisplayName());
+        if (StringUtil.hasText(identifier)) {
+            final String guessedContentType = URLConnection.guessContentTypeFromName(identifier);
             contentType = StringUtil.hasText(guessedContentType) ? guessedContentType : DEFAULT_UNKNOWN_CONTENT_TYPE;
         } else {
             contentType = DEFAULT_UNKNOWN_CONTENT_TYPE;
@@ -183,16 +182,23 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return contentType;
     }
 
-    private DataLink.Term determineTerm(final Deliverable deliverableType) {
+    private DataLink.Term determineTerm(final DeliverableInfo deliverableInfo) {
         final DataLink.Term dataLinkTerm;
-        if (deliverableType.isTarfile()) {
+
+        if (isPackageFile(deliverableInfo)) {
             dataLinkTerm = DataLink.Term.PKG;
-        } else if (deliverableType.isAuxiliary()) {
+        } else if (deliverableInfo.getType().isAuxiliary()) {
             dataLinkTerm = DataLink.Term.AUXILIARY;
         } else {
             dataLinkTerm = DataLink.Term.THIS;
         }
 
         return dataLinkTerm;
+    }
+
+    private boolean isPackageFile(final DeliverableInfo deliverableInfo) {
+        final String identifier = deliverableInfo.getIdentifier();
+        return deliverableInfo.getType().isTarfile()
+                || (StringUtil.hasLength(identifier) && identifier.trim().endsWith(".tar"));
     }
 }

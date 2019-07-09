@@ -101,7 +101,7 @@ public class DataLinkURLBuilder {
     public String createDownloadURL(final DeliverableInfo deliverableInfo) {
         return String.join("/", new String[] {
                 sanitizePath(downloadURLPrefix.toExternalForm()),
-                sanitizePath(deliverableInfo.getDisplayName())
+                sanitizePath(deliverableInfo.getIdentifier())
         });
     }
 

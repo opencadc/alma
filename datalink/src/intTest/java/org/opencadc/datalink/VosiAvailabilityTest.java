@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2011.                            (c) 2011.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -63,6 +62,7 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
+ *  $Revision: 5 $
  *
  ************************************************************************
  */
@@ -70,53 +70,22 @@
 package org.opencadc.datalink;
 
 
-import alma.asdm.domain.DeliverableInfo;
+import ca.nrc.cadc.util.Log4jInit;
+import ca.nrc.cadc.vosi.AvailabilityTest;
 
-import ca.nrc.cadc.util.PropertiesReader;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.Assert;
-
-import static org.mockito.Mockito.*;
+import org.apache.log4j.Level;
 
 
-public class DataLinkURLBuilderTest {
+/**
+ * @author pdowler
+ */
+public class VosiAvailabilityTest extends AvailabilityTest {
 
-    @Test
-    public void createDownloadURL() throws Exception {
-        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
-
-        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder();
-
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C71_C72_C73.tmp");
-
-        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo);
-
-        Assert.assertEquals("Wrong URL.",
-                            "https://myhost.com/mydownloads/uid___C71_C72_C73.tmp",
-                            downloadURL);
-
-        verify(mockDeliverableInfo, times(1)).getIdentifier();
+    static {
+        Log4jInit.setLevel("ca.nrc.cadc.vosi", Level.INFO);
     }
 
-    @Test
-    @Ignore("Ignore until we know if getIdentifier() is necessary.")
-    public void createDownloadURLNullDisplayName() throws Exception {
-        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
-
-        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder();
-
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C81_C82_C83.tmp");
-
-        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo);
-
-        Assert.assertEquals("Wrong URL.",
-                            "https://myhost.com/mydownloads/uid___C81_C82_C83.tmp",
-                            downloadURL);
-
-        verify(mockDeliverableInfo, times(1)).getIdentifier();
+    public VosiAvailabilityTest() {
+        super(TestUtil.DATALINK_SERVICE_ID);
     }
 }

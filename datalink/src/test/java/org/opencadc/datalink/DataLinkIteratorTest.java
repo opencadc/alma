@@ -155,4 +155,38 @@ public class DataLinkIteratorTest {
         verify(mockDataPacker, times(1)).expand(new Uid(deliverableInfoMOUS1ID), false);
         verify(mockDataPacker, times(1)).expand(new Uid(deliverableInfoMOUS2ID), false);
     }
+
+    @Test
+    public void createDataLink() throws Exception {
+        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
+
+        final DataLinkIterator testSubject = new DataLinkIterator(new DataLinkURLBuilder(), null, null);
+
+        final DeliverableInfo deliverableInfoOne = new DeliverableInfo("uid___C7_C8_C9.tar",
+                                                                       Deliverable.PIPELINE_PRODUCT);
+        final DataLink datalinkOne = testSubject.createDataLink(deliverableInfoOne);
+
+        Assert.assertEquals("Wrong semantics.", DataLink.Term.PKG, datalinkOne.getSemantics());
+
+
+        final DeliverableInfo deliverableInfoTwo = new DeliverableInfo("uid__C8_C9_C100.aux.tar",
+                                                                       Deliverable.PIPELINE_AUXILIARY_TARFILE);
+        final DataLink datalinkTwo = testSubject.createDataLink(deliverableInfoTwo);
+
+        Assert.assertEquals("Wrong semantics.", DataLink.Term.PKG, datalinkTwo.getSemantics());
+
+
+        final DeliverableInfo deliverableInfoThree = new DeliverableInfo("README.aux.txt",
+                                                                       Deliverable.PIPELINE_AUXILIARY_README);
+        final DataLink datalinkThree = testSubject.createDataLink(deliverableInfoThree);
+
+        Assert.assertEquals("Wrong semantics.", DataLink.Term.AUXILIARY, datalinkThree.getSemantics());
+
+
+        final DeliverableInfo deliverableInfoFour = new DeliverableInfo("uid__C5_C6.science.fits",
+                                                                         Deliverable.PIPELINE_PRODUCT);
+        final DataLink datalinkFour = testSubject.createDataLink(deliverableInfoFour);
+
+        Assert.assertEquals("Wrong semantics.", DataLink.Term.THIS, datalinkFour.getSemantics());
+    }
 }
