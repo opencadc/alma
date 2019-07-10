@@ -73,19 +73,19 @@ import ca.nrc.cadc.util.PropertiesReader;
 import ca.nrc.cadc.util.StringUtil;
 
 
-public class DataLinkProperties extends PropertiesReader {
+class DataLinkProperties extends PropertiesReader {
 
-    static final String DEFAULT_PROPERTIES_FILE_NAME = "org.opencadc.datalink.properties";
+    private static final String DEFAULT_PROPERTIES_FILE_NAME = "org.opencadc.datalink.properties";
 
-    public DataLinkProperties() {
+    DataLinkProperties() {
         this(DEFAULT_PROPERTIES_FILE_NAME);
     }
 
-    public DataLinkProperties(final String filename) {
+    DataLinkProperties(final String filename) {
         super(filename);
     }
 
-    public String getFirstPropertyValue(final String key, final String defaultValue) {
+    String getFirstPropertyValue(final String key, final String defaultValue) {
         final String s = super.getFirstPropertyValue(key);
         return StringUtil.hasText(s) ? s : defaultValue;
     }

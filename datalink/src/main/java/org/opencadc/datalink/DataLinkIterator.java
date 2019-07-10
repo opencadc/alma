@@ -69,18 +69,22 @@
 
 package org.opencadc.datalink;
 
+import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.DeliverableInfo;
 import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ca.nrc.cadc.util.StringUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Objects;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
@@ -90,9 +94,11 @@ import java.util.Set;
  */
 public class DataLinkIterator implements Iterator<DataLink> {
 
+    private static final Logger LOGGER = LogManager.getLogger(DataLinkIterator.class);
+
     private static final String DEFAULT_UNKNOWN_CONTENT_TYPE = "application/octet-stream";
 
-    private final Queue<DeliverableInfo> currentDeliverableInfoStack = new LinkedList<>();
+    private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
     private final Iterator<String> datasetIDIterator;
     private final DataPacker dataPacker;
@@ -107,13 +113,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
     @Override
     public boolean hasNext() {
-        if (currentDeliverableInfoStack.isEmpty()) {
+        if (dataLinkQueue.isEmpty()) {
             if (datasetIDIterator.hasNext()) {
                 final Uid nextUID = new Uid(datasetIDIterator.next());
-                final DeliverableInfo currentTopLevelDeliverableInfo =
-                        dataPacker.expand(nextUID, false);
+                final DeliverableInfo currentTopLevelDeliverableInfo = dataPacker.expand(nextUID, false);
+
                 visitSubDeliverables(currentTopLevelDeliverableInfo);
-                return !currentDeliverableInfoStack.isEmpty();
+
+                return !dataLinkQueue.isEmpty();
             } else {
                 return false;
             }
@@ -125,13 +132,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private void visitSubDeliverables(final DeliverableInfo deliverableInfo) {
         if (deliverableInfo != null) {
             final Set<DeliverableInfo> subDeliverables = deliverableInfo.getSubDeliverables();
+            final Deliverable deliverableInfoType = deliverableInfo.getType();
 
-            if (deliverableInfo.getType().isTarfile() || subDeliverables.isEmpty()) {
-                currentDeliverableInfoStack.add(deliverableInfo);
-            }
-
-            for (final DeliverableInfo nextDeliverableInfo : subDeliverables) {
-                visitSubDeliverables(nextDeliverableInfo);
+            if (deliverableInfoType.isTarfile() || isRawOrUnknown(deliverableInfoType)) {
+                dataLinkQueue.addAll(createDataLinks(deliverableInfo));
+            } else {
+                for (final DeliverableInfo nextDeliverableInfo : subDeliverables) {
+                    visitSubDeliverables(nextDeliverableInfo);
+                }
             }
         }
     }
@@ -143,11 +151,53 @@ public class DataLinkIterator implements Iterator<DataLink> {
      */
     @Override
     public DataLink next() {
-        return createDataLink(Objects.requireNonNull(currentDeliverableInfoStack.poll()));
+        return dataLinkQueue.poll();
+    }
+
+    /**
+     * Create all of the necessary DataLink entries for the given source DeliverableInfo.  Some files will produce
+     * multiple DataLink entries.
+     *
+     * @param deliverableInfo The DeliverableInfo to create from.
+     * @return Collection of DataLink entries.  Never null.
+     */
+    List<DataLink> createDataLinks(final DeliverableInfo deliverableInfo) {
+        final List<DataLink> dataLinkCollection = new ArrayList<>();
+        final Deliverable deliverableType = deliverableInfo.getType();
+
+        dataLinkCollection.add(createDataLink(deliverableInfo));
+
+        switch (deliverableType) {
+            case PIPELINE_AUXILIARY_TARFILE:
+                dataLinkCollection.add(createRecursiveDataLink(deliverableInfo, DataLink.Term.AUXILIARY));
+                break;
+            case PIPELINE_PRODUCT_TARFILE:
+                dataLinkCollection.add(createRecursiveDataLink(deliverableInfo, DataLink.Term.THIS));
+                break;
+            case PIPELINE_PRODUCT:
+                //if (deliverableInfo.getIdentifier().endsWith(".fits")) {
+                //    dataLinkCollection.add(createCutoutDataLink(deliverableInfo));
+                //} else {
+                //    LOGGER.debug(String.format("No cutout available for %s.", deliverableInfo.getIdentifier()))
+                //}
+                break;
+            default:
+                LOGGER.debug(String.format("Nothing to add for %s.", deliverableInfo.getIdentifier()));
+                break;
+        }
+
+        return dataLinkCollection;
     }
 
     DataLink createDataLink(final DeliverableInfo deliverableInfo) {
-        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), determineTerm(deliverableInfo));
+        final List<DataLink.Term> dataLinkTerms = determineTerms(deliverableInfo);
+
+        // There should always be at least one returned, so it should be safe to pull it off.
+        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), dataLinkTerms.get(0));
+
+        // Already got it.
+        dataLinkTerms.remove(0);
+        dataLinkTerms.forEach(dataLink::addSemantics);
 
         //
         // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This makes
@@ -160,7 +210,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLink.errorMessage = String.format("NotFoundFault: %s", deliverableInfo.getIdentifier());
         } else {
             try {
-                dataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo));
+                dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(deliverableInfo);
             } catch (MalformedURLException e) {
                 // If it's invalid, then just don't set it.
             }
@@ -175,17 +225,36 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLink;
     }
 
+    DataLink createRecursiveDataLink(final DeliverableInfo deliverableInfo, final DataLink.Term dataLinkTerm) {
+        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), DataLink.Term.DATALINK);
+
+        dataLink.addSemantics(dataLinkTerm);
+
+        try {
+            dataLink.accessURL = createRecursiveURL(deliverableInfo);
+        } catch (MalformedURLException e) {
+            // If it's invalid, then just don't set it.
+        }
+
+        return dataLink;
+    }
+
+    URL createRecursiveURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
+        return dataLinkURLBuilder.createRecursiveDataLinkURL(deliverableInfo);
+    }
+
     private Long determineSizeInBytes(final DeliverableInfo deliverableInfo) {
         final long configuredSizeInBytes = deliverableInfo.getSizeInBytes();
         return configuredSizeInBytes >= 0 ? configuredSizeInBytes : null;
     }
 
     private String determineContentType(final DeliverableInfo deliverableInfo) {
-        final String identifier = deliverableInfo.getIdentifier();
+        final String fileCheckInput = deliverableInfo.getType() == Deliverable.ASDM ?
+                deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier();
         final String contentType;
 
-        if (StringUtil.hasText(identifier)) {
-            final String guessedContentType = URLConnection.guessContentTypeFromName(identifier);
+        if (StringUtil.hasText(fileCheckInput)) {
+            final String guessedContentType = URLConnection.guessContentTypeFromName(fileCheckInput);
             contentType = StringUtil.hasText(guessedContentType) ? guessedContentType : DEFAULT_UNKNOWN_CONTENT_TYPE;
         } else {
             contentType = DEFAULT_UNKNOWN_CONTENT_TYPE;
@@ -194,18 +263,26 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return contentType;
     }
 
-    private DataLink.Term determineTerm(final DeliverableInfo deliverableInfo) {
-        final DataLink.Term dataLinkTerm;
+    private List<DataLink.Term> determineTerms(final DeliverableInfo deliverableInfo) {
+        final List<DataLink.Term> dataLinkTermCollection = new ArrayList<>();
 
         if (isPackageFile(deliverableInfo)) {
-            dataLinkTerm = DataLink.Term.PKG;
-        } else if (deliverableInfo.getType().isAuxiliary()) {
-            dataLinkTerm = DataLink.Term.AUXILIARY;
-        } else {
-            dataLinkTerm = DataLink.Term.THIS;
+            dataLinkTermCollection.add(DataLink.Term.PKG);
         }
 
-        return dataLinkTerm;
+        if (deliverableInfo.getType().isAuxiliary()) {
+            dataLinkTermCollection.add(DataLink.Term.AUXILIARY);
+        } else if (deliverableInfo.getType() == Deliverable.ASDM) {
+            dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
+        } else {
+            dataLinkTermCollection.add(DataLink.Term.THIS);
+        }
+
+        return dataLinkTermCollection;
+    }
+
+    private boolean isRawOrUnknown(final Deliverable type) {
+        return (type == Deliverable.ASDM) || (type == Deliverable.DIRECT_ACCESS_ASDM);
     }
 
     private boolean isPackageFile(final DeliverableInfo deliverableInfo) {

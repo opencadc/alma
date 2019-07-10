@@ -80,7 +80,7 @@ configurations {
 dependencies {
     compile 'log4j:log4j:1.2.17'
     compile 'alma.archive:datapacker:2019.06.01'
-    compile 'org.opencadc:cadc-datalink-server:[1.0,)'
+    compile 'org.opencadc:cadc-datalink-server:[1.0.1,)'
 
     runtime 'com.oracle:ojdbc6:11.2.0.3'
 
