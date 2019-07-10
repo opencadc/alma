@@ -23,7 +23,7 @@ services:
     environment: 
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
   obscore.cadc.dao.nrc.ca:
-    image: opencadc/alma-tap:1.1.8
+    image: opencadc/alma-tap:1.1.9
     depends_on:
       - "obscoredb"
     ports:
@@ -49,6 +49,14 @@ services:
       - "25555:5555"
     environment: 
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
+  datalink.cadc.dao.nrc.ca:
+    image: opencadc/alma-datalink:1.0.0
+    networks:
+      - "alma"
+    env_file:
+      - "./datalink/docker/config/alma-datalink.properties"
+    ports:
+      - "45555:5555"
 
 networks:
   alma:

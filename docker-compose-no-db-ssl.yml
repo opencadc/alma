@@ -4,6 +4,7 @@ services:
     image: nginx:alpine
     ports:
       - '443:443'
+      - '80:80'
     networks:
       - 'alma'
     volumes:
@@ -13,6 +14,7 @@ services:
       - 'obscore.cadc.dao.nrc.ca'
       - 'sia.cadc.dao.nrc.ca'
       - 'reg.cadc.dao.nrc.ca'
+      - 'datalink.cadc.dao.nrc.ca'
   sia.cadc.dao.nrc.ca:
     image: opencadc/alma-sia:1.0.1
     networks:
@@ -26,7 +28,7 @@ services:
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
   obscore.cadc.dao.nrc.ca:
-    image: opencadc/alma-tap:1.1.8
+    image: opencadc/alma-tap:1.1.9
     ports:
       - '35555:5555'
     networks:
@@ -46,6 +48,16 @@ services:
       - 'server_certs:/usr/local/share/ca-certificates'
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
+  datalink.cadc.dao.nrc.ca:
+    image: opencadc/alma-datalink:1.0.0
+    networks:
+      - "alma"
+    env_file:
+      - "./datalink/docker/config/alma-datalink.properties"
+    ports:
+      - "45555:5555"
+    volumes:
+      - 'server_certs:/usr/local/share/ca-certificates'
 
 networks:
   alma:

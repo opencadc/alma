@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context>
+    <WatchedResource>WEB-INF/web.xml</WatchedResource>
+
+    <Resource name="jdbc/datalink"
+              auth="Container"
+              type="javax.sql.DataSource"
+              factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+              minEvictableIdleTimeMillis="30000"
+              maxActive="1" maxIdle="1" maxWait="20000"
+              username="${alma.datalink.username}" password="${alma.datalink.password}"
+              driverClassName="${alma.datalink.driverClassName}"
+              url="${alma.datalink.url}"
+              removeAbandoned="false"
+              removeAbandonedTimeout="600"
+              initSQL="ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS.FF3&quot;Z&quot;' NLS_DATE_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS&quot;Z&quot;'"
+              logAbandoned="true"
+              testOnBorrow="true"
+              validationQuery="SELECT 1 FROM DUAL"
+    />
+
+</Context>

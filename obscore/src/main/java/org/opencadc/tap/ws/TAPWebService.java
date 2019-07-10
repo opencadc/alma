@@ -135,6 +135,17 @@ public class TAPWebService implements AvailabilityPlugin {
         return new AvailabilityStatus(isGood, null, null, null, note);
     }
 
+    /**
+     * A very lightweight method that can be called every few seconds to test if a service is (probably) working.
+     * This method is to be implemented by all services.
+     *
+     * @return true if successful, false otherwise
+     */
+    @Override
+    public boolean heartbeat() {
+        return true;
+    }
+
     private void check(final String query) throws CheckException {
         new CheckDataSource(TAPDS_NAME, query).check();
     }
