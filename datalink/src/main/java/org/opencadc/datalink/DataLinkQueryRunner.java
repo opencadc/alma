@@ -135,10 +135,13 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
 
     DataLinkIterator createDataLinkIterator() throws MalformedURLException {
         final List<Parameter> jobParameterList = job.getParameterList();
-        return new DataLinkIterator(createDataLinkURLBuilder(),
-                                    ParameterUtil.findParameterValues(PARAMETER_KEY, jobParameterList).iterator(),
-                                    dataPacker
-        );
+        final List<String> dataSetIDList = ParameterUtil.findParameterValues(PARAMETER_KEY, jobParameterList);
+
+        if (dataSetIDList.isEmpty()) {
+            throw new IllegalArgumentException("No dataset IDs provided.  Use ID=uid://XXX");
+        } else {
+            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), dataPacker);
+        }
     }
 
     DataLinkURLBuilder createDataLinkURLBuilder() throws MalformedURLException {

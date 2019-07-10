@@ -125,6 +125,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private void visitSubDeliverables(final DeliverableInfo deliverableInfo) {
         if (deliverableInfo != null) {
             final Set<DeliverableInfo> subDeliverables = deliverableInfo.getSubDeliverables();
+
             if (deliverableInfo.getType().isTarfile() || subDeliverables.isEmpty()) {
                 currentDeliverableInfoStack.add(deliverableInfo);
             }
@@ -146,19 +147,30 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     DataLink createDataLink(final DeliverableInfo deliverableInfo) {
-        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(),
-                                               determineTerm(deliverableInfo));
-        try {
-            dataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo));
-        } catch (MalformedURLException e) {
-            // If it's invalid, then just don't set it.
+        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), determineTerm(deliverableInfo));
+
+        //
+        // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This makes
+        // TODO: that assumption.  If a UID that does not exist is passed in, the DataPacker will still return a
+        // TODO: result, so we'll hide it here if the size is less than zero bytes.
+        //
+        // jenkinsd 2019.07.09
+        //
+        if (deliverableInfo.getSizeInBytes() < 0) {
+            dataLink.errorMessage = String.format("NotFoundFault: %s", deliverableInfo.getIdentifier());
+        } else {
+            try {
+                dataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo));
+            } catch (MalformedURLException e) {
+                // If it's invalid, then just don't set it.
+            }
+
+            dataLink.contentLength = determineSizeInBytes(deliverableInfo);
+            dataLink.contentType = determineContentType(deliverableInfo);
+
+            // TODO: How to determine this?
+            dataLink.readable = true;
         }
-
-        dataLink.contentLength = determineSizeInBytes(deliverableInfo);
-        dataLink.contentType = determineContentType(deliverableInfo);
-
-        // TODO: How to determine this?
-        dataLink.readable = true;
 
         return dataLink;
     }

@@ -98,6 +98,11 @@
         <url-pattern>/sync</url-pattern>
     </servlet-mapping>
 
+    <servlet-mapping>
+        <servlet-name>DataLinkServlet</servlet-name>
+        <url-pattern>/sync/*</url-pattern>
+    </servlet-mapping>
+
 <!--    <servlet-mapping>-->
 <!--        <servlet-name>DataLinkServlet</servlet-name>-->
 <!--        <url-pattern>/auth-datalink/*</url-pattern>-->

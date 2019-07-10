@@ -119,7 +119,7 @@ public class LinksTest {
 
     //private static final String QUERY_PUB1 = "ivo://cadc.nrc.ca/IRIS?f212h000/IRAS-25um";
 
-    private static final String INVALID_URI = "uid://bar";
+    private static final String INVALID_URI = "uid://foo/bar";
     private static final String NOT_FOUND_URI = "uid://C0/C1/C2";
 
     private static URL anonURL;
@@ -249,7 +249,7 @@ public class LinksTest {
             int sdfCol = TestUtil.getFieldIndexes(getFields)[2];
             TestUtil.compareTableData(getTableData, postTableData, urlCol, sdfCol);
 
-            TestUtil.checkContent(gvtab, "https");
+            TestUtil.checkContent(gvtab);
 
             LOGGER.debug("testSingleUri passed");
         } catch (Exception unexpected) {
@@ -335,8 +335,9 @@ public class LinksTest {
             }
             Assert.assertNotNull("queryStatus", queryStatus);
             Assert.assertEquals("ERROR", queryStatus.getValue());
-            Assert.assertNotNull(queryStatus.content);
-            Assert.assertTrue(queryStatus.content.startsWith("UsageFault"));
+            Assert.assertEquals("Wrong content",
+                                "IllegalArgumentException: No dataset IDs provided.  Use ID=uid://XXX",
+                                queryStatus.content);
         } catch (Exception unexpected) {
             LOGGER.error("unexpected exception", unexpected);
             throw unexpected;
@@ -348,7 +349,7 @@ public class LinksTest {
         LOGGER.debug("testUsageFault_badID");
         try {
             // GET the query.
-            VOTableDocument getVotable = TestUtil.get(anonURL, new String[] {"ID=" + INVALID_URI}, 200);
+            VOTableDocument getVotable = TestUtil.get(anonURL, new String[] {"ID=" + INVALID_URI}, 400);
             VOTableResource gvr = getVotable.getResourceByType("results");
             VOTableInfo queryStatus = null;
             for (VOTableInfo info : gvr.getInfos()) {
@@ -357,32 +358,12 @@ public class LinksTest {
                 }
             }
             Assert.assertNotNull("queryStatus", queryStatus);
-            Assert.assertEquals("OK", queryStatus.getValue());
-
-
-            VOTableTable gvtab = gvr.getTable();
-
-            // Check the VOTable FIELD's.
-            List<VOTableField> getFields = gvtab.getFields();
-            Assert.assertNotNull("VOTable FIELD's is null", getFields);
-            Assert.assertTrue("VOTable FIELD's should not be empty", getFields.size() > 0);
-
-            // Get the TABLEDATA.
-            TableData getTableData = gvtab.getTableData();
-            Assert.assertNotNull("VOTable TableData should not be null", getTableData);
-
-            Iterator<List<Object>> rows = getTableData.iterator();
-            Assert.assertTrue(rows.hasNext()); // one row
-            List<Object> row1 = rows.next();
-            Assert.assertFalse(rows.hasNext()); // exactly one row
-
-            Integer[] index = TestUtil.getFieldIndexes(getFields);
-            String id = (String) row1.get(index[0]);
-            String emsg = (String) row1.get(index[7]);
-            Assert.assertEquals(INVALID_URI, id);
-            Assert.assertTrue(emsg.startsWith("UsageFault"));
-            Assert.assertNull(row1.get(index[1])); // access_url
-            Assert.assertNull(row1.get(index[2])); // service_def
+            Assert.assertEquals("ERROR", queryStatus.getValue());
+            Assert.assertEquals("Wrong content",
+                                String.format("IllegalArgumentException: uid \"%s\" does not conform to expected " +
+                                        "pattern uid://\\w[0-9a-fA-F]+/\\w[0-9a-fA-F]+/\\w[0-9a-fA-F]+ nor " +
+                                        "uid___\\w[0-9a-fA-F]+_\\w[0-9a-fA-F]+_\\w[0-9a-fA-F]+?", INVALID_URI),
+                                queryStatus.content);
         } catch (Exception unexpected) {
             LOGGER.error("unexpected exception", unexpected);
             throw unexpected;

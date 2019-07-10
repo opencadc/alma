@@ -94,7 +94,7 @@ import org.junit.Assert;
 /**
  * @author pdowler
  */
-public class TestUtil {
+class TestUtil {
 
     private static final Logger log = Logger.getLogger(TestUtil.class);
 
@@ -106,7 +106,7 @@ public class TestUtil {
      * @param getFields  GET FIELD's.
      * @param postFields POST FIELD's.
      */
-    public static void compareFields(List<VOTableField> getFields, List<VOTableField> postFields) {
+    static void compareFields(List<VOTableField> getFields, List<VOTableField> postFields) {
         Assert.assertEquals("GET and POST have different number of FIELD's", getFields.size(), postFields.size());
         Integer[] getIndexes = getFieldIndexes(getFields);
         Integer[] postIndexes = getFieldIndexes(postFields);
@@ -122,7 +122,7 @@ public class TestUtil {
      * @param fields List of VOTableField
      * @return Integer array of indexes to values in the VOTableField.
      */
-    public static Integer[] getFieldIndexes(List<VOTableField> fields) {
+    static Integer[] getFieldIndexes(List<VOTableField> fields) {
         Assert.assertNotNull("VOTable FIELD: should not be null", fields);
         Assert.assertEquals("GET VOTable FIELD: should have 9", fields.size(), 9);
         Integer[] indexes = new Integer[] {null, null, null, null, null, null, null, null, null};
@@ -172,7 +172,7 @@ public class TestUtil {
         return indexes;
     }
 
-    public static void checkContent(VOTableTable tab, String expectedProto) throws Exception {
+    static void checkContent(VOTableTable tab) throws Exception {
         Integer[] indices = TestUtil.getFieldIndexes(tab.getFields());
         int uriCol = indices[0];
         int urlCol = indices[1];
@@ -204,7 +204,7 @@ public class TestUtil {
 
             if (urlO != null) {
                 URL url = new URL((String) urlO);
-                Assert.assertEquals("proto", expectedProto, url.getProtocol());
+                Assert.assertEquals("proto", "https", url.getProtocol());
             }
         }
     }
@@ -214,8 +214,10 @@ public class TestUtil {
      *
      * @param getTableData
      * @param postTableData
+     * @param urlCol
+     * @param sdfCol
      */
-    public static void compareTableData(TableData getTableData, TableData postTableData, int urlCol, int sdfCol)
+    static void compareTableData(TableData getTableData, TableData postTableData, int urlCol, int sdfCol)
             throws Exception {
         Iterator<List<Object>> getIterator = getTableData.iterator();
         Iterator<List<Object>> postIterator = postTableData.iterator();
@@ -278,32 +280,56 @@ public class TestUtil {
      * @param parameters Parameters.
      * @return VOtable
      *
-     * @throws UnsupportedEncodingException
-     * @throws MalformedURLException
+     * @throws IOException
      */
-    public static VOTableDocument get(URL endpoint, String[] parameters)
-            throws UnsupportedEncodingException, MalformedURLException, IOException {
+    static VOTableDocument get(URL endpoint, String[] parameters) throws IOException {
         return get(endpoint, parameters, 200);
     }
 
-    public static VOTableDocument get(URL endpoint, String[] parameters, int expectedCode)
-            throws UnsupportedEncodingException, MalformedURLException, IOException {
+    static VOTableDocument get(URL endpoint, String[] parameters, int expectedCode) throws IOException {
         URL url = getQueryURL(endpoint, parameters);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         log.debug("GET " + url);
         HttpDownload get = new HttpDownload(url, out);
+        get.setFollowRedirects(false);
         get.run();
-        log.debug("throwable", get.getThrowable());
-        Assert.assertEquals("HTTP status code", expectedCode, get.getResponseCode());
-        if (expectedCode < 400 && get.getThrowable() != null) {
-            Assert.fail("GET of " + url.toString() + " failed because " + get.getThrowable().getMessage());
+
+        final String str;
+
+        if (get.getRedirectURL() != null) {
+            str = TestUtil.followGetRedirect(get.getRedirectURL());
+        } else {
+            log.debug("throwable", get.getThrowable());
+            Assert.assertEquals("HTTP status code", expectedCode, get.getResponseCode());
+            if (expectedCode < 400 && get.getThrowable() != null) {
+                Assert.fail("GET of " + url.toString() + " failed because " + get.getThrowable().getMessage());
+            }
+            str = out.toString();
         }
-        String str = out.toString();
-        log.debug("GET response: \n" + str);
+
+        return TestUtil.readVOTable(str);
+    }
+
+    static VOTableDocument readVOTable(final String input) throws IOException {
+        log.debug("GET response: \n" + input);
         VOTableReader reader = new VOTableReader();
-        VOTableDocument votable = reader.read(str);
-        Assert.assertNotNull("GET VOTable should not be null", votable);
+        VOTableDocument votable = reader.read(input);
+        Assert.assertNotNull("VOTable should not be null", votable);
         return votable;
+    }
+
+    static String followGetRedirect(final URL endpoint) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        log.debug("GET " + endpoint);
+        final HttpDownload get = new HttpDownload(endpoint, out);
+        get.setFollowRedirects(false);
+        get.run();
+
+        if (get.getRedirectURL() != null) {
+            return TestUtil.followGetRedirect(get.getRedirectURL());
+        } else {
+            return out.toString();
+        }
     }
 
 
@@ -312,19 +338,18 @@ public class TestUtil {
      *
      * @param endpoint
      * @param parameters POST parameters.
+     *
      * @return VOTable.
      *
-     * @throws UnsupportedEncodingException
-     * @throws MalformedURLException
      * @throws IOException
      */
-    public static VOTableDocument post(URL endpoint, Map<String, Object> parameters)
-            throws UnsupportedEncodingException, MalformedURLException, IOException {
-        String response = post(endpoint, parameters, null);
-        VOTableReader reader = new VOTableReader();
-        VOTableDocument votable = reader.read(response);
-        Assert.assertNotNull("VOTable should not be null", votable);
-        return votable;
+    static VOTableDocument post(URL endpoint, Map<String, Object> parameters) throws IOException {
+        final String response = post(endpoint, parameters, null);
+        return TestUtil.readVOTable(response);
+        //VOTableReader reader = new VOTableReader();
+        //VOTableDocument votable = reader.read(response);
+        //Assert.assertNotNull("VOTable should not be null", votable);
+        //return votable;
     }
 
     /**
@@ -340,8 +365,8 @@ public class TestUtil {
      * @throws MalformedURLException
      * @throws IOException
      */
-    public static String post(URL endpoint, Map<String, Object> parameters, String responseFormat)
-            throws UnsupportedEncodingException, MalformedURLException, IOException {
+    static String post(URL endpoint, Map<String, Object> parameters, String responseFormat)
+            throws MalformedURLException, IOException {
         // POST parameters.
         URL url = getQueryURL(endpoint, null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -352,15 +377,23 @@ public class TestUtil {
             parameters.put("RESPONSEFORMAT", responseFormat);
         }
         HttpPost post = new HttpPost(url, parameters, out);
+        post.setFollowRedirects(false);
         post.run();
+
         if (post.getThrowable() != null) {
             Assert.fail("POST of " + url.toString() + " failed because " + post.getThrowable().getMessage());
         }
 
-        String str = out.toString();
-        log.debug("POST response: \n" + str);
-        return str;
+        final URL redirectURL = post.getRedirectURL();
+        final String output;
+        if (redirectURL != null) {
+            output = TestUtil.followGetRedirect(redirectURL);
+        } else {
+            output = out.toString();
+            log.debug("POST response: \n" + output);
+        }
 
+        return output;
     }
 
     /**
@@ -369,11 +402,9 @@ public class TestUtil {
      * @param parameters query parameters.
      * @return query URL
      *
-     * @throws UnsupportedEncodingException
      * @throws MalformedURLException
      */
-    public static URL getQueryURL(URL baseUrl, String[] parameters)
-            throws UnsupportedEncodingException, MalformedURLException {
+    static URL getQueryURL(URL baseUrl, String[] parameters) throws MalformedURLException {
         StringBuilder sb = new StringBuilder();
         if (parameters != null) {
             sb.append("?");
