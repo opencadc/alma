@@ -97,6 +97,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private static final Logger LOGGER = LogManager.getLogger(DataLinkIterator.class);
 
     private static final String DEFAULT_UNKNOWN_CONTENT_TYPE = "application/octet-stream";
+    private static final String VOTABLE_CONTENT_TYPE = "application/x-votable+xml;content=datalink";
 
     private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
@@ -212,7 +213,9 @@ public class DataLinkIterator implements Iterator<DataLink> {
             try {
                 dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(deliverableInfo);
             } catch (MalformedURLException e) {
-                // If it's invalid, then just don't set it.
+                LOGGER.warn("Access URL creation failed.", e);
+                dataLink.errorMessage = String.format("Unable to create access URL for %s.",
+                                                      deliverableInfo.getIdentifier());
             }
 
             dataLink.contentLength = determineSizeInBytes(deliverableInfo);
@@ -233,8 +236,12 @@ public class DataLinkIterator implements Iterator<DataLink> {
         try {
             dataLink.accessURL = createRecursiveURL(deliverableInfo);
         } catch (MalformedURLException e) {
-            // If it's invalid, then just don't set it.
+            LOGGER.warn("Recursive URL creation failed.", e);
+            dataLink.errorMessage = String.format("Unable to create recursive URL for %s.",
+                                                  deliverableInfo.getIdentifier());
         }
+
+        dataLink.contentType = VOTABLE_CONTENT_TYPE;
 
         return dataLink;
     }
@@ -265,14 +272,19 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
     private List<DataLink.Term> determineTerms(final DeliverableInfo deliverableInfo) {
         final List<DataLink.Term> dataLinkTermCollection = new ArrayList<>();
+        final Deliverable deliverableType = deliverableInfo.getType();
 
         if (isPackageFile(deliverableInfo)) {
             dataLinkTermCollection.add(DataLink.Term.PKG);
         }
 
-        if (deliverableInfo.getType().isAuxiliary()) {
+        if (deliverableType.isAuxiliary()) {
             dataLinkTermCollection.add(DataLink.Term.AUXILIARY);
-        } else if (deliverableInfo.getType() == Deliverable.ASDM) {
+        }
+
+        if (deliverableType == Deliverable.PIPELINE_AUXILIARY_CALIBRATION) {
+            dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
+        } else if (deliverableType == Deliverable.ASDM) {
             dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
         } else {
             dataLinkTermCollection.add(DataLink.Term.THIS);
