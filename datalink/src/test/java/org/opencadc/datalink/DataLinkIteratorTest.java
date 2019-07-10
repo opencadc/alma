@@ -74,6 +74,8 @@ import alma.asdm.domain.DeliverableInfo;
 import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -98,10 +100,9 @@ public class DataLinkIteratorTest {
 
         final DeliverableInfo deliverableInfoProject1 = new DeliverableInfo("2016.1.00057.S",
                                                                             Deliverable.PROJECT);
-        final DeliverableInfo deliverableInfoMOUS = new DeliverableInfo(deliverableInfoMOUS1ID,
-                                                                        Deliverable.MOUS);
+        final DeliverableInfo deliverableInfoMOUS = new DeliverableInfo(deliverableInfoMOUS1ID, Deliverable.MOUS);
         final DeliverableInfo deliverableInfoMOUSTAR = new DeliverableInfo("uid___C7_C8_C9.tar",
-                                                                           Deliverable.PIPELINE_PRODUCT);
+                                                                           Deliverable.PIPELINE_PRODUCT_TARFILE);
         deliverableInfoMOUSTAR.setDisplayName("uid___C7_C8_C9.tar");
         deliverableInfoMOUSTAR.setOwner(deliverableInfoMOUS);
 
@@ -115,7 +116,7 @@ public class DataLinkIteratorTest {
         final DeliverableInfo deliverableInfoSubMOUS = new DeliverableInfo(deliverableInfoMOUS2ID,
                                                                            Deliverable.MOUS);
         final DeliverableInfo deliverableInfoSubMOUSAux = new DeliverableInfo("uid___C10_C11_C12.tar",
-                                                                              Deliverable.PIPELINE_AUXILIARY);
+                                                                              Deliverable.PIPELINE_AUXILIARY_TARFILE);
         deliverableInfoSubMOUSAux.setDisplayName("uid___C10_C11_C12.tar");
         deliverableInfoSubMOUSAux.setOwner(deliverableInfoSubMOUS);
 
@@ -136,18 +137,25 @@ public class DataLinkIteratorTest {
 
         final String[] expectedAccessURLs = new String[] {
                 "https://myhost.com/mydownloads/uid___C7_C8_C9.tar",
-                "https://myhost.com/mydownloads/uid___C10_C11_C12.tar"
-        };
+                "https://myhost.com/mydatalink/recurse/uid___C7_C8_C9.tar",
+                "https://myhost.com/mydownloads/uid___C10_C11_C12.tar",
+                "https://myhost.com/mydatalink/recurse/uid___C10_C11_C12.tar",
+                };
 
         final String[] resultAccessURLs = new String[expectedAccessURLs.length];
 
+        final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, uidIterator, mockDataPacker) {
+            @Override
+            URL lookupRecursiveURL(DeliverableInfo deliverableInfo) throws MalformedURLException {
+                return new URL("https://myhost.com/mydatalink/recurse/" + deliverableInfo.getIdentifier());
+            }
+        };
+
         int index = 0;
-        for (final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, uidIterator,
-                                                                       mockDataPacker);
-             testSubject.hasNext(); ) {
+
+        while (testSubject.hasNext()) {
             final DataLink nextDataLink = testSubject.next();
             resultAccessURLs[index++] = nextDataLink.accessURL.toExternalForm();
-            Assert.assertEquals("Wrong content type.", "application/x-tar", nextDataLink.contentType);
         }
 
         Assert.assertArrayEquals("Wrong access URLs.", expectedAccessURLs, resultAccessURLs);
@@ -157,36 +165,54 @@ public class DataLinkIteratorTest {
     }
 
     @Test
-    public void createDataLink() throws Exception {
+    public void createDataLinks() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
         final DataLinkIterator testSubject = new DataLinkIterator(new DataLinkURLBuilder(), null, null);
 
         final DeliverableInfo deliverableInfoOne = new DeliverableInfo("uid___C7_C8_C9.tar",
                                                                        Deliverable.PIPELINE_PRODUCT);
-        final DataLink datalinkOne = testSubject.createDataLink(deliverableInfoOne);
+        final List<DataLink> dataLinksOne = testSubject.createDataLinks(deliverableInfoOne);
+        Assert.assertEquals("Should have one element.", 1, dataLinksOne.size());
+        final DataLink datalinkOne = dataLinksOne.get(0);
 
-        Assert.assertEquals("Wrong semantics.", DataLink.Term.PKG, datalinkOne.getSemantics());
+        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.PKG, DataLink.Term.THIS},
+                                 datalinkOne.getSemantics().toArray());
 
 
         final DeliverableInfo deliverableInfoTwo = new DeliverableInfo("uid__C8_C9_C100.aux.tar",
                                                                        Deliverable.PIPELINE_AUXILIARY_TARFILE);
-        final DataLink datalinkTwo = testSubject.createDataLink(deliverableInfoTwo);
+        final List<DataLink> dataLinksTwo = testSubject.createDataLinks(deliverableInfoTwo);
+        Assert.assertEquals("Should contain two elements.", 2, dataLinksTwo.size());
+        final DataLink datalinkTwo = dataLinksTwo.get(0);
 
-        Assert.assertEquals("Wrong semantics.", DataLink.Term.PKG, datalinkTwo.getSemantics());
+        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.PKG, DataLink.Term.AUXILIARY},
+                                 datalinkTwo.getSemantics().toArray());
+
+        final DataLink datalinkTwoPointOne = testSubject.createDataLinks(deliverableInfoTwo).get(1);
+
+        Assert.assertArrayEquals("Wrong semantics.",
+                                 new DataLink.Term[] {DataLink.Term.DATALINK, DataLink.Term.AUXILIARY},
+                                 datalinkTwoPointOne.getSemantics().toArray());
 
 
         final DeliverableInfo deliverableInfoThree = new DeliverableInfo("README.aux.txt",
-                                                                       Deliverable.PIPELINE_AUXILIARY_README);
-        final DataLink datalinkThree = testSubject.createDataLink(deliverableInfoThree);
+                                                                         Deliverable.PIPELINE_AUXILIARY_README);
+        final List<DataLink> dataLinksThree = testSubject.createDataLinks(deliverableInfoThree);
+        Assert.assertEquals("Should have one element.", 1, dataLinksThree.size());
+        final DataLink datalinkThree = dataLinksThree.get(0);
 
-        Assert.assertEquals("Wrong semantics.", DataLink.Term.AUXILIARY, datalinkThree.getSemantics());
+        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.AUXILIARY},
+                                 datalinkThree.getSemantics().toArray());
 
 
         final DeliverableInfo deliverableInfoFour = new DeliverableInfo("uid__C5_C6.science.fits",
-                                                                         Deliverable.PIPELINE_PRODUCT);
-        final DataLink datalinkFour = testSubject.createDataLink(deliverableInfoFour);
+                                                                        Deliverable.PIPELINE_PRODUCT);
+        final List<DataLink> dataLinksFour = testSubject.createDataLinks(deliverableInfoFour);
+        Assert.assertEquals("Should have one element.", 1, dataLinksFour.size());
+        final DataLink datalinkFour = dataLinksFour.get(0);
 
-        Assert.assertEquals("Wrong semantics.", DataLink.Term.THIS, datalinkFour.getSemantics());
+        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.THIS},
+                                 datalinkFour.getSemantics().toArray());
     }
 }
