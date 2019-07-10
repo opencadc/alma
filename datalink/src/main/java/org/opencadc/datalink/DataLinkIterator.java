@@ -286,7 +286,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
         } else if (deliverableType == Deliverable.ASDM) {
             dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
-        } else {
+        } else if (deliverableType.isLeaf() && !deliverableType.isAuxiliary()) {
             dataLinkTermCollection.add(DataLink.Term.THIS);
         }
 
