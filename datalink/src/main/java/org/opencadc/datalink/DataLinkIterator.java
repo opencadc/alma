@@ -210,7 +210,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLink.errorMessage = String.format("NotFoundFault: %s", deliverableInfo.getIdentifier());
         } else {
             try {
-                dataLink.accessURL = new URL(dataLinkURLBuilder.createDownloadURL(deliverableInfo));
+                dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(deliverableInfo);
             } catch (MalformedURLException e) {
                 // If it's invalid, then just don't set it.
             }
@@ -231,7 +231,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
         dataLink.addSemantics(dataLinkTerm);
 
         try {
-            dataLink.accessURL = lookupRecursiveURL(deliverableInfo);
+            dataLink.accessURL = createRecursiveURL(deliverableInfo);
         } catch (MalformedURLException e) {
             // If it's invalid, then just don't set it.
         }
@@ -239,8 +239,8 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLink;
     }
 
-    URL lookupRecursiveURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return new URL(String.format("https://drilldown.com/goto/%s", deliverableInfo.getIdentifier()));
+    URL createRecursiveURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
+        return dataLinkURLBuilder.createRecursiveDataLinkURL(deliverableInfo);
     }
 
     private Long determineSizeInBytes(final DeliverableInfo deliverableInfo) {

@@ -13,21 +13,12 @@ services:
       - "datalink"
   datalink:
     image: opencadc/alma-datalink:1.0.0
-    depends_on:
-      - "datalinkdb"
     ports:
       - "5555:5555"
     networks:
       - "datalink"
     env_file:
       - "./docker/config/alma-datalink.properties"
-  datalinkdb:
-    image: opencadc/tap-oracle:11-xe
-    shm_size: 1gb
-    networks:
-      - "datalink"
-    volumes:
-      - "./docker/sql:/docker-entrypoint-initdb.d/startup"
 
 networks:
   datalink:

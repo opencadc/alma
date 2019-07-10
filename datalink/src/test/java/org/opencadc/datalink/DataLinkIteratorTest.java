@@ -74,7 +74,6 @@ import alma.asdm.domain.DeliverableInfo;
 import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -130,30 +129,25 @@ public class DataLinkIteratorTest {
 
         final DataPacker mockDataPacker = mock(DataPacker.class);
 
-        final DataLinkURLBuilder dataLinkURLBuilder = new DataLinkURLBuilder();
+        final DataLinkURLBuilder dataLinkURLBuilder =
+                new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"));
 
         when(mockDataPacker.expand(new Uid(deliverableInfoMOUS1ID), false)).thenReturn(deliverableInfoMOUS);
         when(mockDataPacker.expand(new Uid(deliverableInfoMOUS2ID), false)).thenReturn(deliverableInfoSubMOUS);
 
         final String[] expectedAccessURLs = new String[] {
                 "https://myhost.com/mydownloads/uid___C7_C8_C9.tar",
-                "https://myhost.com/mydatalink/recurse/uid___C7_C8_C9.tar",
+                "https://myhost.com/mydatalink/sync?ID=uid___C7_C8_C9.tar",
                 "https://myhost.com/mydownloads/uid___C10_C11_C12.tar",
-                "https://myhost.com/mydatalink/recurse/uid___C10_C11_C12.tar",
+                "https://myhost.com/mydatalink/sync?ID=uid___C10_C11_C12.tar",
                 };
 
         final String[] resultAccessURLs = new String[expectedAccessURLs.length];
 
-        final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, uidIterator, mockDataPacker) {
-            @Override
-            URL lookupRecursiveURL(DeliverableInfo deliverableInfo) throws MalformedURLException {
-                return new URL("https://myhost.com/mydatalink/recurse/" + deliverableInfo.getIdentifier());
-            }
-        };
-
         int index = 0;
 
-        while (testSubject.hasNext()) {
+        for (final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, uidIterator, mockDataPacker);
+             testSubject.hasNext(); ) {
             final DataLink nextDataLink = testSubject.next();
             resultAccessURLs[index++] = nextDataLink.accessURL.toExternalForm();
         }
@@ -168,7 +162,8 @@ public class DataLinkIteratorTest {
     public void createDataLinks() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
-        final DataLinkIterator testSubject = new DataLinkIterator(new DataLinkURLBuilder(), null, null);
+        final DataLinkIterator testSubject =
+                new DataLinkIterator(new DataLinkURLBuilder(new URL("https://myhost.com/datalink/do")), null, null);
 
         final DeliverableInfo deliverableInfoOne = new DeliverableInfo("uid___C7_C8_C9.tar",
                                                                        Deliverable.PIPELINE_PRODUCT);

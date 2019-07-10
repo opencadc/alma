@@ -78,6 +78,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.Assert;
 
+import java.net.URL;
+
 import static org.mockito.Mockito.*;
 
 
@@ -88,11 +90,11 @@ public class DataLinkURLBuilderTest {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
         final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder();
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(null);
 
         when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C71_C72_C73.tmp");
 
-        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo);
+        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo).toExternalForm();
 
         Assert.assertEquals("Wrong URL.",
                             "https://myhost.com/mydownloads/uid___C71_C72_C73.tmp",
@@ -102,20 +104,42 @@ public class DataLinkURLBuilderTest {
     }
 
     @Test
-    @Ignore("Ignore until we know if getIdentifier() is necessary.")
-    public void createDownloadURLNullDisplayName() throws Exception {
+    public void createRecursiveDataLinkURL() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
+        final URL serviceEndpoint = new URL("https://myhost.com/datalink/endpoint");
         final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder();
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(serviceEndpoint);
 
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C81_C82_C83.tmp");
+        when(mockDeliverableInfo.getIdentifier()).thenReturn("2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar");
 
-        final String downloadURL = testSubject.createDownloadURL(mockDeliverableInfo);
+        final String recursiveDataLinkURL =
+                testSubject.createRecursiveDataLinkURL(mockDeliverableInfo).toExternalForm();
 
         Assert.assertEquals("Wrong URL.",
-                            "https://myhost.com/mydownloads/uid___C81_C82_C83.tmp",
-                            downloadURL);
+                            "https://myhost.com/datalink/endpoint?ID=2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar",
+                            recursiveDataLinkURL);
+
+        verify(mockDeliverableInfo, times(1)).getIdentifier();
+    }
+
+    @Test
+    public void createRecursiveDataLinkURLWithQuery() throws Exception {
+        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
+
+        final URL serviceEndpoint = new URL("https://myhost.com/datalink/endpoint?recurse=true");
+        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(serviceEndpoint);
+
+        when(mockDeliverableInfo.getIdentifier()).thenReturn("2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar");
+
+        final String recursiveDataLinkURL =
+                testSubject.createRecursiveDataLinkURL(mockDeliverableInfo).toExternalForm();
+
+        Assert.assertEquals("Wrong URL.",
+                            "https://myhost.com/datalink/endpoint?recurse=true&ID=2016.1.00161" +
+                                    ".S_uid___C81_C82_C83_auxiliary.tar",
+                            recursiveDataLinkURL);
 
         verify(mockDeliverableInfo, times(1)).getIdentifier();
     }

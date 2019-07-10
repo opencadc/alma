@@ -1,9 +1,10 @@
-version: "3.2"
+version: '3.2'
 services:
   proxy.cadc.dao.nrc.ca:
     image: nginx:alpine
     ports:
       - '443:443'
+      - '80:80'
     networks:
       - 'alma'
     volumes:
@@ -17,13 +18,36 @@ services:
   sia.cadc.dao.nrc.ca:
     image: opencadc/alma-sia:1.0.1
     networks:
-      - "alma"
+      - 'alma'
     ports:
-      - "15555:5555"
-    depends_on: 
-      - "obscore.cadc.dao.nrc.ca"
-    environment: 
-      CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
+      - '15555:5555'
+    depends_on:
+      - 'obscore.cadc.dao.nrc.ca'
+    volumes:
+      - 'server_certs:/usr/local/share/ca-certificates'
+    environment:
+      CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
+  obscore.cadc.dao.nrc.ca:
+    image: opencadc/alma-tap:1.1.9
+    ports:
+      - '35555:5555'
+    networks:
+      - 'alma'
+    env_file:
+      - './obscore/docker/config/alma-tap.properties'
+    volumes:
+      - 'server_certs:/usr/local/share/ca-certificates'
+  reg.cadc.dao.nrc.ca:
+    image: opencadc/alma-reg:1.0.1
+    networks:
+      - 'alma'
+    ports:
+      - '25555:5555'
+    volumes:
+      - './reg/docker/reg-resource-caps.properties:/root/config/reg-resource-caps.properties'
+      - 'server_certs:/usr/local/share/ca-certificates'
+    environment:
+      CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
   datalink.cadc.dao.nrc.ca:
     image: opencadc/alma-datalink:1.0.0
     networks:
@@ -32,33 +56,9 @@ services:
       - "./datalink/docker/config/alma-datalink.properties"
     ports:
       - "45555:5555"
-  obscore.cadc.dao.nrc.ca:
-    image: opencadc/alma-tap:1.1.9
-    depends_on:
-      - "obscoredb.cadc.dao.nrc.ca"
-    ports:
-      - "35555:5555"
-    networks:
-      - "alma"
-    env_file:
-      - "./obscore/docker/config/alma-tap.properties"
-    environment: 
-      CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
-  obscoredb.cadc.dao.nrc.ca:
-    image: opencadc/tap-oracle:11-xe
-    shm_size: 1gb
-    networks:
-      - "alma"
     volumes:
-      - "./obscore/docker/sql:/docker-entrypoint-initdb.d/startup"
-  reg.cadc.dao.nrc.ca:
-    image: opencadc/alma-reg:1.0.1
-    networks:
-      - "alma"
-    ports:
-      - "25555:5555"
-    environment: 
-      CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=reg"
+      - 'server_certs:/usr/local/share/ca-certificates'
+      - "./datalink/org.opencadc.datalink.properties:/root/config/org.opencadc.datalink.properties"
 
 networks:
   alma:
