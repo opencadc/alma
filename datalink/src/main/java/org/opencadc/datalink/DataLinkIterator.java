@@ -71,7 +71,6 @@ package org.opencadc.datalink;
 
 import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.DeliverableInfo;
-import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -97,11 +96,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private static final Logger LOGGER = LogManager.getLogger(DataLinkIterator.class);
 
     private static final String DEFAULT_UNKNOWN_CONTENT_TYPE = "application/octet-stream";
+    private static final String VOTABLE_CONTENT_TYPE = "application/x-votable+xml;content=datalink";
 
     private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
     private final Iterator<String> datasetIDIterator;
     private final DataPacker dataPacker;
+
+    private DataLinkUID currentDataLinkUID;
 
 
     DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
@@ -115,10 +117,12 @@ public class DataLinkIterator implements Iterator<DataLink> {
     public boolean hasNext() {
         if (dataLinkQueue.isEmpty()) {
             if (datasetIDIterator.hasNext()) {
-                final Uid nextUID = new Uid(datasetIDIterator.next());
-                final DeliverableInfo currentTopLevelDeliverableInfo = dataPacker.expand(nextUID, false);
+                this.currentDataLinkUID = new DataLinkUID(datasetIDIterator.next());
+                final DeliverableInfo currentTopLevelDeliverableInfo = dataPacker.expand(
+                        this.currentDataLinkUID.getArchiveUID(), false);
 
-                visitSubDeliverables(currentTopLevelDeliverableInfo);
+                final DeliverableInfo requestedDeliverableInfo = navigateToRequestedID(currentTopLevelDeliverableInfo);
+                visitSubDeliverables(requestedDeliverableInfo);
 
                 return !dataLinkQueue.isEmpty();
             } else {
@@ -129,17 +133,22 @@ public class DataLinkIterator implements Iterator<DataLink> {
         }
     }
 
+    private DeliverableInfo navigateToRequestedID(final DeliverableInfo deliverableInfo) {
+        DeliverableInfo di = deliverableInfo;
+        final Set<DeliverableInfo> subDeliverables = di.getSubDeliverables();
+        for (final Iterator<DeliverableInfo> subDeliverableIterator = subDeliverables.iterator();
+             !currentDataLinkUID.getOriginalID().equals(getIdentifier(di)) && subDeliverableIterator.hasNext(); ) {
+            di = navigateToRequestedID(subDeliverableIterator.next());
+        }
+
+        return di;
+    }
+
     private void visitSubDeliverables(final DeliverableInfo deliverableInfo) {
         if (deliverableInfo != null) {
             final Set<DeliverableInfo> subDeliverables = deliverableInfo.getSubDeliverables();
-            final Deliverable deliverableInfoType = deliverableInfo.getType();
-
-            if (deliverableInfoType.isTarfile() || isRawOrUnknown(deliverableInfoType)) {
-                dataLinkQueue.addAll(createDataLinks(deliverableInfo));
-            } else {
-                for (final DeliverableInfo nextDeliverableInfo : subDeliverables) {
-                    visitSubDeliverables(nextDeliverableInfo);
-                }
+            for (final DeliverableInfo nextDeliverableInfo : subDeliverables) {
+                dataLinkQueue.addAll(createDataLinks(nextDeliverableInfo));
             }
         }
     }
@@ -189,57 +198,71 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLinkCollection;
     }
 
-    DataLink createDataLink(final DeliverableInfo deliverableInfo) {
+    private DataLink createDataLink(final DeliverableInfo deliverableInfo) {
         final List<DataLink.Term> dataLinkTerms = determineTerms(deliverableInfo);
-
-        // There should always be at least one returned, so it should be safe to pull it off.
-        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), dataLinkTerms.get(0));
+        final DataLink.Term primarySemantic = dataLinkTerms.get(0);
 
         // Already got it.
         dataLinkTerms.remove(0);
-        dataLinkTerms.forEach(dataLink::addSemantics);
+        final DataLink dataLink;
 
-        //
-        // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This makes
-        // TODO: that assumption.  If a UID that does not exist is passed in, the DataPacker will still return a
-        // TODO: result, so we'll hide it here if the size is less than zero bytes.
-        //
-        // jenkinsd 2019.07.09
-        //
-        if (deliverableInfo.getSizeInBytes() < 0) {
-            dataLink.errorMessage = String.format("NotFoundFault: %s", deliverableInfo.getIdentifier());
+        if (primarySemantic == DataLink.Term.DATALINK) {
+            dataLink = createRecursiveDataLink(deliverableInfo, null);
         } else {
-            try {
-                dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(deliverableInfo);
-            } catch (MalformedURLException e) {
-                // If it's invalid, then just don't set it.
+            dataLink = new DataLink(deliverableInfo.getIdentifier(), primarySemantic);
+
+            //
+            // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This
+            // TODO: makes that assumption.  If a UID that does not exist is passed in, the DataPacker will still
+            // TODO: return a result, so we'll hide it here if the size is less than zero bytes.
+            //
+            // jenkinsd 2019.07.11
+            //
+            if (deliverableInfo.getSizeInBytes() < 0) {
+                dataLink.errorMessage = String.format("NotFoundFault: %s", deliverableInfo.getIdentifier());
+            } else {
+                try {
+                    dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(deliverableInfo);
+                } catch (MalformedURLException e) {
+                    LOGGER.warn("Access URL creation failed.", e);
+                    dataLink.errorMessage = String.format("Unable to create access URL for %s.",
+                                                          deliverableInfo.getIdentifier());
+                }
+
+                dataLink.contentLength = determineSizeInBytes(deliverableInfo);
+                dataLink.contentType = determineContentType(deliverableInfo);
+
+                // TODO: How to determine this?
+                dataLink.readable = true;
             }
-
-            dataLink.contentLength = determineSizeInBytes(deliverableInfo);
-            dataLink.contentType = determineContentType(deliverableInfo);
-
-            // TODO: How to determine this?
-            dataLink.readable = true;
         }
+
+        dataLinkTerms.forEach(dataLink::addSemantics);
 
         return dataLink;
     }
 
-    DataLink createRecursiveDataLink(final DeliverableInfo deliverableInfo, final DataLink.Term dataLinkTerm) {
+    private DataLink createRecursiveDataLink(final DeliverableInfo deliverableInfo, final DataLink.Term dataLinkTerm) {
         final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), DataLink.Term.DATALINK);
 
-        dataLink.addSemantics(dataLinkTerm);
+        if (dataLinkTerm != null) {
+            dataLink.addSemantics(dataLinkTerm);
+        }
 
         try {
             dataLink.accessURL = createRecursiveURL(deliverableInfo);
         } catch (MalformedURLException e) {
-            // If it's invalid, then just don't set it.
+            LOGGER.warn("Recursive URL creation failed.", e);
+            dataLink.errorMessage = String.format("Unable to create recursive URL for %s.",
+                                                  deliverableInfo.getIdentifier());
         }
+
+        dataLink.contentType = VOTABLE_CONTENT_TYPE;
 
         return dataLink;
     }
 
-    URL createRecursiveURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
+    private URL createRecursiveURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
         return dataLinkURLBuilder.createRecursiveDataLinkURL(deliverableInfo);
     }
 
@@ -249,8 +272,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     private String determineContentType(final DeliverableInfo deliverableInfo) {
-        final String fileCheckInput = deliverableInfo.getType() == Deliverable.ASDM ?
-                deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier();
+        final String fileCheckInput = getIdentifier(deliverableInfo);
         final String contentType;
 
         if (StringUtil.hasText(fileCheckInput)) {
@@ -263,31 +285,39 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return contentType;
     }
 
+    private String getIdentifier(final DeliverableInfo deliverableInfo) {
+        return deliverableInfo == null ? null : (deliverableInfo.getType() == Deliverable.ASDM ?
+                                                 deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier());
+    }
+
     private List<DataLink.Term> determineTerms(final DeliverableInfo deliverableInfo) {
         final List<DataLink.Term> dataLinkTermCollection = new ArrayList<>();
+        final Deliverable deliverableType = deliverableInfo.getType();
 
         if (isPackageFile(deliverableInfo)) {
             dataLinkTermCollection.add(DataLink.Term.PKG);
         }
 
-        if (deliverableInfo.getType().isAuxiliary()) {
+        if (deliverableType.isAuxiliary()) {
             dataLinkTermCollection.add(DataLink.Term.AUXILIARY);
-        } else if (deliverableInfo.getType() == Deliverable.ASDM) {
+        }
+
+        if (deliverableType == Deliverable.PIPELINE_AUXILIARY_CALIBRATION) {
+            dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
+        } else if (deliverableType == Deliverable.ASDM) {
             dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
-        } else {
+        } else if (deliverableType.isLeaf() && !deliverableType.isAuxiliary()) {
             dataLinkTermCollection.add(DataLink.Term.THIS);
+        } else if (deliverableType.isOus()) {
+            dataLinkTermCollection.add(DataLink.Term.DATALINK);
         }
 
         return dataLinkTermCollection;
     }
 
-    private boolean isRawOrUnknown(final Deliverable type) {
-        return (type == Deliverable.ASDM) || (type == Deliverable.DIRECT_ACCESS_ASDM);
-    }
-
     private boolean isPackageFile(final DeliverableInfo deliverableInfo) {
-        final String identifier = deliverableInfo.getIdentifier();
+        final String identifier = getIdentifier(deliverableInfo);
         return deliverableInfo.getType().isTarfile()
-                || (StringUtil.hasLength(identifier) && identifier.trim().endsWith(".tar"));
+               || (StringUtil.hasLength(identifier) && identifier.trim().endsWith(".tar"));
     }
 }

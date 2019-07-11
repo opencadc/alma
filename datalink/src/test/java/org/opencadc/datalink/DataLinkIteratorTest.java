@@ -75,10 +75,13 @@ import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.junit.Test;
 import org.junit.Assert;
@@ -94,68 +97,150 @@ public class DataLinkIteratorTest {
     public void runThrough() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
-        final String deliverableInfoMOUS1ID = "uid://C1/C2/C3";
-        final String deliverableInfoMOUS2ID = "uid://C4/C5/C6";
+        final DeliverableInfo PROJECT = new DeliverableInfo("2016.1.0001.S", Deliverable.PROJECT);
 
-        final DeliverableInfo deliverableInfoProject1 = new DeliverableInfo("2016.1.00057.S",
-                                                                            Deliverable.PROJECT);
-        final DeliverableInfo deliverableInfoMOUS = new DeliverableInfo(deliverableInfoMOUS1ID, Deliverable.MOUS);
-        final DeliverableInfo deliverableInfoMOUSTAR = new DeliverableInfo("uid___C7_C8_C9.tar",
-                                                                           Deliverable.PIPELINE_PRODUCT_TARFILE);
-        deliverableInfoMOUSTAR.setDisplayName("uid___C7_C8_C9.tar");
-        deliverableInfoMOUSTAR.setOwner(deliverableInfoMOUS);
+        final DeliverableInfo SGOUS = new DeliverableInfo("uid://C1/C10/C100", Deliverable.SGOUS);
+        PROJECT.addSubDeliverable(SGOUS);
 
-        deliverableInfoMOUS.setOwner(deliverableInfoProject1);
+        final DeliverableInfo GOUS = new DeliverableInfo("uid://C2/C20/C200", Deliverable.GOUS);
+        SGOUS.addSubDeliverable(GOUS);
 
-        deliverableInfoProject1.setSubDeliverables(Collections.singletonList(deliverableInfoMOUS));
-        deliverableInfoMOUS.setSubDeliverables(Collections.singletonList(deliverableInfoMOUSTAR));
+        final DeliverableInfo MOUS1 = new DeliverableInfo("uid___C3_C30_C300", Deliverable.MOUS);
+        final DeliverableInfo MOUS2 = new DeliverableInfo("uid___C31_C301_C3001", Deliverable.MOUS);
+        GOUS.addSubDeliverable(MOUS1);
+        GOUS.addSubDeliverable(MOUS2);
 
-        final DeliverableInfo deliverableInfoProject2 = new DeliverableInfo("2016.0.00055.S",
-                                                                            Deliverable.PROJECT);
-        final DeliverableInfo deliverableInfoSubMOUS = new DeliverableInfo(deliverableInfoMOUS2ID,
-                                                                           Deliverable.MOUS);
-        final DeliverableInfo deliverableInfoSubMOUSAux = new DeliverableInfo("uid___C10_C11_C12.tar",
-                                                                              Deliverable.PIPELINE_AUXILIARY_TARFILE);
-        deliverableInfoSubMOUSAux.setDisplayName("uid___C10_C11_C12.tar");
-        deliverableInfoSubMOUSAux.setOwner(deliverableInfoSubMOUS);
+        final DeliverableInfo README = new DeliverableInfo("member.uid___C3_C30_C300",
+                                                           Deliverable.PIPELINE_AUXILIARY_README);
+        MOUS1.addSubDeliverable(README);
 
-        deliverableInfoSubMOUS.setOwner(deliverableInfoProject2);
+        final DeliverableInfo RAW1 = new DeliverableInfo("2016.1.00001.S_uid___C4_C40_C400.asdm.sdm.tar",
+                                                         Deliverable.ASDM);
+        MOUS1.addSubDeliverable(RAW1);
 
-        deliverableInfoProject2.setSubDeliverables(Collections.singletonList(deliverableInfoSubMOUS));
-        deliverableInfoSubMOUS.setSubDeliverables(Collections.singletonList(deliverableInfoSubMOUSAux));
+        final DeliverableInfo PRODUCT1 = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar",
+                                                             Deliverable.PIPELINE_PRODUCT_TARFILE);
+        MOUS1.addSubDeliverable(PRODUCT1);
 
-        final List<String> uidList = Arrays.asList(deliverableInfoMOUS1ID, deliverableInfoMOUS2ID);
-        final Iterator<String> uidIterator = uidList.iterator();
+        final DeliverableInfo FITS1 = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.fits",
+                                                          Deliverable.PIPELINE_PRODUCT);
+        PRODUCT1.addSubDeliverable(FITS1);
+
+        final DeliverableInfo FITSGZ = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.fits.gz",
+                                                           Deliverable.PIPELINE_PRODUCT);
+        PRODUCT1.addSubDeliverable(FITSGZ);
+
+        final DeliverableInfo RAW2 = new DeliverableInfo("2016.2.00002.S_uid___C4_C40_C400.asdm.sdm.tar",
+                                                         Deliverable.ASDM);
+        MOUS2.addSubDeliverable(RAW2);
+
+        final DeliverableInfo PRODUCT2 = new DeliverableInfo("2016.2.00002.S_uid___C31_C301_C3001_001_of_001.tar",
+                                                             Deliverable.PIPELINE_PRODUCT_TARFILE);
+        MOUS2.addSubDeliverable(PRODUCT2);
+
+        final DeliverableInfo FITS2 = new DeliverableInfo("2016.2.00002.S_uid___C31_C301_C3001_001_of_001.fits",
+                                                          Deliverable.PIPELINE_PRODUCT);
+        PRODUCT2.addSubDeliverable(FITS2);
+
 
         final DataPacker mockDataPacker = mock(DataPacker.class);
-
         final DataLinkURLBuilder dataLinkURLBuilder =
                 new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"));
+        final Iterator<String> dataSetIDIterator =
+                Arrays.asList("uid___C3_C30_C300", "uid___C31_C301_C3001").iterator();
 
-        when(mockDataPacker.expand(new Uid(deliverableInfoMOUS1ID), false)).thenReturn(deliverableInfoMOUS);
-        when(mockDataPacker.expand(new Uid(deliverableInfoMOUS2ID), false)).thenReturn(deliverableInfoSubMOUS);
+        when(mockDataPacker.expand(new Uid("uid___C3_C30_C300"), false)).thenReturn(PROJECT);
+        when(mockDataPacker.expand(new Uid("uid___C31_C301_C3001"), false)).thenReturn(PROJECT);
 
-        final String[] expectedAccessURLs = new String[] {
-                "https://myhost.com/mydownloads/uid___C7_C8_C9.tar",
-                "https://myhost.com/mydatalink/sync?ID=uid___C7_C8_C9.tar",
-                "https://myhost.com/mydownloads/uid___C10_C11_C12.tar",
-                "https://myhost.com/mydatalink/sync?ID=uid___C10_C11_C12.tar",
-                };
+        final Set<String> resultDataLinkIDs = new TreeSet<>();
+        final List<DataLink> expectedDataLinks = new ArrayList<>();
+        final Set<String> expectedDataLinkIDs = new TreeSet<>();
+        final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator,
+                                                                  mockDataPacker);
 
-        final String[] resultAccessURLs = new String[expectedAccessURLs.length];
-
-        int index = 0;
-
-        for (final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, uidIterator, mockDataPacker);
-             testSubject.hasNext(); ) {
-            final DataLink nextDataLink = testSubject.next();
-            resultAccessURLs[index++] = nextDataLink.accessURL.toExternalForm();
+        while (testSubject.hasNext()) {
+            resultDataLinkIDs.add(testSubject.next().getID());
         }
 
-        Assert.assertArrayEquals("Wrong access URLs.", expectedAccessURLs, resultAccessURLs);
+        expectedDataLinks.addAll(testSubject.createDataLinks(README));
+        expectedDataLinks.addAll(testSubject.createDataLinks(RAW1));
+        expectedDataLinks.addAll(testSubject.createDataLinks(PRODUCT1));
+        expectedDataLinks.addAll(testSubject.createDataLinks(RAW2));
+        expectedDataLinks.addAll(testSubject.createDataLinks(PRODUCT2));
 
-        verify(mockDataPacker, times(1)).expand(new Uid(deliverableInfoMOUS1ID), false);
-        verify(mockDataPacker, times(1)).expand(new Uid(deliverableInfoMOUS2ID), false);
+        for (final DataLink dataLink : expectedDataLinks) {
+            expectedDataLinkIDs.add(dataLink.getID());
+        }
+
+        verify(mockDataPacker, times(1)).expand(new Uid("uid___C3_C30_C300"), false);
+        verify(mockDataPacker, times(1)).expand(new Uid("uid___C31_C301_C3001"), false);
+
+        // DataLink has no equals() method, so we'll need to dive down into the URLs of each DataLink.
+        Assert.assertArrayEquals("Wrong returned DataLink IDs.", expectedDataLinkIDs.toArray(),
+                                 resultDataLinkIDs.toArray());
+    }
+
+    @Test
+    public void runThroughFiltering() throws Exception {
+        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
+
+        final DeliverableInfo PROJECT = new DeliverableInfo("2016.1.0001.S", Deliverable.PROJECT);
+        final DeliverableInfo SGOUS = new DeliverableInfo("uid://C1/C10/C100", Deliverable.SGOUS);
+        PROJECT.addSubDeliverable(SGOUS);
+
+        final DeliverableInfo GOUS = new DeliverableInfo("uid://C2/C20/C200", Deliverable.GOUS);
+        SGOUS.addSubDeliverable(GOUS);
+        final DeliverableInfo MOUS = new DeliverableInfo("uid___C3_C30_C300", Deliverable.MOUS);
+        GOUS.addSubDeliverable(MOUS);
+
+        final DeliverableInfo README = new DeliverableInfo("member.uid___C3_C30_C300",
+                                                           Deliverable.PIPELINE_AUXILIARY_README);
+        MOUS.addSubDeliverable(README);
+        final DeliverableInfo RAW = new DeliverableInfo("2016.1.00001.S_uid___C4_C40_C400.asdm.sdm.tar",
+                                                        Deliverable.ASDM);
+        MOUS.addSubDeliverable(RAW);
+        final DeliverableInfo PRODUCT = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar",
+                                                            Deliverable.PIPELINE_PRODUCT_TARFILE);
+        MOUS.addSubDeliverable(PRODUCT);
+
+        final DeliverableInfo FITS = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.fits",
+                                                         Deliverable.PIPELINE_PRODUCT);
+        PRODUCT.addSubDeliverable(FITS);
+
+        final DeliverableInfo FITSGZ = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.fits.gz",
+                                                           Deliverable.PIPELINE_PRODUCT);
+        PRODUCT.addSubDeliverable(FITSGZ);
+
+        final DataPacker mockDataPacker = mock(DataPacker.class);
+        final DataLinkURLBuilder dataLinkURLBuilder =
+                new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"));
+        final Iterator<String> dataSetIDIterator =
+                Collections.singletonList("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar").iterator();
+
+        when(mockDataPacker.expand(new Uid("uid___C3_C30_C300"), false)).thenReturn(PROJECT);
+
+        final Set<String> resultDataLinkIDs = new TreeSet<>();
+        final List<DataLink> expectedDataLinks = new ArrayList<>();
+        final Set<String> expectedDataLinkIDs = new TreeSet<>();
+        final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator,
+                                                                  mockDataPacker);
+
+        while (testSubject.hasNext()) {
+            resultDataLinkIDs.add(testSubject.next().getID());
+        }
+
+        expectedDataLinks.addAll(testSubject.createDataLinks(FITS));
+        expectedDataLinks.addAll(testSubject.createDataLinks(FITSGZ));
+
+        for (final DataLink dataLink : expectedDataLinks) {
+            expectedDataLinkIDs.add(dataLink.getID());
+        }
+
+        verify(mockDataPacker, times(1)).expand(new Uid("uid___C3_C30_C300"), false);
+
+        // DataLink has no equals() method, so we'll need to dive down into the URLs of each DataLink.
+        Assert.assertArrayEquals("Wrong returned DataLink IDs.", expectedDataLinkIDs.toArray(),
+                                 resultDataLinkIDs.toArray());
     }
 
     @Test
