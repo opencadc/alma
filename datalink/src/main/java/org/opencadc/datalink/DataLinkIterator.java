@@ -71,6 +71,7 @@ package org.opencadc.datalink;
 
 import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.DeliverableInfo;
+import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -122,7 +123,12 @@ public class DataLinkIterator implements Iterator<DataLink> {
                         this.currentDataLinkUID.getArchiveUID(), false);
 
                 final DeliverableInfo requestedDeliverableInfo = navigateToRequestedID(currentTopLevelDeliverableInfo);
-                visitSubDeliverables(requestedDeliverableInfo);
+
+                if (isDeliverableInfoNotFound(requestedDeliverableInfo)) {
+                    dataLinkQueue.add(createNotFoundDataLink(requestedDeliverableInfo));
+                } else {
+                    visitSubDeliverables(requestedDeliverableInfo);
+                }
 
                 return !dataLinkQueue.isEmpty();
             } else {
@@ -133,11 +139,23 @@ public class DataLinkIterator implements Iterator<DataLink> {
         }
     }
 
+    private boolean deliverableInfoMatches(final DeliverableInfo deliverableInfo) {
+        final boolean matchesFlag;
+
+        if (deliverableInfo.getType() == Deliverable.ASDM) {
+            matchesFlag = currentDataLinkUID.getArchiveUID().equals(new Uid(deliverableInfo.getIdentifier()));
+        } else {
+            matchesFlag = currentDataLinkUID.getOriginalID().equals(getIdentifier(deliverableInfo));
+        }
+
+        return matchesFlag;
+    }
+
     private DeliverableInfo navigateToRequestedID(final DeliverableInfo deliverableInfo) {
         DeliverableInfo di = deliverableInfo;
         final Set<DeliverableInfo> subDeliverables = di.getSubDeliverables();
         for (final Iterator<DeliverableInfo> subDeliverableIterator = subDeliverables.iterator();
-             !currentDataLinkUID.getOriginalID().equals(getIdentifier(di)) && subDeliverableIterator.hasNext(); ) {
+             !deliverableInfoMatches(di) && subDeliverableIterator.hasNext(); ) {
             di = navigateToRequestedID(subDeliverableIterator.next());
         }
 
@@ -198,6 +216,17 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLinkCollection;
     }
 
+    private DataLink createNotFoundDataLink(final DeliverableInfo deliverableInfo) {
+        final DataLink errorDataLink = new DataLink(deliverableInfo.getIdentifier(), DataLink.Term.ERROR);
+        errorDataLink.errorMessage = String.format("NotFoundFault: %s", deliverableInfo.getIdentifier());
+
+        return errorDataLink;
+    }
+
+    private boolean isDeliverableInfoNotFound(final DeliverableInfo deliverableInfo) {
+        return deliverableInfo.getSizeInBytes() < 0;
+    }
+
     private DataLink createDataLink(final DeliverableInfo deliverableInfo) {
         final List<DataLink.Term> dataLinkTerms = determineTerms(deliverableInfo);
         final DataLink.Term primarySemantic = dataLinkTerms.get(0);
@@ -209,8 +238,6 @@ public class DataLinkIterator implements Iterator<DataLink> {
         if (primarySemantic == DataLink.Term.DATALINK) {
             dataLink = createRecursiveDataLink(deliverableInfo, null);
         } else {
-            dataLink = new DataLink(deliverableInfo.getIdentifier(), primarySemantic);
-
             //
             // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This
             // TODO: makes that assumption.  If a UID that does not exist is passed in, the DataPacker will still
@@ -218,9 +245,10 @@ public class DataLinkIterator implements Iterator<DataLink> {
             //
             // jenkinsd 2019.07.11
             //
-            if (deliverableInfo.getSizeInBytes() < 0) {
-                dataLink.errorMessage = String.format("NotFoundFault: %s", deliverableInfo.getIdentifier());
+            if (isDeliverableInfoNotFound(deliverableInfo)) {
+                dataLink = createNotFoundDataLink(deliverableInfo);
             } else {
+                dataLink = new DataLink(deliverableInfo.getIdentifier(), primarySemantic);
                 try {
                     dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(deliverableInfo);
                 } catch (MalformedURLException e) {
@@ -234,10 +262,10 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
                 // TODO: How to determine this?
                 dataLink.readable = true;
+
+                dataLinkTerms.forEach(dataLink::addSemantics);
             }
         }
-
-        dataLinkTerms.forEach(dataLink::addSemantics);
 
         return dataLink;
     }
@@ -306,7 +334,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
         } else if (deliverableType == Deliverable.ASDM) {
             dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
-        } else if (deliverableType.isLeaf() && !deliverableType.isAuxiliary()) {
+        } else if (!deliverableType.isAuxiliary()) {
             dataLinkTermCollection.add(DataLink.Term.THIS);
         } else if (deliverableType.isOus()) {
             dataLinkTermCollection.add(DataLink.Term.DATALINK);
