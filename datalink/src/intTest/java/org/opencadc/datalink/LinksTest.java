@@ -360,9 +360,7 @@ public class LinksTest {
             Assert.assertNotNull("queryStatus", queryStatus);
             Assert.assertEquals("ERROR", queryStatus.getValue());
             Assert.assertEquals("Wrong content",
-                                String.format("IllegalArgumentException: uid \"%s\" does not conform to expected " +
-                                        "pattern uid://\\w[0-9a-fA-F]+/\\w[0-9a-fA-F]+/\\w[0-9a-fA-F]+ nor " +
-                                        "uid___\\w[0-9a-fA-F]+_\\w[0-9a-fA-F]+_\\w[0-9a-fA-F]+?", INVALID_URI),
+                                String.format("IllegalArgumentException: No UID found in %s", INVALID_URI),
                                 queryStatus.content);
         } catch (Exception unexpected) {
             LOGGER.error("unexpected exception", unexpected);

@@ -114,8 +114,8 @@ public class DataLinkIteratorTest {
                                                            Deliverable.PIPELINE_AUXILIARY_README);
         MOUS1.addSubDeliverable(README);
 
-        final DeliverableInfo RAW1 = new DeliverableInfo("2016.1.00001.S_uid___C4_C40_C400.asdm.sdm.tar",
-                                                         Deliverable.ASDM);
+        final DeliverableInfo RAW1 = new DeliverableInfo("uid://C4/C40/C400", Deliverable.ASDM);
+        RAW1.setDisplayName("2016.1.00001.S_uid___C4_C40_C400.asdm.sdm.tar");
         MOUS1.addSubDeliverable(RAW1);
 
         final DeliverableInfo PRODUCT1 = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar",
@@ -130,8 +130,8 @@ public class DataLinkIteratorTest {
                                                            Deliverable.PIPELINE_PRODUCT);
         PRODUCT1.addSubDeliverable(FITSGZ);
 
-        final DeliverableInfo RAW2 = new DeliverableInfo("2016.2.00002.S_uid___C4_C40_C400.asdm.sdm.tar",
-                                                         Deliverable.ASDM);
+        final DeliverableInfo RAW2 = new DeliverableInfo("uid://C4/C40/C400", Deliverable.ASDM);
+        RAW2.setDisplayName("2016.2.00002.S_uid___C4_C40_C400.asdm.sdm.tar");
         MOUS2.addSubDeliverable(RAW2);
 
         final DeliverableInfo PRODUCT2 = new DeliverableInfo("2016.2.00002.S_uid___C31_C301_C3001_001_of_001.tar",
@@ -159,7 +159,8 @@ public class DataLinkIteratorTest {
                                                                   mockDataPacker);
 
         while (testSubject.hasNext()) {
-            resultDataLinkIDs.add(testSubject.next().getID());
+            final DataLink resultDataLink = testSubject.next();
+            resultDataLinkIDs.add(resultDataLink.getID());
         }
 
         expectedDataLinks.addAll(testSubject.createDataLinks(README));
@@ -196,8 +197,8 @@ public class DataLinkIteratorTest {
         final DeliverableInfo README = new DeliverableInfo("member.uid___C3_C30_C300",
                                                            Deliverable.PIPELINE_AUXILIARY_README);
         MOUS.addSubDeliverable(README);
-        final DeliverableInfo RAW = new DeliverableInfo("2016.1.00001.S_uid___C4_C40_C400.asdm.sdm.tar",
-                                                        Deliverable.ASDM);
+        final DeliverableInfo RAW = new DeliverableInfo("uid://C454/C4545/C5454", Deliverable.ASDM);
+        RAW.setDisplayName("2016.1.00001.S_uid___C544_C4545_C5454.asdm.sdm.tar");
         MOUS.addSubDeliverable(RAW);
         final DeliverableInfo PRODUCT = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar",
                                                             Deliverable.PIPELINE_PRODUCT_TARFILE);
@@ -226,7 +227,8 @@ public class DataLinkIteratorTest {
                                                                   mockDataPacker);
 
         while (testSubject.hasNext()) {
-            resultDataLinkIDs.add(testSubject.next().getID());
+            final DataLink nextResultDataLink = testSubject.next();
+            resultDataLinkIDs.add(nextResultDataLink.getID());
         }
 
         expectedDataLinks.addAll(testSubject.createDataLinks(FITS));
@@ -294,5 +296,14 @@ public class DataLinkIteratorTest {
 
         Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.THIS},
                                  datalinkFour.getSemantics().toArray());
+
+        final DeliverableInfo deliverableInfoFive = new DeliverableInfo("uid__C5_C6_C7.tar",
+                                                                        Deliverable.PIPELINE_PRODUCT_TARFILE);
+        final List<DataLink> dataLinksFive = testSubject.createDataLinks(deliverableInfoFive);
+        Assert.assertEquals("Should have two elements.", 2, dataLinksFive.size());
+        final DataLink datalinkFive = dataLinksFive.get(0);
+
+        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.PKG, DataLink.Term.THIS},
+                                 datalinkFive.getSemantics().toArray());
     }
 }
