@@ -1,2 +1,3 @@
 *.war
 **/alma-tap.properties
+.devcontainer
