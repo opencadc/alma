@@ -334,10 +334,10 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
         } else if (deliverableType == Deliverable.ASDM) {
             dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
-        } else if (!deliverableType.isAuxiliary()) {
-            dataLinkTermCollection.add(DataLink.Term.THIS);
         } else if (deliverableType.isOus()) {
             dataLinkTermCollection.add(DataLink.Term.DATALINK);
+        } else if (!deliverableType.isAuxiliary()) {
+            dataLinkTermCollection.add(DataLink.Term.THIS);
         }
 
         return dataLinkTermCollection;
