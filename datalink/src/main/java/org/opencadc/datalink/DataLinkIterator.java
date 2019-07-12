@@ -98,6 +98,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
     private static final String DEFAULT_UNKNOWN_CONTENT_TYPE = "application/octet-stream";
     private static final String VOTABLE_CONTENT_TYPE = "application/x-votable+xml;content=datalink";
+    private static final String FITS_CONTENT_TYPE = "image/fits";
 
     private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
@@ -202,11 +203,11 @@ public class DataLinkIterator implements Iterator<DataLink> {
                 dataLinkCollection.add(createRecursiveDataLink(deliverableInfo, DataLink.Term.THIS));
                 break;
             case PIPELINE_PRODUCT:
-                //if (deliverableInfo.getIdentifier().endsWith(".fits")) {
-                //    dataLinkCollection.add(createCutoutDataLink(deliverableInfo));
-                //} else {
-                //    LOGGER.debug(String.format("No cutout available for %s.", deliverableInfo.getIdentifier()))
-                //}
+                if (getIdentifier(deliverableInfo).endsWith(".fits")) {
+                    dataLinkCollection.add(createCutoutDataLink(deliverableInfo));
+                } else {
+                    LOGGER.debug(String.format("No cutout available for %s.", deliverableInfo.getIdentifier()));
+                }
                 break;
             default:
                 LOGGER.debug(String.format("Nothing to add for %s.", deliverableInfo.getIdentifier()));
@@ -290,8 +291,28 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLink;
     }
 
+    private DataLink createCutoutDataLink(final DeliverableInfo deliverableInfo) {
+        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), DataLink.Term.CUTOUT);
+
+        try {
+            dataLink.accessURL = createCutoutURL(deliverableInfo);
+        } catch (MalformedURLException e) {
+            LOGGER.warn("Cutout URL creation failed.", e);
+            dataLink.errorMessage = String.format("Unable to create Cutout URL for %s.",
+                                                  deliverableInfo.getIdentifier());
+        }
+
+        dataLink.contentType = FITS_CONTENT_TYPE;
+
+        return dataLink;
+    }
+
     private URL createRecursiveURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
         return dataLinkURLBuilder.createRecursiveDataLinkURL(deliverableInfo);
+    }
+
+    private URL createCutoutURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
+        return dataLinkURLBuilder.createCutoutLinkURL(deliverableInfo);
     }
 
     private Long determineSizeInBytes(final DeliverableInfo deliverableInfo) {

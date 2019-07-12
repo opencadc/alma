@@ -78,10 +78,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import org.junit.Test;
 import org.junit.Assert;
@@ -92,6 +91,62 @@ import static org.mockito.Mockito.*;
 
 
 public class DataLinkIteratorTest {
+
+    class DataLinkComparator implements Comparator<DataLink> {
+
+        /**
+         * Compares its two arguments for order.  Returns a negative integer,
+         * zero, or a positive integer as the first argument is less than, equal
+         * to, or greater than the second.<p>
+         * The implementor must ensure that {@code sgn(compare(x, y)) ==
+         * -sgn(compare(y, x))} for all {@code x} and {@code y}.  (This
+         * implies that {@code compare(x, y)} must throw an exception if and only
+         * if {@code compare(y, x)} throws an exception.)<p>
+         * The implementor must also ensure that the relation is transitive:
+         * {@code ((compare(x, y)>0) && (compare(y, z)>0))} implies
+         * {@code compare(x, z)>0}.<p>
+         * Finally, the implementor must ensure that {@code compare(x, y)==0}
+         * implies that {@code sgn(compare(x, z))==sgn(compare(y, z))} for all
+         * {@code z}.<p>
+         * It is generally the case, but <i>not</i> strictly required that
+         * {@code (compare(x, y)==0) == (x.equals(y))}.  Generally speaking,
+         * any comparator that violates this condition should clearly indicate
+         * this fact.  The recommended language is "Note: this comparator
+         * imposes orderings that are inconsistent with equals."<p>
+         * In the foregoing description, the notation
+         * {@code sgn(}<i>expression</i>{@code )} designates the mathematical
+         * <i>signum</i> function, which is defined to return one of {@code -1},
+         * {@code 0}, or {@code 1} according to whether the value of
+         * <i>expression</i> is negative, zero, or positive, respectively.
+         *
+         * @param o1 the first object to be compared.
+         * @param o2 the second object to be compared.
+         * @return a negative integer, zero, or a positive integer as the
+         * first argument is less than, equal to, or greater than the
+         * second.
+         *
+         * @throws NullPointerException if an argument is null and this
+         *                              comparator does not permit null arguments
+         * @throws ClassCastException   if the arguments' types prevent them from
+         *                              being compared by this comparator.
+         */
+        @Override
+        public int compare(DataLink o1, DataLink o2) {
+            final int comparison;
+            final int compareID = o1.getID().compareTo(o2.getID());
+            if (compareID == 0) {
+                final boolean containsAllSemantics =
+                        o2.getSemantics().containsAll(o1.getSemantics());
+                final int compareSemantics = containsAllSemantics ? 0 : -1;
+
+                comparison = compareSemantics == 0 ? compareSemantics : o1.contentType.compareTo(o2.contentType);
+            } else {
+                comparison = compareID;
+            }
+
+            return comparison;
+        }
+    }
 
     @Test
     public void runThrough() throws Exception {
@@ -145,40 +200,70 @@ public class DataLinkIteratorTest {
 
         final DataPacker mockDataPacker = mock(DataPacker.class);
         final DataLinkURLBuilder dataLinkURLBuilder =
-                new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"));
+                new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"),
+                                       new URL("https://myhost.com/mysoda/sync"));
         final Iterator<String> dataSetIDIterator =
                 Arrays.asList("uid___C3_C30_C300", "uid___C31_C301_C3001").iterator();
 
         when(mockDataPacker.expand(new Uid("uid___C3_C30_C300"), false)).thenReturn(PROJECT);
         when(mockDataPacker.expand(new Uid("uid___C31_C301_C3001"), false)).thenReturn(PROJECT);
 
-        final Set<String> resultDataLinkIDs = new TreeSet<>();
+        // Keep them sorted the same.
+        final List<DataLink> resultDataLinks = new ArrayList<>();
         final List<DataLink> expectedDataLinks = new ArrayList<>();
-        final Set<String> expectedDataLinkIDs = new TreeSet<>();
+
         final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator,
                                                                   mockDataPacker);
 
         while (testSubject.hasNext()) {
-            final DataLink resultDataLink = testSubject.next();
-            resultDataLinkIDs.add(resultDataLink.getID());
+            resultDataLinks.add(testSubject.next());
         }
 
-        expectedDataLinks.addAll(testSubject.createDataLinks(README));
-        expectedDataLinks.addAll(testSubject.createDataLinks(RAW1));
-        expectedDataLinks.addAll(testSubject.createDataLinks(PRODUCT1));
-        expectedDataLinks.addAll(testSubject.createDataLinks(RAW2));
-        expectedDataLinks.addAll(testSubject.createDataLinks(PRODUCT2));
-
-        for (final DataLink dataLink : expectedDataLinks) {
-            expectedDataLinkIDs.add(dataLink.getID());
-        }
+        expectedDataLinks.add(createDataLink(README, "text/plain",
+                                             new URL(String.format("https://myhost.com/mydownloads/%s",
+                                                                   README.getIdentifier())),
+                                             DataLink.Term.AUXILIARY, new ArrayList<>()));
+        expectedDataLinks.add(createDataLink(RAW1, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydownloads/%s",
+                                                                   RAW1.getIdentifier())),
+                                             DataLink.Term.PROGENITOR, Collections.singletonList(DataLink.Term.PKG)));
+        expectedDataLinks.add(createDataLink(PRODUCT1, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydownloads/%s",
+                                                                   PRODUCT1.getIdentifier())),
+                                             DataLink.Term.THIS, Collections.singletonList(DataLink.Term.PKG)));
+        expectedDataLinks.add(createDataLink(PRODUCT1, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
+                                                                   PRODUCT1.getIdentifier())),
+                                             DataLink.Term.THIS, Collections.singletonList(DataLink.Term.DATALINK)));
+        expectedDataLinks.add(createDataLink(RAW2, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydownloads/%s",
+                                                                   RAW2.getIdentifier())),
+                                             DataLink.Term.PROGENITOR, Collections.singletonList(DataLink.Term.PKG)));
+        expectedDataLinks.add(createDataLink(PRODUCT2, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydownloads/%s",
+                                                                   PRODUCT2.getIdentifier())),
+                                             DataLink.Term.THIS, Collections.singletonList(DataLink.Term.PKG)));
+        expectedDataLinks.add(createDataLink(PRODUCT2, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
+                                                                   PRODUCT2.getIdentifier())),
+                                             DataLink.Term.THIS, Collections.singletonList(DataLink.Term.DATALINK)));
 
         verify(mockDataPacker, times(1)).expand(new Uid("uid___C3_C30_C300"), false);
         verify(mockDataPacker, times(1)).expand(new Uid("uid___C31_C301_C3001"), false);
 
-        // DataLink has no equals() method, so we'll need to dive down into the URLs of each DataLink.
-        Assert.assertArrayEquals("Wrong returned DataLink IDs.", expectedDataLinkIDs.toArray(),
-                                 resultDataLinkIDs.toArray());
+        // Even footing before comparing each item individually.
+        resultDataLinks.sort(new DataLinkComparator());
+        expectedDataLinks.sort(new DataLinkComparator());
+
+        Assert.assertEquals("Wrong sizes.", expectedDataLinks.size(), resultDataLinks.size());
+
+        final DataLinkComparator comparator = new DataLinkComparator();
+        for (int i = 0; i < resultDataLinks.size(); i++) {
+            final DataLink resultDataLink = resultDataLinks.get(i);
+            final DataLink expectedDataLink = expectedDataLinks.get(i);
+
+            Assert.assertEquals("DataLinks are not equal.", 0, comparator.compare(resultDataLink, expectedDataLink));
+        }
     }
 
     @Test
@@ -214,35 +299,63 @@ public class DataLinkIteratorTest {
 
         final DataPacker mockDataPacker = mock(DataPacker.class);
         final DataLinkURLBuilder dataLinkURLBuilder =
-                new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"));
+                new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"),
+                                       new URL("https://myhost.com/mysoda/sync"));
         final Iterator<String> dataSetIDIterator =
                 Collections.singletonList("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar").iterator();
 
         when(mockDataPacker.expand(new Uid("uid___C3_C30_C300"), false)).thenReturn(PROJECT);
 
-        final Set<String> resultDataLinkIDs = new TreeSet<>();
         final List<DataLink> expectedDataLinks = new ArrayList<>();
-        final Set<String> expectedDataLinkIDs = new TreeSet<>();
+        final List<DataLink> resultDataLinks = new ArrayList<>();
         final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator,
                                                                   mockDataPacker);
 
         while (testSubject.hasNext()) {
-            final DataLink nextResultDataLink = testSubject.next();
-            resultDataLinkIDs.add(nextResultDataLink.getID());
+            resultDataLinks.add(testSubject.next());
         }
 
-        expectedDataLinks.addAll(testSubject.createDataLinks(FITS));
-        expectedDataLinks.addAll(testSubject.createDataLinks(FITSGZ));
-
-        for (final DataLink dataLink : expectedDataLinks) {
-            expectedDataLinkIDs.add(dataLink.getID());
-        }
+        expectedDataLinks.add(createDataLink(FITS, "image/fits",
+                                             new URL(String.format("https://myhost.com/mydownloads/%s",
+                                                                   FITS.getIdentifier())), DataLink.Term.THIS,
+                                             new ArrayList<>()));
+        expectedDataLinks.add(createDataLink(FITS, "image/fits",
+                                             new URL(String.format("https://myhost.com/mycutoutservice/sync?ID=%s",
+                                                                   FITS.getIdentifier())), DataLink.Term.CUTOUT,
+                                             new ArrayList<>()));
+        expectedDataLinks.add(createDataLink(FITSGZ, "image/fits",
+                                             new URL(String.format("https://myhost.com/mydownloads/%s",
+                                                                   FITSGZ.getIdentifier())), DataLink.Term.THIS,
+                                             new ArrayList<>()));
 
         verify(mockDataPacker, times(1)).expand(new Uid("uid___C3_C30_C300"), false);
 
-        // DataLink has no equals() method, so we'll need to dive down into the URLs of each DataLink.
-        Assert.assertArrayEquals("Wrong returned DataLink IDs.", expectedDataLinkIDs.toArray(),
-                                 resultDataLinkIDs.toArray());
+        // Even footing before comparing each item individually.
+        resultDataLinks.sort(new DataLinkComparator());
+        expectedDataLinks.sort(new DataLinkComparator());
+
+        Assert.assertEquals("Wrong sizes.", expectedDataLinks.size(), resultDataLinks.size());
+
+        final DataLinkComparator comparator = new DataLinkComparator();
+        for (int i = 0; i < resultDataLinks.size(); i++) {
+            final DataLink resultDataLink = resultDataLinks.get(i);
+            final DataLink expectedDataLink = expectedDataLinks.get(i);
+
+            Assert.assertEquals("DataLinks are not equal.", 0, comparator.compare(resultDataLink, expectedDataLink));
+        }
+    }
+
+    private DataLink createDataLink(final DeliverableInfo deliverableInfo, final String contentType,
+                                    final URL accessURL, final DataLink.Term semantic,
+                                    final List<DataLink.Term> otherSemantics) {
+        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), semantic);
+
+        otherSemantics.forEach(dataLink::addSemantics);
+
+        dataLink.accessURL = accessURL;
+        dataLink.contentType = contentType;
+
+        return dataLink;
     }
 
     @Test
@@ -250,7 +363,9 @@ public class DataLinkIteratorTest {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
         final DataLinkIterator testSubject =
-                new DataLinkIterator(new DataLinkURLBuilder(new URL("https://myhost.com/datalink/do")), null, null);
+                new DataLinkIterator(new DataLinkURLBuilder(new URL("https://myhost.com/datalink/do"),
+                                                            new URL("https://myhost.com/mysoda/sync")),
+                                     null, null);
 
         final DeliverableInfo deliverableInfoOne = new DeliverableInfo("uid___C7_C8_C9.tar",
                                                                        Deliverable.PIPELINE_PRODUCT);
@@ -291,7 +406,7 @@ public class DataLinkIteratorTest {
         final DeliverableInfo deliverableInfoFour = new DeliverableInfo("uid__C5_C6.science.fits",
                                                                         Deliverable.PIPELINE_PRODUCT);
         final List<DataLink> dataLinksFour = testSubject.createDataLinks(deliverableInfoFour);
-        Assert.assertEquals("Should have one element.", 1, dataLinksFour.size());
+        Assert.assertEquals("Should have one element.", 2, dataLinksFour.size());
         final DataLink datalinkFour = dataLinksFour.get(0);
 
         Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.THIS},

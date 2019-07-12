@@ -74,7 +74,6 @@ import alma.asdm.domain.DeliverableInfo;
 
 import ca.nrc.cadc.util.PropertiesReader;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -90,7 +89,7 @@ public class DataLinkURLBuilderTest {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
         final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(null);
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(null, null);
 
         when(mockDeliverableInfo.getIdentifier()).thenReturn("uid___C71_C72_C73.tmp");
 
@@ -109,7 +108,7 @@ public class DataLinkURLBuilderTest {
 
         final URL serviceEndpoint = new URL("https://myhost.com/datalink/endpoint");
         final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(serviceEndpoint);
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(serviceEndpoint, null);
 
         when(mockDeliverableInfo.getIdentifier()).thenReturn("2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar");
 
@@ -124,12 +123,31 @@ public class DataLinkURLBuilderTest {
     }
 
     @Test
+    public void createCutoutLinkURL() throws Exception {
+        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
+
+        final URL serviceEndpoint = new URL("https://myhost.com/soda/endpoint");
+        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(null, serviceEndpoint);
+
+        when(mockDeliverableInfo.getIdentifier()).thenReturn("2016.1.00161.S_uid___C81_C82_C83_sci.fits");
+
+        final String recursiveDataLinkURL = testSubject.createCutoutLinkURL(mockDeliverableInfo).toExternalForm();
+
+        Assert.assertEquals("Wrong URL.",
+                            "https://myhost.com/soda/endpoint?ID=2016.1.00161.S_uid___C81_C82_C83_sci.fits",
+                            recursiveDataLinkURL);
+
+        verify(mockDeliverableInfo, times(1)).getIdentifier();
+    }
+
+    @Test
     public void createRecursiveDataLinkURLWithQuery() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
         final URL serviceEndpoint = new URL("https://myhost.com/datalink/endpoint?recurse=true");
         final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(serviceEndpoint);
+        final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(serviceEndpoint, null);
 
         when(mockDeliverableInfo.getIdentifier()).thenReturn("2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar");
 
@@ -138,7 +156,7 @@ public class DataLinkURLBuilderTest {
 
         Assert.assertEquals("Wrong URL.",
                             "https://myhost.com/datalink/endpoint?recurse=true&ID=2016.1.00161" +
-                                    ".S_uid___C81_C82_C83_auxiliary.tar",
+                            ".S_uid___C81_C82_C83_auxiliary.tar",
                             recursiveDataLinkURL);
 
         verify(mockDeliverableInfo, times(1)).getIdentifier();

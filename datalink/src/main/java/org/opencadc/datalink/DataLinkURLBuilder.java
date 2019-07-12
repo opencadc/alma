@@ -80,26 +80,37 @@ import java.net.URL;
 public class DataLinkURLBuilder {
 
     private final DataLinkProperties dataLinkProperties;
-    private final URL serviceEndpoint;
+    private final URL dataLinkServiceEndpoint;
+    private final URL cutoutServiceEndpoint;
 
 
-    public DataLinkURLBuilder(final URL serviceEndpoint) {
-        this(new DataLinkProperties(), serviceEndpoint);
+    public DataLinkURLBuilder(final URL dataLinkServiceEndpoint, final URL cutoutServiceEndpoint) {
+        this(new DataLinkProperties(), dataLinkServiceEndpoint, cutoutServiceEndpoint);
     }
 
-    public DataLinkURLBuilder(final DataLinkProperties dataLinkProperties, final URL serviceEndpoint) {
+    public DataLinkURLBuilder(final DataLinkProperties dataLinkProperties, final URL dataLinkServiceEndpoint,
+                              final URL cutoutServiceEndpoint) {
         this.dataLinkProperties = dataLinkProperties;
-        this.serviceEndpoint = serviceEndpoint;
+        this.dataLinkServiceEndpoint = dataLinkServiceEndpoint;
+        this.cutoutServiceEndpoint = cutoutServiceEndpoint;
     }
 
-    URL createRecursiveDataLinkURL(final DeliverableInfo deliverableInfo)
+    URL createRecursiveDataLinkURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
+        return createServiceLinkURL(deliverableInfo, dataLinkServiceEndpoint);
+    }
+
+    URL createCutoutLinkURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
+        return createServiceLinkURL(deliverableInfo, cutoutServiceEndpoint);
+    }
+
+    private URL createServiceLinkURL(final DeliverableInfo deliverableInfo, final URL serviceURLEndpoint)
             throws MalformedURLException {
-        final String urlFile = String.format("%s%sID=%s", serviceEndpoint.getFile(),
-                                             StringUtil.hasText(serviceEndpoint.getQuery()) ? "&" : "?",
+        final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
+                                             StringUtil.hasText(serviceURLEndpoint.getQuery()) ? "&" : "?",
                                              deliverableInfo.getIdentifier());
 
-        return new URL(serviceEndpoint.getProtocol(), serviceEndpoint.getHost(),
-                       serviceEndpoint.getPort(), urlFile);
+        return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
+                       serviceURLEndpoint.getPort(), urlFile);
     }
 
     URL createDownloadURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
@@ -116,7 +127,7 @@ public class DataLinkURLBuilder {
 
                 // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
                 sanitizePath(deliverableInfo.getType() == Deliverable.ASDM ?
-                                     deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier())
+                             deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier())
         }));
     }
 
