@@ -1,39 +1,36 @@
 create or replace function TO_CIRCLE(in_coordinate_string in varchar2)
 return SDO_GEOMETRY is
-	circle SDO_GEOMETRY;
-	buff		varchar2(2048);
-	x_val 	number;
-	y_val	number;
-	radius_val	number;
-	point_1_x number;
-	point_1_y number;
-	point_2_x number;
-	point_2_y number;
-	point_3_x number;
-	point_3_y number;
-	pattern varchar2(32) := '-?[0-9]\d*(\.\d+)?';
-	begin
+	circle SDO_GEOMETRY
+    begin_index 	number;
+    x_val 	number;
+    y_val	number;
+    ;radius_val	number;
+    point_1_x number;
+    point_1_y number;
+    point_2_x number;
+    point_2_y number;
+    point_3_x number;
+    point_3_y number;
+    pattern varchar2(32) := '-?[0-9]\d*(\.\d+)?';
+    format varchar2(16) := '999.999999';
+begin
 		if REGEXP_COUNT(in_coordinate_string, pattern) <> 3
 		then
 			RAISE_APPLICATION_ERROR(-20001, 'Circles require three (3) values: (x, y, radius)');
-		end if;
-		-- Set the X value as entered.
-		select to_number(regexp_substr(in_coordinate_string, pattern)) into x_val from DUAL;
-		select trim(substr(in_coordinate_string, length(x_val) + 1)) into buff from DUAL;
-		-- Set the Y value as entered.
-		select to_number(regexp_substr(buff, pattern)) into y_val from DUAL;
-		select trim(substr(in_coordinate_string, length(y_val) + 1)) into buff from DUAL;
-		-- Set the Radius value as entered.
-		select to_number(regexp_substr(buff, pattern)) into radius_val from DUAL;
-		select x_val - radius_val into point_1_x from DUAL;
-		select y_val into point_1_y from DUAL;
-		select x_val into point_2_x from DUAL;
-		select y_val + radius_val into point_2_y from DUAL;
-		select x_val + radius_val into point_3_x from DUAL;
-		select y_val into point_3_y from DUAL;
-		select SDO_GEOMETRY(2003, null, null, SDO_ELEM_INFO_ARRAY(1, 1003, 4), SDO_ORDINATE_ARRAY(point_1_x, point_1_y, point_2_x, point_2_y, point_3_x, point_3_y)) into circle from DUAL;
-		return circle;
-	end;
+        end if;
+        select regexp_instr(in_coordinate_string, pattern) into begin_index from DUAL;
+        select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 1), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into x_val from DUAL;
+        select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 2), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into y_val from DUAL;
+        select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 3), format, ' NLS_NUMERIC_CHARACTERS= '',.''') into radius_val from DUAL;
+        select x_val - radius_val into point_1_x from DUAL;
+        select y_val into point_1_y from DUAL;
+        select x_val into point_2_x from DUAL;
+        select y_val + radius_val into point_2_y from DUAL;
+        select x_val + radius_val into point_3_x from DUAL;
+        select y_val into point_3_y from DUAL;
+        select SDO_GEOMETRY(2003, null, null, SDO_ELEM_INFO_ARRAY(1, 1003, 4), SDO_ORDINATE_ARRAY(point_1_x, point_1_y, point_2_x, point_2_y, point_3_x, point_3_y)) into circle from DUAL;
+        return circle;
+end;
 /
 
 create or replace function TO_POLYGON(in_coordinate_string in varchar2)
@@ -46,6 +43,7 @@ return SDO_GEOMETRY is
 	vertices SDO_ORDINATE_ARRAY := SDO_ORDINATE_ARRAY();
 	counter integer := 0;
 	next_vert number := 0.0;
+    format varchar2(16) := '999.99999999';
 	begin
 		if REGEXP_COUNT(in_coordinate_string, pattern) < 6
 		then
@@ -53,7 +51,7 @@ return SDO_GEOMETRY is
 		end if;
 		for i in c_vertices loop
       		counter := counter + 1;
-      		next_vert := to_number(i.VERT);
+      		next_vert := to_number(i.VERT, format, ' NLS_NUMERIC_CHARACTERS = '',.''');
       		vertices.extend;
       		vertices(counter) := next_vert;
       	end loop;
