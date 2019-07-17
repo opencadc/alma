@@ -1,10 +1,10 @@
 create or replace function TO_CIRCLE(in_coordinate_string in varchar2)
 return SDO_GEOMETRY is
-	circle SDO_GEOMETRY
-    begin_index 	number;
-    x_val 	number;
-    y_val	number;
-    ;radius_val	number;
+	circle SDO_GEOMETRY;
+    begin_index number;
+    x_val number;
+    y_val number;
+    radius_val number;
     point_1_x number;
     point_1_y number;
     point_2_x number;
@@ -21,7 +21,7 @@ begin
         select regexp_instr(in_coordinate_string, pattern) into begin_index from DUAL;
         select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 1), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into x_val from DUAL;
         select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 2), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into y_val from DUAL;
-        select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 3), format, ' NLS_NUMERIC_CHARACTERS= '',.''') into radius_val from DUAL;
+        select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 3), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into radius_val from DUAL;
         select x_val - radius_val into point_1_x from DUAL;
         select y_val into point_1_y from DUAL;
         select x_val into point_2_x from DUAL;
@@ -62,27 +62,30 @@ return SDO_GEOMETRY is
 
 create or replace function TO_UNION(in_coordinate_string in varchar2)
 return SDO_GEOMETRY is
-	pattern varchar2(64) := '((Polygon|Circle)(\ -?[0-9]\d*(\.\d+))*)+';
-	cursor c_shapes is
-	select regexp_substr(in_coordinate_string, pattern, 1, level) as SHAPE from DUAL
-	connect by regexp_substr(in_coordinate_string, pattern, 1, level) is not null;
-	union_geo SDO_GEOMETRY;
-	next_shape SDO_GEOMETRY;
-	begin
-		for i in c_shapes loop
-			if LOWER(i.SHAPE) LIKE 'circle%'
-			then
-				next_shape := TO_CIRCLE(i.SHAPE);
-			elsif LOWER(i.SHAPE) LIKE 'polygon%'
-			then
-				next_shape := TO_POLYGON(i.SHAPE);
-			else
-			 	RAISE_APPLICATION_ERROR(-20000, 'Unsupported shape in UNION"' || i.SHAPE || '".  Only "CIRCLE" or "POLYGON" are supported.');
-			end if;      		
-      		select SDO_GEOM.SDO_UNION(union_geo, next_shape, 0.05) into union_geo from DUAL;
-      	end loop;
-		return union_geo;
-	end;
+    pattern varchar2(64) := '((Polygon|Circle)(\ -?[0-9]\d*(\.\d+))*)+';
+    cursor c_shapes is
+    select regexp_substr(in_coordinate_string, pattern, 1, level) as SHAPE from DUAL
+    connect by regexp_substr(in_coordinate_string, pattern, 1, level) is not null;
+    shape_array SDO_GEOMETRY_ARRAY;
+    next_shape SDO_GEOMETRY;
+    shape_collector SDO_GEOMETRY_ARRAY;
+    begin
+    shape_collector := SDO_GEOMETRY_ARRAY();
+    for i in c_shapes loop
+        if LOWER(i.SHAPE) LIKE 'circle%'
+        then
+            next_shape := TO_CIRCLE(i.SHAPE);
+        elsif LOWER(i.SHAPE) LIKE 'polygon%'
+        then
+            next_shape := TO_POLYGON(i.SHAPE);
+        else
+            RAISE_APPLICATION_ERROR(-20000, 'Unsupported shape in UNION"' || i.SHAPE || '".  Only "CIRCLE" or "POLYGON" are supported.');
+        end if;
+        shape_collector.extend;
+        shape_collector(shape_collector.count) := next_shape;
+    end loop;
+    return SDO_AGGR_SET_UNION(shape_collector, 0.000001);
+end;
 /
 
 

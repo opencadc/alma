@@ -76,6 +76,7 @@ import ca.nrc.cadc.tap.expression.OracleExpressionDeParser;
 import ca.nrc.cadc.tap.parser.OracleQuerySelectDeParser;
 import ca.nrc.cadc.tap.parser.QuerySelectDeParser;
 import ca.nrc.cadc.tap.parser.converter.OracleCeilingConverter;
+import ca.nrc.cadc.tap.parser.converter.OracleObsCoreSelectListConverter;
 import ca.nrc.cadc.tap.parser.converter.OracleRegionConverter;
 import ca.nrc.cadc.tap.parser.converter.OracleSubstringConverter;
 import ca.nrc.cadc.tap.parser.converter.TableNameConverter;
@@ -116,6 +117,7 @@ public class AdqlQueryImpl extends AdqlQuery {
         // For Oracle, the CEILING function is actually CEIL.
         navigatorList.add(new OracleCeilingConverter(new ExpressionNavigator(), tnrc, tnc));
         navigatorList.add(new OracleSubstringConverter(new ExpressionNavigator(), tnrc, tnc));
+        navigatorList.add(new OracleObsCoreSelectListConverter(new ExpressionNavigator(), tnrc, tnc));
         navigatorList.add(new OracleRegionConverter(new ExpressionNavigator(), tnrc, tnc));
         navigatorList.add(new SelectNavigator(new ExpressionNavigator(), tnrc, tnc));
 

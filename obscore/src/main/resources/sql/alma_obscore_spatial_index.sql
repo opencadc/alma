@@ -4,9 +4,11 @@
 ALTER TABLE ALMA.asa_science
 ADD SPATIAL_BOUNDS  SDO_GEOMETRY;
 
--- Populate the SPATIAL_BOUNDS column based on the current footprint values.  Takes minutes to run.
-UPDATE ALMA.asa_science asr
-SET asr.SPATIAL_BOUNDS = (SELECT TO_GEOMETRIC_OBJECT(asp.footprint) FROM ALMA.asa_science asp WHERE asp.DATASET_ID = asr.DATASET_ID);
+-- Populate the SPATIAL_BOUNDS column based on the current footprint values.  Takes several minutes to run.
+UPDATE ALMA.asa_science
+SET SPATIAL_BOUNDS = TO_GEOMETRIC_OBJECT(FOOTPRINT)
+WHERE FOOTPRINT IS NOT NULL
+AND FOOTPRINT <> ' ';
 
 -- Necessary to prepare Oracle for the Spatial Index coming.
 INSERT INTO USER_SDO_GEOM_METADATA
