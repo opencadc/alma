@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         id="target_resolver" version="3.0">
+    <display-name>SODA</display-name>
+
+    <servlet>
+        <load-on-startup>1</load-on-startup>
+        <servlet-name>logControl</servlet-name>
+        <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
+        <init-param>
+            <param-name>logLevel</param-name>
+            <param-value>info</param-value>
+        </init-param>
+        <init-param>
+            <param-name>logLevelPackages</param-name>
+            <param-value>
+                org.opencadc.soda
+                ca.nrc.cadc.dali
+                ca.nrc.cadc.vosi
+                ca.nrc.cadc.uws
+                ca.nrc.cadc.wcs
+            </param-value>
+        </init-param>
+        <!--        <init-param>-->
+        <!--            <param-name>logAccessGroup</param-name>-->
+        <!--            <param-value>ivo://cadc.nrc.ca/gms?CADC</param-value>-->
+        <!--        </init-param>-->
+        <!--        <init-param>-->
+        <!--            <param-name>groupAuthorizer</param-name>-->
+        <!--            <param-value>ca.nrc.cadc.ac.client.GroupAuthorizer</param-value>-->
+        <!--        </init-param>-->
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>3</load-on-startup>
+        <servlet-name>CapabilitiesServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.vosi.CapabilitiesServlet</servlet-class>
+        <init-param>
+            <param-name>input</param-name>
+            <param-value>/capabilities.xml</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>3</load-on-startup>
+        <servlet-name>AvailabilityServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.vosi.AvailabilityServlet</servlet-class>
+        <init-param>
+            <description>
+            </description>
+            <param-name>ca.nrc.cadc.vosi.AvailabilityPlugin</param-name>
+            <param-value>org.opencadc.soda.SodaAvailabilityPlugin</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>2</load-on-startup>
+        <servlet-name>SyncSodaServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>post</param-name>
+            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
+            <param-value>org.opencadc.soda.ws.SodaJobManager</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <servlet-name>AsyncSodaServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.uws.server.AsyncServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.uws.web.GetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>post</param-name>
+            <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>delete</param-name>
+            <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
+            <param-value>org.opencadc.soda.ws.SodaJobManager</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>2</load-on-startup>
+        <servlet-name>SodaEchoServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>org.opencadc.soda.ws.EchoAction</param-value>
+        </init-param>
+    </servlet>
+
+    <!-- URL-to-servlet mapping -->
+
+    <servlet-mapping>
+        <servlet-name>logControl</servlet-name>
+        <url-pattern>/logControl</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AvailabilityServlet</servlet-name>
+        <url-pattern>/availability</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>CapabilitiesServlet</servlet-name>
+        <url-pattern>/capabilities</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>SyncSodaServlet</servlet-name>
+        <url-pattern>/sync</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AsyncSodaServlet</servlet-name>
+        <url-pattern>/async</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>SodaEchoServlet</servlet-name>
+        <url-pattern>/soda-echo/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- security constraints -->
+
+<!--    <security-role>-->
+<!--        <description>Public security role</description>-->
+<!--        <role-name>public</role-name>-->
+<!--    </security-role>-->
+
+<!--    <security-constraint>-->
+<!--        <web-resource-collection>-->
+<!--            <web-resource-name>auth</web-resource-name>-->
+<!--            <description/>-->
+<!--            <url-pattern>/logControl/*</url-pattern>-->
+<!--        </web-resource-collection>-->
+<!--        <auth-constraint>-->
+<!--            <description>force authentication for all requests</description>-->
+<!--            <role-name>public</role-name>-->
+<!--        </auth-constraint>-->
+<!--    </security-constraint>-->
+
+<!--    <login-config>-->
+<!--        <auth-method>BASIC</auth-method>-->
+<!--        <realm-name>Canadian Astronomy Data Centre</realm-name>-->
+<!--    </login-config>-->
+</web-app>
