@@ -98,6 +98,7 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.List;
 
 
@@ -111,7 +112,9 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
     private static final String NGAS_TIMEOUT_SECONDS_PROPERTY_NAME = "ngasTimeoutSeconds";
     private static final String ALMA_DB_JNDI_NAME_KEY = "almaJDBCName";
     private static final String ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME = "almaDataLinkServiceURI";
+    private static final String ALMA_SODA_SERVICE_ID_PROPERTY_NAME = "almaSODAServiceURI";
     private static final String DEFAULT_ALMA_DATALINK_SERVICE_ID = "ivo://cadc.nrc.ca/datalink";
+    private static final String DEFAULT_ALMA_SODA_SERVICE_ID = "ivo://cadc.nrc.ca/soda";
     private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/datalink";
     private static final String PARAMETER_KEY = "ID";
 
@@ -153,7 +156,12 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
         return new DataLinkURLBuilder(registryClient.getServiceURL(
                 URI.create(dataLinkProperties.getFirstPropertyValue(ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME,
                                                                     DEFAULT_ALMA_DATALINK_SERVICE_ID)),
-                Standards.DATALINK_LINKS_10, AuthMethod.ANON));
+                Standards.DATALINK_LINKS_10, AuthMethod.ANON),
+                                      registryClient.getServiceURL(
+                                              URI.create(dataLinkProperties.getFirstPropertyValue(
+                                                      ALMA_SODA_SERVICE_ID_PROPERTY_NAME,
+                                                      DEFAULT_ALMA_SODA_SERVICE_ID)),
+                                              Standards.SODA_SYNC_10, AuthMethod.ANON));
     }
 
     DataPacker createDataPacker() {

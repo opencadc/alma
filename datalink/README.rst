@@ -1,6 +1,10 @@
 ALMA DataLink (1.0.0)
 ================
 
+Current implementation can be found at the CADC here:
+https://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/alma-datalink/
+
+
 `IVOA DataLink`_ service for the `ALMA Science Archive`_.
 
 Build

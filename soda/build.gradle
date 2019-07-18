@@ -9,6 +9,22 @@ repositories {
     jcenter()
 
     // To obtain access to the Oracle Maven repository, put your credentials into environment variables:
+    // - ALMA_MAVEN_USERNAME
+    // - ALMA_MAVEN_PASSWORD
+    //
+    // or, create a gradle.properties in your ~/.gradle directory with the following variables set:
+    // - almaMavenUsername
+    // - almaMavenPassword
+    maven {
+        name 'alma-central'
+        url 'https://maven-repo.hq.eso.org/artifactory/ALMA'
+        credentials {
+            username = System.getenv("ALMA_MAVEN_USERNAME") ?: almaMavenUsername
+            password = System.getenv("ALMA_MAVEN_PASSWORD") ?: almaMavenPassword
+        }
+    }
+
+    // To obtain access to the Oracle Maven repository, put your credentials into environment variables:
     // - MAVEN_ORACLE_USERNAME
     // - MAVEN_ORACLE_PASSWORD
     //
@@ -23,28 +39,24 @@ repositories {
             password = System.getenv("MAVEN_ORACLE_PASSWORD") ?: mavenOraclePassword
         }
     }
-
-    maven {
-        url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
-    }
 }
 
 group = 'org.opencadc'
-sourceCompatibility = 1.7
-version = '1009'
+sourceCompatibility = 1.8
+version = '1000'
 
 ext {
-    default_app_name = 'tap'
+    default_app_name = 'soda'
 }
 
 war {
-    if (project.hasProperty('alma_tap_app_name')) {
+    if (project.hasProperty('alma_soda_app_name')) {
         eachFile {
             if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-                filter(ReplaceTokens, tokens: [app_name: project.alma_tap_app_name])
+                filter(ReplaceTokens, tokens: [app_name: project.alma_soda_app_name])
             }
         }
-        archiveName = project.alma_tap_app_name + '##' + project.version + '.war'
+        archiveName = project.alma_soda_app_name + '##' + project.version + '.war'
     } else {
         eachFile {
             if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
@@ -54,7 +66,7 @@ war {
         archiveName = project.default_app_name + '##' + project.version + '.war'
     }
 
-    // Include the swagger-ui so that /tap provides the TAP API documentation
+    // Include the swagger-ui so that /soda provides the soda API documentation
     from('../') {
         include 'swagger-ui/'
     }
@@ -66,24 +78,16 @@ configurations {
 }
 
 dependencies {
-    compile 'log4j:log4j:1.2.+'
-    compile 'com.oracle:ojdbc6:11.2.0.3'
-    compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.3'
-    compile 'org.opencadc:cadc-tap-server-oracle:[1.2.3,)'
-    compile 'org.opencadc:cadc-tap-server:[1.1.5,)'
-    compile 'org.opencadc:cadc-adql:[1.1,)'
-    compile 'org.opencadc:cadc-vosi:[1.0.1,2.0)'
+    compile 'log4j:log4j:1.2.17'
+    compile 'org.opencadc:cadc-soda-server:[1.0,)'
 
-    runtime 'org.opencadc:cadc-registry:[1.2.1,)'
-
-    testCompile 'junit:junit:4.+'
+    testCompile 'junit:junit:[4.12,)'
+    testCompile 'org.mockito:mockito-core:[2.28,)'
     testCompile 'org.opencadc:cadc-test-uws:[1.1.1,)'
     testCompile 'org.opencadc:cadc-test-vosi:[1.0.2,)'
-    testCompile 'org.opencadc:cadc-test-tap:[1.1,)'
 
     intTestCompile 'org.opencadc:cadc-test-uws:[1.1.1,)'
     intTestCompile 'org.opencadc:cadc-test-vosi:[1.0.2,)'
-    intTestCompile 'org.opencadc:cadc-test-tap:[1.1,)'
 }
 
 sourceSets {

@@ -1,4 +1,3 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
@@ -67,88 +66,62 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.soda;
 
-import alma.asdm.domain.Deliverable;
-import alma.asdm.domain.DeliverableInfo;
 import ca.nrc.cadc.util.StringUtil;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-
-
-public class DataLinkURLBuilder {
-
-    private final DataLinkProperties dataLinkProperties;
-    private final URL dataLinkServiceEndpoint;
-    private final URL cutoutServiceEndpoint;
+import ca.nrc.cadc.vosi.AvailabilityPlugin;
+import ca.nrc.cadc.vosi.AvailabilityStatus;
 
 
-    public DataLinkURLBuilder(final URL dataLinkServiceEndpoint, final URL cutoutServiceEndpoint) {
-        this(new DataLinkProperties(), dataLinkServiceEndpoint, cutoutServiceEndpoint);
+public class SodaAvailabilityPlugin implements AvailabilityPlugin {
+
+    private String applicationName;
+    private String state;
+
+
+    /**
+     * Set application name. The appName is a string unique to this
+     * application.
+     *
+     * @param appName unique application name
+     */
+    @Override
+    public void setAppName(String appName) {
+        this.applicationName = appName;
     }
 
-    public DataLinkURLBuilder(final DataLinkProperties dataLinkProperties, final URL dataLinkServiceEndpoint,
-                              final URL cutoutServiceEndpoint) {
-        this.dataLinkProperties = dataLinkProperties;
-        this.dataLinkServiceEndpoint = dataLinkServiceEndpoint;
-        this.cutoutServiceEndpoint = cutoutServiceEndpoint;
+    /**
+     * Get the current status.
+     *
+     * @return current status
+     */
+    @Override
+    public AvailabilityStatus getStatus() {
+        return new AvailabilityStatus(true, null, null, null,
+                                      String.format("%s state: %s", applicationName, StringUtil.hasText(state) ?
+                                                                                     state : "ACTIVE"));
     }
 
-    URL createRecursiveDataLinkURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return createServiceLinkURL(deliverableInfo, dataLinkServiceEndpoint);
+    /**
+     * The AvailabilitySerlet supports a POST with state=??? that it will pass
+     * on to the WebService. This can be used to implement state-changes in the
+     * service, e.g. disabling or enabling features.
+     *
+     * @param state requested state
+     */
+    @Override
+    public void setState(String state) {
+        this.state = state;
     }
 
-    URL createCutoutLinkURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return createServiceLinkURL(deliverableInfo, cutoutServiceEndpoint);
-    }
-
-    private URL createServiceLinkURL(final DeliverableInfo deliverableInfo, final URL serviceURLEndpoint)
-            throws MalformedURLException {
-        final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
-                                             StringUtil.hasText(serviceURLEndpoint.getQuery()) ? "&" : "?",
-                                             deliverableInfo.getIdentifier());
-
-        return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
-                       serviceURLEndpoint.getPort(), urlFile);
-    }
-
-    URL createDownloadURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        final String secureSchemeHost = dataLinkProperties.getFirstPropertyValue("secureSchemeHost");
-        final String downloadPath = dataLinkProperties.getFirstPropertyValue("downloadPath");
-
-        final String sanitizedURL = String.join("/", new String[] {
-                sanitizePath(secureSchemeHost),
-                sanitizePath(downloadPath)
-        });
-
-        return new URL(String.join("/", new String[] {
-                sanitizePath(new URL(sanitizedURL).toExternalForm()),
-
-                // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
-                sanitizePath(deliverableInfo.getType() == Deliverable.ASDM ?
-                             deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier())
-        }));
-    }
-
-    private String sanitizePath(final String pathItem) {
-        final String sanitizedPath;
-        if (!StringUtil.hasLength(pathItem)) {
-            sanitizedPath = "";
-        } else {
-            final StringBuilder stringBuilder = new StringBuilder(pathItem.trim());
-
-            while (stringBuilder.indexOf("/") == 0) {
-                stringBuilder.deleteCharAt(0);
-            }
-
-            while (stringBuilder.lastIndexOf("/") == (stringBuilder.length() - 1)) {
-                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-            }
-
-            sanitizedPath = stringBuilder.toString();
-        }
-
-        return sanitizedPath;
+    /**
+     * A very lightweight method that can be called every few seconds to test if a service is (probably) working.
+     * This method is to be implemented by all services.
+     *
+     * @return true if successful, false otherwise
+     */
+    @Override
+    public boolean heartbeat() {
+        return true;
     }
 }

@@ -67,88 +67,11 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.soda.ws;
 
-import alma.asdm.domain.Deliverable;
-import alma.asdm.domain.DeliverableInfo;
-import ca.nrc.cadc.util.StringUtil;
-
-import java.net.MalformedURLException;
-import java.net.URL;
+import ca.nrc.cadc.uws.server.SimpleJobManager;
 
 
-public class DataLinkURLBuilder {
+public class SodaJobManager extends SimpleJobManager {
 
-    private final DataLinkProperties dataLinkProperties;
-    private final URL dataLinkServiceEndpoint;
-    private final URL cutoutServiceEndpoint;
-
-
-    public DataLinkURLBuilder(final URL dataLinkServiceEndpoint, final URL cutoutServiceEndpoint) {
-        this(new DataLinkProperties(), dataLinkServiceEndpoint, cutoutServiceEndpoint);
-    }
-
-    public DataLinkURLBuilder(final DataLinkProperties dataLinkProperties, final URL dataLinkServiceEndpoint,
-                              final URL cutoutServiceEndpoint) {
-        this.dataLinkProperties = dataLinkProperties;
-        this.dataLinkServiceEndpoint = dataLinkServiceEndpoint;
-        this.cutoutServiceEndpoint = cutoutServiceEndpoint;
-    }
-
-    URL createRecursiveDataLinkURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return createServiceLinkURL(deliverableInfo, dataLinkServiceEndpoint);
-    }
-
-    URL createCutoutLinkURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return createServiceLinkURL(deliverableInfo, cutoutServiceEndpoint);
-    }
-
-    private URL createServiceLinkURL(final DeliverableInfo deliverableInfo, final URL serviceURLEndpoint)
-            throws MalformedURLException {
-        final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
-                                             StringUtil.hasText(serviceURLEndpoint.getQuery()) ? "&" : "?",
-                                             deliverableInfo.getIdentifier());
-
-        return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
-                       serviceURLEndpoint.getPort(), urlFile);
-    }
-
-    URL createDownloadURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        final String secureSchemeHost = dataLinkProperties.getFirstPropertyValue("secureSchemeHost");
-        final String downloadPath = dataLinkProperties.getFirstPropertyValue("downloadPath");
-
-        final String sanitizedURL = String.join("/", new String[] {
-                sanitizePath(secureSchemeHost),
-                sanitizePath(downloadPath)
-        });
-
-        return new URL(String.join("/", new String[] {
-                sanitizePath(new URL(sanitizedURL).toExternalForm()),
-
-                // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
-                sanitizePath(deliverableInfo.getType() == Deliverable.ASDM ?
-                             deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier())
-        }));
-    }
-
-    private String sanitizePath(final String pathItem) {
-        final String sanitizedPath;
-        if (!StringUtil.hasLength(pathItem)) {
-            sanitizedPath = "";
-        } else {
-            final StringBuilder stringBuilder = new StringBuilder(pathItem.trim());
-
-            while (stringBuilder.indexOf("/") == 0) {
-                stringBuilder.deleteCharAt(0);
-            }
-
-            while (stringBuilder.lastIndexOf("/") == (stringBuilder.length() - 1)) {
-                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-            }
-
-            sanitizedPath = stringBuilder.toString();
-        }
-
-        return sanitizedPath;
-    }
 }

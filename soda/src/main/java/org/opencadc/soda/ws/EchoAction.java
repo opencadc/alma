@@ -67,88 +67,97 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.soda.ws;
 
-import alma.asdm.domain.Deliverable;
-import alma.asdm.domain.DeliverableInfo;
-import ca.nrc.cadc.util.StringUtil;
+import org.apache.log4j.Logger;
+import ca.nrc.cadc.rest.InlineContentHandler;
+import ca.nrc.cadc.rest.RestAction;
+import ca.nrc.cadc.util.Base64;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
-
-public class DataLinkURLBuilder {
-
-    private final DataLinkProperties dataLinkProperties;
-    private final URL dataLinkServiceEndpoint;
-    private final URL cutoutServiceEndpoint;
+import java.io.PrintWriter;
 
 
-    public DataLinkURLBuilder(final URL dataLinkServiceEndpoint, final URL cutoutServiceEndpoint) {
-        this(new DataLinkProperties(), dataLinkServiceEndpoint, cutoutServiceEndpoint);
+public class EchoAction extends RestAction {
+
+    private static final Logger LOGGER = Logger.getLogger(EchoAction.class);
+
+    /**
+     * Create inline content handler to process non-form data. Non-form data could
+     * be a document or part of a multi-part request). Null return value is allowed
+     * if the service never expects non-form data or wants to ignore non-form data.
+     *
+     * @return configured InlineContentHandler
+     */
+    @Override
+    protected InlineContentHandler getInlineContentHandler() {
+        return null;
     }
 
-    public DataLinkURLBuilder(final DataLinkProperties dataLinkProperties, final URL dataLinkServiceEndpoint,
-                              final URL cutoutServiceEndpoint) {
-        this.dataLinkProperties = dataLinkProperties;
-        this.dataLinkServiceEndpoint = dataLinkServiceEndpoint;
-        this.cutoutServiceEndpoint = cutoutServiceEndpoint;
-    }
+    /**
+     * Implemented by subclass
+     * The following exceptions, when thrown by this function, are
+     * automatically mapped into HTTP errors by RestAction class:
+     * java.lang.IllegalArgumentException : 400
+     * java.security.AccessControlException : 403
+     * java.security.cert.CertificateException : 403
+     * ca.nrc.cadc.net.ResourceNotFoundException : 404
+     * ca.nrc.cadc.net.ResourceAlreadyExistsException : 409
+     * ca.nrc.cadc.io.ByteLimitExceededException : 413
+     * ca.nrc.cadc.net.TransientException : 503
+     * java.lang.RuntimeException : 500
+     * java.lang.Error : 500
+     *
+     * @throws Exception for standard application failure
+     */
+    @Override
+    public void doAction() throws Exception {
+        Stuff msg = parseStuff(syncInput.getPath());
 
-    URL createRecursiveDataLinkURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return createServiceLinkURL(deliverableInfo, dataLinkServiceEndpoint);
-    }
-
-    URL createCutoutLinkURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return createServiceLinkURL(deliverableInfo, cutoutServiceEndpoint);
-    }
-
-    private URL createServiceLinkURL(final DeliverableInfo deliverableInfo, final URL serviceURLEndpoint)
-            throws MalformedURLException {
-        final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
-                                             StringUtil.hasText(serviceURLEndpoint.getQuery()) ? "&" : "?",
-                                             deliverableInfo.getIdentifier());
-
-        return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
-                       serviceURLEndpoint.getPort(), urlFile);
-    }
-
-    URL createDownloadURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        final String secureSchemeHost = dataLinkProperties.getFirstPropertyValue("secureSchemeHost");
-        final String downloadPath = dataLinkProperties.getFirstPropertyValue("downloadPath");
-
-        final String sanitizedURL = String.join("/", new String[] {
-                sanitizePath(secureSchemeHost),
-                sanitizePath(downloadPath)
-        });
-
-        return new URL(String.join("/", new String[] {
-                sanitizePath(new URL(sanitizedURL).toExternalForm()),
-
-                // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
-                sanitizePath(deliverableInfo.getType() == Deliverable.ASDM ?
-                             deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier())
-        }));
-    }
-
-    private String sanitizePath(final String pathItem) {
-        final String sanitizedPath;
-        if (!StringUtil.hasLength(pathItem)) {
-            sanitizedPath = "";
-        } else {
-            final StringBuilder stringBuilder = new StringBuilder(pathItem.trim());
-
-            while (stringBuilder.indexOf("/") == 0) {
-                stringBuilder.deleteCharAt(0);
-            }
-
-            while (stringBuilder.lastIndexOf("/") == (stringBuilder.length() - 1)) {
-                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-            }
-
-            sanitizedPath = stringBuilder.toString();
+        syncOutput.setCode(msg.code);
+        if (msg.contentType != null) {
+            syncOutput.setHeader("Content-Type", msg.contentType);
         }
+        if (msg.body != null) {
+            PrintWriter pw = new PrintWriter(syncOutput.getOutputStream());
+            pw.println(msg.body);
+            pw.flush();
+            pw.close();
+        }
+    }
 
-        return sanitizedPath;
+    private class Stuff {
+
+        int code;
+        String contentType;
+        String body;
+    }
+
+    private Stuff parseStuff(String path) {
+        Stuff ret = new Stuff();
+        try {
+            if (path.charAt(0) == '/') {
+                path = path.substring(1);
+            }
+            String msg = Base64.decodeString(path);
+            LOGGER.debug("parse msg: " + msg);
+            String[] parts = msg.split("[|]");
+            for (String s : parts) {
+                LOGGER.debug("msg part: " + s);
+            }
+            if (parts.length > 0) {
+                ret.code = Integer.parseInt(parts[0]);
+            }
+            if (parts.length > 1) {
+                ret.contentType = parts[1];
+            }
+            if (parts.length > 2) {
+                ret.body = parts[2];
+            }
+        } catch (NumberFormatException ex) {
+            ret.code = 400;
+            ret.contentType = "text/plain";
+            ret.body = "BUG: invalid message in URL";
+        }
+        return ret;
     }
 }

@@ -2,6 +2,24 @@
 Change Log
 ==========
 
+1.1.10 (Released)
+-------------------------
+
+* Added formatter for region (S_REGION) column.
+* ADQL properly refers to the FOOTPRINT column when selecting the S_REGION column.
+* Added formatting to the TO_NUMBER() call in the SQL functions.  Some Oracle instances use a comma (,) and others use a period (.).
+* Improved function to create the UNION types in S_REGION.
+
+1.1.9 (Released)
+-------------------------
+
+* Remove unused line in web.xml
+
+1.1.8 (Released)
+-------------------------
+
+* Completed SDO_GEOMETRY column Footprint conversions for Polygons, Circles, and Unions.
+
 1.1.7 (Released)
 -------------------------
 
