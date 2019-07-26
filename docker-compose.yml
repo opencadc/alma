@@ -1,6 +1,7 @@
 version: '3.2'
 services:
   proxy.cadc.dao.nrc.ca:
+    hostname: ${HOSTNAME:-proxy.cadc.dao.nrc.ca}
     image: nginx:alpine
     ports:
       - '80:80'
