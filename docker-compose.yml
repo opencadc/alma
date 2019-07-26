@@ -12,6 +12,8 @@ services:
       - 'obscore.cadc.dao.nrc.ca'
       - 'sia.cadc.dao.nrc.ca'
       - 'reg.cadc.dao.nrc.ca'
+      - 'soda.cadc.dao.nrc.ca'
+      - 'datalink.cadc.dao.nrc.ca'
   sia.cadc.dao.nrc.ca:
     image: opencadc/alma-sia:1.0.1
     networks:
@@ -46,6 +48,12 @@ services:
       - '25555:5555'
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
+  soda.cadc.dao.nrc.ca:
+    image: opencadc/alma-soda:1.0.0
+    ports:
+      - '55555:5555'
+    networks:
+      - 'alma'
 
 networks:
   alma:

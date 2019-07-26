@@ -81,6 +81,8 @@ dependencies {
     compile 'log4j:log4j:1.2.17'
     compile 'org.opencadc:cadc-soda-server:[1.0,)'
 
+    runtime 'com.oracle:ojdbc6:11.2.0.3'
+
     testCompile 'junit:junit:[4.12,)'
     testCompile 'org.mockito:mockito-core:[2.28,)'
     testCompile 'org.opencadc:cadc-test-uws:[1.1.1,)'

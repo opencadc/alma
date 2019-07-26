@@ -2,15 +2,15 @@
 <Context>
     <WatchedResource>WEB-INF/web.xml</WatchedResource>
        
-    <Resource name="jdbc/tapuser"
+    <Resource name="jdbc/soda"
               auth="Container"
               type="javax.sql.DataSource"
               factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
               minEvictableIdleTimeMillis="30000"
               maxActive="1" maxIdle="1" maxWait="20000"
-              username="${alma.tapuser.username}" password="${alma.tapuser.password}"
-              driverClassName="${alma.tapuser.driverClassName}"
-              url="${alma.tapuser.url}"
+              username="${alma.soda.username}" password="${alma.soda.password}"
+              driverClassName="${alma.soda.driverClassName}"
+              url="${alma.soda.url}"
               removeAbandoned="false"
               removeAbandonedTimeout="600"
               initSQL="ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS.FF3&quot;Z&quot;' NLS_DATE_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS&quot;Z&quot;'"

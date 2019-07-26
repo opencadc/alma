@@ -73,6 +73,8 @@ package org.opencadc.soda.server;
 
 public class ALMASodaJobRunner extends AbstractSodaJobRunner {
 
+    private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/soda";
+
     @Override
     public SodaPlugin getSodaPlugin() {
         return new ALMAStreamingSodaPlugin();
