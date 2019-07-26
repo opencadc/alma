@@ -69,28 +69,29 @@
 
 package org.opencadc.datalink;
 
-import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.DeliverableInfo;
+import org.opencadc.alma.AlmaProperties;
+import org.opencadc.alma.deliverable.DeliverableURLBuilder;
 import ca.nrc.cadc.util.StringUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
 
-public class DataLinkURLBuilder {
+public class DataLinkURLBuilder extends DeliverableURLBuilder {
 
-    private final DataLinkProperties dataLinkProperties;
     private final URL dataLinkServiceEndpoint;
     private final URL cutoutServiceEndpoint;
 
 
     public DataLinkURLBuilder(final URL dataLinkServiceEndpoint, final URL cutoutServiceEndpoint) {
-        this(new DataLinkProperties(), dataLinkServiceEndpoint, cutoutServiceEndpoint);
+        this(new AlmaProperties(), dataLinkServiceEndpoint, cutoutServiceEndpoint);
     }
 
-    public DataLinkURLBuilder(final DataLinkProperties dataLinkProperties, final URL dataLinkServiceEndpoint,
+    public DataLinkURLBuilder(final AlmaProperties almaProperties, final URL dataLinkServiceEndpoint,
                               final URL cutoutServiceEndpoint) {
-        this.dataLinkProperties = dataLinkProperties;
+
+        super(almaProperties);
         this.dataLinkServiceEndpoint = dataLinkServiceEndpoint;
         this.cutoutServiceEndpoint = cutoutServiceEndpoint;
     }
@@ -111,44 +112,5 @@ public class DataLinkURLBuilder {
 
         return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
                        serviceURLEndpoint.getPort(), urlFile);
-    }
-
-    URL createDownloadURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        final String secureSchemeHost = dataLinkProperties.getFirstPropertyValue("secureSchemeHost");
-        final String downloadPath = dataLinkProperties.getFirstPropertyValue("downloadPath");
-
-        final String sanitizedURL = String.join("/", new String[] {
-                sanitizePath(secureSchemeHost),
-                sanitizePath(downloadPath)
-        });
-
-        return new URL(String.join("/", new String[] {
-                sanitizePath(new URL(sanitizedURL).toExternalForm()),
-
-                // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
-                sanitizePath(deliverableInfo.getType() == Deliverable.ASDM ?
-                             deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier())
-        }));
-    }
-
-    private String sanitizePath(final String pathItem) {
-        final String sanitizedPath;
-        if (!StringUtil.hasLength(pathItem)) {
-            sanitizedPath = "";
-        } else {
-            final StringBuilder stringBuilder = new StringBuilder(pathItem.trim());
-
-            while (stringBuilder.indexOf("/") == 0) {
-                stringBuilder.deleteCharAt(0);
-            }
-
-            while (stringBuilder.lastIndexOf("/") == (stringBuilder.length() - 1)) {
-                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-            }
-
-            sanitizedPath = stringBuilder.toString();
-        }
-
-        return sanitizedPath;
     }
 }

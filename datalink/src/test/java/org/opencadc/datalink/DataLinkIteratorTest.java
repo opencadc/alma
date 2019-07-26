@@ -84,6 +84,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.junit.Assert;
+import org.opencadc.alma.deliverable.DeliverableInfoWalker;
 
 import ca.nrc.cadc.util.PropertiesReader;
 
@@ -92,7 +93,7 @@ import static org.mockito.Mockito.*;
 
 public class DataLinkIteratorTest {
 
-    class DataLinkComparator implements Comparator<DataLink> {
+    static class DataLinkComparator implements Comparator<DataLink> {
 
         /**
          * Compares its two arguments for order.  Returns a negative integer,
@@ -213,7 +214,7 @@ public class DataLinkIteratorTest {
         final List<DataLink> expectedDataLinks = new ArrayList<>();
 
         final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator,
-                                                                  mockDataPacker);
+                                                                  mockDataPacker, new DeliverableInfoWalker());
 
         while (testSubject.hasNext()) {
             resultDataLinks.add(testSubject.next());
@@ -309,7 +310,7 @@ public class DataLinkIteratorTest {
         final List<DataLink> expectedDataLinks = new ArrayList<>();
         final List<DataLink> resultDataLinks = new ArrayList<>();
         final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator,
-                                                                  mockDataPacker);
+                                                                  mockDataPacker, new DeliverableInfoWalker());
 
         while (testSubject.hasNext()) {
             resultDataLinks.add(testSubject.next());
@@ -365,7 +366,7 @@ public class DataLinkIteratorTest {
         final DataLinkIterator testSubject =
                 new DataLinkIterator(new DataLinkURLBuilder(new URL("https://myhost.com/datalink/do"),
                                                             new URL("https://myhost.com/mysoda/sync")),
-                                     null, null);
+                                     null, null, null);
 
         final DeliverableInfo deliverableInfoOne = new DeliverableInfo("uid___C7_C8_C9.tar",
                                                                        Deliverable.PIPELINE_PRODUCT);

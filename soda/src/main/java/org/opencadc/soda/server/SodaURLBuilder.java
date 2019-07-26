@@ -67,31 +67,54 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.ws;
+package org.opencadc.soda.server;
 
-import org.opencadc.soda.AlmaSodaJobRunner;
-import ca.nrc.cadc.uws.server.JobExecutor;
-import ca.nrc.cadc.uws.server.MemoryJobPersistence;
-import ca.nrc.cadc.uws.server.SimpleJobManager;
-import ca.nrc.cadc.uws.server.SyncJobExecutor;
+import alma.asdm.domain.DeliverableInfo;
+import org.opencadc.alma.AlmaProperties;
+import org.opencadc.alma.deliverable.DeliverableURLBuilder;
+
+import ca.nrc.cadc.dali.Interval;
+import ca.nrc.cadc.dali.Shape;
+import ca.nrc.cadc.net.NetUtil;
+import ca.nrc.cadc.util.StringUtil;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
 
 
-public class SodaJobManager extends SimpleJobManager {
-    private static final long MAX_EXEC_DURATION = 4 * 3600L;    // 4 hours to dump a catalog to vpsace
-    private static final long MAX_DESTRUCTION = 7 * 24 * 60 * 60L; // 1 week
-    private static final long MAX_QUOTE = 24 * 3600L;         // 24 hours since we have a threadpool with
+public class SodaURLBuilder extends DeliverableURLBuilder {
 
-    public SodaJobManager() {
-        super();
+    public SodaURLBuilder(final AlmaProperties almaProperties) {
+        super(almaProperties);
+    }
 
-        // Persist UWS jobs to memory by default.
-        final MemoryJobPersistence jobPersist = new MemoryJobPersistence();
-        final JobExecutor jobExec = new SyncJobExecutor(jobPersist, AlmaSodaJobRunner.class);
+    public URL createCutoutURL(final DeliverableInfo deliverableInfo, Cutout<Shape> pos, Cutout<Interval> band,
+                               Cutout<Interval> time, Cutout<List<String>> pol) throws MalformedURLException {
+        final URL downloadURL = createDownloadURL(deliverableInfo);
 
-        super.setJobPersistence(jobPersist);
-        super.setJobExecutor(jobExec);
-        super.setMaxExecDuration(MAX_EXEC_DURATION);
-        super.setMaxDestruction(MAX_DESTRUCTION);
-        super.setMaxQuote(MAX_QUOTE);
+        URL cutoutURL = toCutoutURL(downloadURL, pos);
+        cutoutURL = toCutoutURL(cutoutURL, band);
+        cutoutURL = toCutoutURL(cutoutURL, time);
+        cutoutURL = toCutoutURL(cutoutURL, pol);
+        return cutoutURL;
+    }
+
+    private URL toCutoutURL(final URL downloadURL, Cutout cutout) throws MalformedURLException {
+        if ((cutout == null) || (cutout.value == null)) {
+            return downloadURL;
+        } else {
+            final String queryParam = NetUtil.encode(String.format("%s=%s", cutout.name, cutout.value));
+            final StringBuilder cutoutURLString = new StringBuilder(downloadURL.toExternalForm());
+            if (StringUtil.hasText(downloadURL.getQuery())) {
+                cutoutURLString.append("&");
+            } else {
+                cutoutURLString.append("?");
+            }
+
+            cutoutURLString.append(queryParam);
+
+            return new URL(cutoutURLString.toString());
+        }
     }
 }

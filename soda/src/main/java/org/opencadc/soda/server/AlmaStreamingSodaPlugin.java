@@ -67,67 +67,85 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.soda.server;
 
+import alma.asdm.domain.DeliverableInfo;
 import alma.asdm.domain.identifiers.Uid;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import ca.nrc.cadc.util.StringUtil;
+import alma.asdm.service.DataPacker;
+import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.deliverable.DeliverableInfoWalker;
+import ca.nrc.cadc.dali.Interval;
+import ca.nrc.cadc.dali.Shape;
+import ca.nrc.cadc.net.HttpDownload;
+import ca.nrc.cadc.rest.SyncOutput;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-
-/**
- * Class that can handle a UID in the form of archiveUID://C0/C1/C2 (or uid___C0_C1_C2), or a Project Tarfile ID that is
- * in the form of 2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar.
- */
-class DataLinkUID {
-
-    private static final Logger LOGGER = LogManager.getLogger(DataLinkUID.class);
-    private static final Pattern UID_PATTERN =
-            Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URL;
+import java.util.List;
 
 
-    private final String originalID;
+public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin {
 
-    private Uid archiveUID;
+    private final DataPacker dataPacker;
+    private final DeliverableInfoWalker deliverableInfoWalker;
+    private final SodaURLBuilder sodaURLBuilder;
 
-    // Is a Filter ID
-    private boolean isFilterIDFlag;
 
-
-    DataLinkUID(final String originalID) {
-        if (!StringUtil.hasText(originalID)) {
-            throw new IllegalArgumentException("Passed ID cannot be null or empty.");
-        }
-
-        this.originalID = originalID;
-        parseID();
+    public AlmaStreamingSodaPlugin(final DataPacker dataPacker, final DeliverableInfoWalker deliverableInfoWalker,
+                                   final SodaURLBuilder sodaURLBuilder) {
+        this.dataPacker = dataPacker;
+        this.deliverableInfoWalker = deliverableInfoWalker;
+        this.sodaURLBuilder = sodaURLBuilder;
     }
 
-    private void parseID() {
-        final Matcher matcher = UID_PATTERN.matcher(this.originalID);
 
-        if (matcher.find()) {
-            final String uidMatch = matcher.group();
-            LOGGER.debug(String.format("Matched %s from %s", uidMatch, this.originalID));
-            this.isFilterIDFlag = !uidMatch.equals(this.originalID);
-            this.archiveUID = new Uid(uidMatch);
-        } else {
-            throw new IllegalArgumentException(String.format("No UID found in %s", this.originalID));
-        }
+    /**
+     * Perform cutout operation and write output.
+     *
+     * @param uri  the ID value that identifies the data (file)
+     * @param pos  optional position cutout (may be null)
+     * @param band optional energy cutout (may be null)
+     * @param time optional time cutout (may be null)
+     * @param pol  optional polarization cutout (may be null)
+     * @param out  wrapper for setting output properties (HTTP headers) and opening the OutputStream
+     * @throws IOException failure to read or write data
+     */
+    @Override
+    public void write(URI uri, Cutout<Shape> pos, Cutout<Interval> band, Cutout<Interval> time,
+                      Cutout<List<String>> pol, SyncOutput out) throws IOException {
+        final URL cutoutURL = toURL(1, uri, pos, band, time, pol);
+        final HttpDownload httpDownload = createDownloader(cutoutURL, out.getOutputStream());
+        httpDownload.run();
     }
 
-    String getOriginalID() {
-        return originalID;
+    HttpDownload createDownloader(final URL url, final OutputStream outputStream) {
+        return new HttpDownload(url, outputStream);
     }
 
-    boolean isFiltering() {
-        return isFilterIDFlag;
-    }
-
-    Uid getArchiveUID() {
-        return archiveUID;
+    /**
+     * Convert a cutout request to a specific data (file) to a URL for the result.
+     * The URL could be to an on-the-fly cutout backend (for SODA-sync) or the plugin
+     * method could retrieve data, perform the cutout operation, store the result
+     * in temporary storage, and return a URL to the result (SODA-async).
+     *
+     * @param serialNum number that increments for each call to the plugin within a single request
+     * @param uri       the ID value that identifies the data (file)
+     * @param pos       optional position cutout (may be null)
+     * @param band      optional energy cutout (may be null)
+     * @param time      optional time cutout (may be null)
+     * @param pol       optional polarization cutout (may be null)
+     * @return a URL to the result of the operation
+     *
+     * @throws IOException failure to read or write data
+     */
+    @Override
+    public URL toURL(int serialNum, URI uri, Cutout<Shape> pos, Cutout<Interval> band, Cutout<Interval> time,
+                     Cutout<List<String>> pol) throws IOException {
+        final AlmaUID almaUID = new AlmaUID(uri.toString());
+        final DeliverableInfo cutoutTargetParent = dataPacker.expand(almaUID.getArchiveUID(), false);
+        final DeliverableInfo cutoutTarget = deliverableInfoWalker.navigateToRequestedID(almaUID, cutoutTargetParent);
+        return sodaURLBuilder.createCutoutURL(cutoutTarget, pos, band, time, pol);
     }
 }

@@ -67,16 +67,66 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.server;
+package org.opencadc.alma.deliverable;
+
+import alma.asdm.domain.Deliverable;
+import alma.asdm.domain.DeliverableInfo;
+import org.opencadc.alma.AlmaProperties;
+
+import ca.nrc.cadc.util.StringUtil;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 
+public class DeliverableURLBuilder {
 
-public class ALMASodaJobRunner extends AbstractSodaJobRunner {
+    private final AlmaProperties almaProperties;
 
-    private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/soda";
+    public DeliverableURLBuilder(AlmaProperties almaProperties) {
+        this.almaProperties = almaProperties;
+    }
 
-    @Override
-    public SodaPlugin getSodaPlugin() {
-        return new ALMAStreamingSodaPlugin();
+    public URL createDownloadURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
+        final String secureSchemeHost = almaProperties.getFirstPropertyValue("secureSchemeHost");
+        final String downloadPath = almaProperties.getFirstPropertyValue("downloadPath");
+
+        final String sanitizedURL = String.join("/", new String[] {
+                sanitizePath(secureSchemeHost),
+                sanitizePath(downloadPath)
+        });
+
+        return new URL(String.join("/", new String[] {
+                sanitizePath(new URL(sanitizedURL).toExternalForm()),
+
+                // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
+                sanitizePath(deliverableInfo.getType() == Deliverable.ASDM ?
+                             deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier())
+        }));
+    }
+
+    AlmaProperties getAlmaProperties() {
+        return almaProperties;
+    }
+
+    public String sanitizePath(final String pathItem) {
+        final String sanitizedPath;
+        if (!StringUtil.hasLength(pathItem)) {
+            sanitizedPath = "";
+        } else {
+            final StringBuilder stringBuilder = new StringBuilder(pathItem.trim());
+
+            while (stringBuilder.indexOf("/") == 0) {
+                stringBuilder.deleteCharAt(0);
+            }
+
+            while (stringBuilder.lastIndexOf("/") == (stringBuilder.length() - 1)) {
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            }
+
+            sanitizedPath = stringBuilder.toString();
+        }
+
+        return sanitizedPath;
     }
 }

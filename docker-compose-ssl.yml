@@ -60,7 +60,7 @@ services:
       - "45555:5555"
     volumes:
       - 'server_certs:/usr/local/share/ca-certificates'
-      - "./datalink/org.opencadc.datalink.properties:/root/config/org.opencadc.datalink.properties"
+      - "./org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties"
   soda.cadc.dao.nrc.ca:
     image: opencadc/alma-soda:1.0.0
     ports:
@@ -71,6 +71,7 @@ services:
       - "./soda/docker/config/alma-soda.properties"
     volumes:
       - 'server_certs:/usr/local/share/ca-certificates'
+      - "./org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties"
 
 networks:
   alma:

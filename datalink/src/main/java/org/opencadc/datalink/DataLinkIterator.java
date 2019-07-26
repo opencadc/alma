@@ -71,10 +71,11 @@ package org.opencadc.datalink;
 
 import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.DeliverableInfo;
-import alma.asdm.domain.identifiers.Uid;
 import alma.asdm.service.DataPacker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.deliverable.DeliverableInfoWalker;
 
 import ca.nrc.cadc.util.StringUtil;
 
@@ -100,30 +101,31 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private static final String VOTABLE_CONTENT_TYPE = "application/x-votable+xml;content=datalink";
     private static final String FITS_CONTENT_TYPE = "image/fits";
 
+    private final DeliverableInfoWalker deliverableInfoWalker;
     private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
     private final Iterator<String> datasetIDIterator;
     private final DataPacker dataPacker;
 
-    private DataLinkUID currentDataLinkUID;
-
 
     DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
-                     final DataPacker dataPacker) {
+                     final DataPacker dataPacker, final DeliverableInfoWalker deliverableInfoWalker) {
         this.dataLinkURLBuilder = dataLinkURLBuilder;
         this.datasetIDIterator = datasetIDIterator;
         this.dataPacker = dataPacker;
+        this.deliverableInfoWalker = deliverableInfoWalker;
     }
 
     @Override
     public boolean hasNext() {
         if (dataLinkQueue.isEmpty()) {
             if (datasetIDIterator.hasNext()) {
-                this.currentDataLinkUID = new DataLinkUID(datasetIDIterator.next());
+                final AlmaUID currentUID = new AlmaUID(datasetIDIterator.next());
                 final DeliverableInfo currentTopLevelDeliverableInfo = dataPacker.expand(
-                        this.currentDataLinkUID.getArchiveUID(), false);
+                        currentUID.getArchiveUID(), false);
 
-                final DeliverableInfo requestedDeliverableInfo = navigateToRequestedID(currentTopLevelDeliverableInfo);
+                final DeliverableInfo requestedDeliverableInfo =
+                        deliverableInfoWalker.navigateToRequestedID(currentUID, currentTopLevelDeliverableInfo);
 
                 if (isDeliverableInfoNotFound(requestedDeliverableInfo)) {
                     dataLinkQueue.add(createNotFoundDataLink(requestedDeliverableInfo));
@@ -138,29 +140,6 @@ public class DataLinkIterator implements Iterator<DataLink> {
         } else {
             return true;
         }
-    }
-
-    private boolean deliverableInfoMatches(final DeliverableInfo deliverableInfo) {
-        final boolean matchesFlag;
-
-        if (deliverableInfo.getType() == Deliverable.ASDM) {
-            matchesFlag = currentDataLinkUID.getArchiveUID().equals(new Uid(deliverableInfo.getIdentifier()));
-        } else {
-            matchesFlag = currentDataLinkUID.getOriginalID().equals(getIdentifier(deliverableInfo));
-        }
-
-        return matchesFlag;
-    }
-
-    private DeliverableInfo navigateToRequestedID(final DeliverableInfo deliverableInfo) {
-        DeliverableInfo di = deliverableInfo;
-        final Set<DeliverableInfo> subDeliverables = di.getSubDeliverables();
-        for (final Iterator<DeliverableInfo> subDeliverableIterator = subDeliverables.iterator();
-             !deliverableInfoMatches(di) && subDeliverableIterator.hasNext(); ) {
-            di = navigateToRequestedID(subDeliverableIterator.next());
-        }
-
-        return di;
     }
 
     private void visitSubDeliverables(final DeliverableInfo deliverableInfo) {

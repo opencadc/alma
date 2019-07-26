@@ -41,6 +41,8 @@ services:
       - "./datalink/docker/config/alma-datalink.properties"
     ports:
       - "45555:5555"
+    volumes:
+      - "./org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties"
   reg.cadc.dao.nrc.ca:
     image: opencadc/alma-reg:1.0.1
     networks:
@@ -55,6 +57,8 @@ services:
       - '55555:5555'
     networks:
       - 'alma'
+    volumes:
+      - "./org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties"
 
 networks:
   alma:
