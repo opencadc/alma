@@ -67,31 +67,56 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.ws;
+package org.opencadc.soda.server;
 
-import org.opencadc.soda.server.ALMASodaJobRunner;
-import ca.nrc.cadc.uws.server.JobExecutor;
-import ca.nrc.cadc.uws.server.MemoryJobPersistence;
-import ca.nrc.cadc.uws.server.SimpleJobManager;
-import ca.nrc.cadc.uws.server.SyncJobExecutor;
+import ca.nrc.cadc.dali.Interval;
+import ca.nrc.cadc.dali.Shape;
+import ca.nrc.cadc.rest.SyncOutput;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.util.List;
 
 
-public class SodaJobManager extends SimpleJobManager {
-    private static final long MAX_EXEC_DURATION = 4 * 3600L;    // 4 hours to dump a catalog to vpsace
-    private static final long MAX_DESTRUCTION = 7 * 24 * 60 * 60L; // 1 week
-    private static final long MAX_QUOTE = 24 * 3600L;         // 24 hours since we have a threadpool with
+public class ALMAStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin {
 
-    public SodaJobManager() {
-        super();
+    /**
+     * Perform cutout operation and write output.
+     *
+     * @param uri  the ID value that identifies the data (file)
+     * @param pos  optional position cutout (may be null)
+     * @param band optional energy cutout (may be null)
+     * @param time optional time cutout (may be null)
+     * @param pol  optional polarization cutout (may be null)
+     * @param out  wrapper for setting output properties (HTTP headers) and opening the OutputStream
+     * @throws IOException failure to read or write data
+     */
+    @Override
+    public void write(URI uri, Cutout<Shape> pos, Cutout<Interval> band, Cutout<Interval> time,
+                      Cutout<List<String>> pol, SyncOutput out) throws IOException {
 
-        // Persist UWS jobs to memory by default.
-        final MemoryJobPersistence jobPersist = new MemoryJobPersistence();
-        final JobExecutor jobExec = new SyncJobExecutor(jobPersist, ALMASodaJobRunner.class);
+    }
 
-        super.setJobPersistence(jobPersist);
-        super.setJobExecutor(jobExec);
-        super.setMaxExecDuration(MAX_EXEC_DURATION);
-        super.setMaxDestruction(MAX_DESTRUCTION);
-        super.setMaxQuote(MAX_QUOTE);
+    /**
+     * Convert a cutout request to a specific data (file) to a URL for the result.
+     * The URL could be to an on-the-fly cutout backend (for SODA-sync) or the plugin
+     * method could retrieve data, perform the cutout operation, store the result
+     * in temporary storage, and return a URL to the result (SODA-async).
+     *
+     * @param serialNum number that increments for each call to the plugin within a single request
+     * @param uri       the ID value that identifies the data (file)
+     * @param pos       optional position cutout (may be null)
+     * @param band      optional energy cutout (may be null)
+     * @param time      optional time cutout (may be null)
+     * @param pol       optional polarization cutout (may be null)
+     * @return a URL to the result of the operation
+     *
+     * @throws IOException failure to read or write data
+     */
+    @Override
+    public URL toURL(int serialNum, URI uri, Cutout<Shape> pos, Cutout<Interval> band, Cutout<Interval> time,
+                     Cutout<List<String>> pol) throws IOException {
+        return null;
     }
 }

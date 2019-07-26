@@ -15,6 +15,7 @@ services:
       - 'sia.cadc.dao.nrc.ca'
       - 'reg.cadc.dao.nrc.ca'
       - 'datalink.cadc.dao.nrc.ca'
+      - 'soda.cadc.dao.nrc.ca'
   sia.cadc.dao.nrc.ca:
     image: opencadc/alma-sia:1.0.1
     networks:
@@ -59,6 +60,16 @@ services:
     volumes:
       - 'server_certs:/usr/local/share/ca-certificates'
       - "./datalink/org.opencadc.datalink.properties:/root/config/org.opencadc.datalink.properties"
+  soda.cadc.dao.nrc.ca:
+    image: opencadc/alma-soda:1.0.0
+    ports:
+      - '55555:5555'
+    networks:
+      - 'alma'
+    env_file:
+      - "./soda/docker/config/alma-soda.properties"
+    volumes:
+      - 'server_certs:/usr/local/share/ca-certificates'
 
 networks:
   alma:
