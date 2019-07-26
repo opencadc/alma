@@ -67,31 +67,63 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.ws;
+package org.opencadc.soda.server;
 
-import org.opencadc.soda.AlmaSodaJobRunner;
-import ca.nrc.cadc.uws.server.JobExecutor;
-import ca.nrc.cadc.uws.server.MemoryJobPersistence;
-import ca.nrc.cadc.uws.server.SimpleJobManager;
-import ca.nrc.cadc.uws.server.SyncJobExecutor;
+import alma.asdm.domain.DeliverableInfo;
+import alma.asdm.domain.identifiers.Uid;
+import alma.asdm.service.DataPacker;
+
+import ca.nrc.cadc.dali.Circle;
+import ca.nrc.cadc.dali.Point;
+import ca.nrc.cadc.dali.Shape;
+
+import java.net.URI;
+import java.net.URL;
+import java.util.Collections;
+
+import static org.mockito.Mockito.*;
+
+import org.junit.Test;
+import org.junit.Assert;
+import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.deliverable.DeliverableInfoWalker;
 
 
-public class SodaJobManager extends SimpleJobManager {
-    private static final long MAX_EXEC_DURATION = 4 * 3600L;    // 4 hours to dump a catalog to vpsace
-    private static final long MAX_DESTRUCTION = 7 * 24 * 60 * 60L; // 1 week
-    private static final long MAX_QUOTE = 24 * 3600L;         // 24 hours since we have a threadpool with
+public class AlmaStreamingSodaPluginTest {
 
-    public SodaJobManager() {
-        super();
+    @Test
+    public void simpleCutoutURL() throws Exception {
+        final DataPacker mockDataPacker = mock(DataPacker.class);
+        final DeliverableInfoWalker mockDeliverableInfoWalker = mock(DeliverableInfoWalker.class);
+        final SodaURLBuilder mockSodaURLBuilder = mock(SodaURLBuilder.class);
+        final AlmaStreamingSodaPlugin testSubject = new AlmaStreamingSodaPlugin(mockDataPacker,
+                                                                                mockDeliverableInfoWalker,
+                                                                                mockSodaURLBuilder);
+        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
 
-        // Persist UWS jobs to memory by default.
-        final MemoryJobPersistence jobPersist = new MemoryJobPersistence();
-        final JobExecutor jobExec = new SyncJobExecutor(jobPersist, AlmaSodaJobRunner.class);
+        final Uid targetParentURI = new Uid("uid://C1/C2/C3");
+        final URI targetURI = URI.create("1977.11.25_uid___C1_C2_C3.myfile.fits");
+        final AlmaUID targetAlmaUID = new AlmaUID(targetURI.toString());
+        final Circle circle = new Circle(new Point(18.0D, 78.5D), 0.5D);
+        final Cutout<Shape> testCutout = new Cutout<>("TESTCIRC", "TESTCIRC1", circle);
 
-        super.setJobPersistence(jobPersist);
-        super.setJobExecutor(jobExec);
-        super.setMaxExecDuration(MAX_EXEC_DURATION);
-        super.setMaxDestruction(MAX_DESTRUCTION);
-        super.setMaxQuote(MAX_QUOTE);
+        when(mockDataPacker.expand(targetParentURI, false)).thenReturn(mockDeliverableInfo);
+        when(mockDeliverableInfo.getSubDeliverables()).thenReturn(Collections.emptySet());
+        when(mockDeliverableInfoWalker.navigateToRequestedID(targetAlmaUID,
+                                                             mockDeliverableInfo)).thenReturn(mockDeliverableInfo);
+        when(mockSodaURLBuilder.createCutoutURL(mockDeliverableInfo, testCutout, null, null, null)).thenReturn(
+                new URL("https://almaserver.com/sodacutout/downloads/1977.11.25_uid___C1_C2_C3.myfile.fits?CIRCLE=18" +
+                        ".0+78.5+0.5"));
+
+        final URL cutoutURL = testSubject.toURL(88, targetURI, testCutout, null, null, null);
+
+        Assert.assertEquals("Wrong result URL.",
+                            "https://almaserver.com/sodacutout/downloads/1977.11.25_uid___C1_C2_C3.myfile" +
+                            ".fits?CIRCLE=18.0+78.5+0.5",
+                            cutoutURL.toExternalForm());
+
+        verify(mockDataPacker, times(1)).expand(targetParentURI, false);
+        verify(mockDeliverableInfoWalker, times(1)).navigateToRequestedID(targetAlmaUID, mockDeliverableInfo);
+        verify(mockSodaURLBuilder, times(1)).createCutoutURL(mockDeliverableInfo, testCutout, null, null, null);
     }
 }

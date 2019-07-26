@@ -67,7 +67,8 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.soda;
+
 
 import alma.asdm.action.asdm.AsdmWalker;
 import alma.asdm.dao.BulkStoreDao;
@@ -86,87 +87,46 @@ import alma.asdm.service.ProductService;
 import alma.asdm.service.RetrieveService;
 import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.deliverable.DeliverableInfoWalker;
-import org.opencadc.datalink.server.DataLinkSource;
-import org.opencadc.datalink.server.LinkQueryRunner;
-
-import ca.nrc.cadc.auth.AuthMethod;
+import org.opencadc.soda.server.AbstractSodaJobRunner;
+import org.opencadc.soda.server.AlmaStreamingSodaPlugin;
+import org.opencadc.soda.server.SodaPlugin;
+import org.opencadc.soda.server.SodaURLBuilder;
 import ca.nrc.cadc.db.DBUtil;
-import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.uws.Parameter;
-import ca.nrc.cadc.uws.ParameterUtil;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import java.net.URI;
-import java.util.List;
 
 
-/**
- * Job Runner implementation for DataLink endpoints.  This is identified as a RequestHandlerService to allow it to be
- * loaded from Spring.
- */
-public class DataLinkQueryRunner extends LinkQueryRunner {
+public class AlmaSodaJobRunner extends AbstractSodaJobRunner {
 
     private static final String NGAS_HOSTS_PROPERTY_NAME = "ngasHosts";
     private static final String NGAS_TIMEOUT_SECONDS_PROPERTY_NAME = "ngasTimeoutSeconds";
-    private static final String ALMA_DB_JNDI_NAME_KEY = "almaDataLinkJDBCName";
-    private static final String ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME = "almaDataLinkServiceURI";
-    private static final String ALMA_SODA_SERVICE_ID_PROPERTY_NAME = "almaSODAServiceURI";
-    private static final String DEFAULT_ALMA_DATALINK_SERVICE_ID = "ivo://cadc.nrc.ca/datalink";
-    private static final String DEFAULT_ALMA_SODA_SERVICE_ID = "ivo://cadc.nrc.ca/soda";
-    private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/datalink";
-    private static final String PARAMETER_KEY = "ID";
+    private static final String ALMA_DB_JNDI_NAME_KEY = "almaSodaJDBCName";
+    private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/soda";
 
-    private final DataPacker dataPacker;
     private final AlmaProperties almaProperties;
-    private final RegistryClient registryClient;
 
 
-    public DataLinkQueryRunner(final String propertiesFileName, final DataPacker dataPacker,
-                               final RegistryClient registryClient) {
-        this.almaProperties = new AlmaProperties(propertiesFileName);
-        this.dataPacker = dataPacker;
-        this.registryClient = registryClient;
+    public AlmaSodaJobRunner(AlmaProperties sodaProperties) {
+        this.almaProperties = sodaProperties;
     }
 
-    public DataLinkQueryRunner() {
-        this.almaProperties = new AlmaProperties();
-        this.dataPacker = createDataPacker();
-        this.registryClient = new RegistryClient();
+    public AlmaSodaJobRunner() {
+        this(new AlmaProperties());
     }
 
     @Override
-    protected DataLinkSource getDataLinkSource() {
-        return new DataLinkDataPackerSource(createDataLinkIterator());
-    }
-
-    DataLinkIterator createDataLinkIterator() {
-        final List<Parameter> jobParameterList = job.getParameterList();
-        final List<String> dataSetIDList = ParameterUtil.findParameterValues(PARAMETER_KEY, jobParameterList);
-
-        if (dataSetIDList.isEmpty()) {
-            throw new IllegalArgumentException("No dataset IDs provided.  Use ID=uid://XXX");
-        } else {
-            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), dataPacker,
-                                        createDeliverableInfoWalker());
-        }
+    public SodaPlugin getSodaPlugin() {
+        return new AlmaStreamingSodaPlugin(createDataPacker(), createDeliverableInfoWalker(),
+                                           createDeliverableURLBuilder());
     }
 
     DeliverableInfoWalker createDeliverableInfoWalker() {
         return new DeliverableInfoWalker();
     }
 
-    DataLinkURLBuilder createDataLinkURLBuilder() {
-        return new DataLinkURLBuilder(registryClient.getServiceURL(
-                URI.create(almaProperties.getFirstPropertyValue(ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME,
-                                                                DEFAULT_ALMA_DATALINK_SERVICE_ID)),
-                Standards.DATALINK_LINKS_10, AuthMethod.ANON),
-                                      registryClient.getServiceURL(
-                                              URI.create(almaProperties.getFirstPropertyValue(
-                                                      ALMA_SODA_SERVICE_ID_PROPERTY_NAME,
-                                                      DEFAULT_ALMA_SODA_SERVICE_ID)),
-                                              Standards.SODA_SYNC_10, AuthMethod.ANON));
+    SodaURLBuilder createDeliverableURLBuilder() {
+        return new SodaURLBuilder(almaProperties);
     }
 
     DataPacker createDataPacker() {

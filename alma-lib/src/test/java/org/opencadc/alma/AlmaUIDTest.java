@@ -67,31 +67,59 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.ws;
+package org.opencadc.alma;
 
-import org.opencadc.soda.AlmaSodaJobRunner;
-import ca.nrc.cadc.uws.server.JobExecutor;
-import ca.nrc.cadc.uws.server.MemoryJobPersistence;
-import ca.nrc.cadc.uws.server.SimpleJobManager;
-import ca.nrc.cadc.uws.server.SyncJobExecutor;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 
-public class SodaJobManager extends SimpleJobManager {
-    private static final long MAX_EXEC_DURATION = 4 * 3600L;    // 4 hours to dump a catalog to vpsace
-    private static final long MAX_DESTRUCTION = 7 * 24 * 60 * 60L; // 1 week
-    private static final long MAX_QUOTE = 24 * 3600L;         // 24 hours since we have a threadpool with
+public class AlmaUIDTest {
 
-    public SodaJobManager() {
-        super();
+    @Before
+    public void setup() {
+        Configurator.setLevel(AlmaUID.class.getCanonicalName(), Level.DEBUG);
+    }
 
-        // Persist UWS jobs to memory by default.
-        final MemoryJobPersistence jobPersist = new MemoryJobPersistence();
-        final JobExecutor jobExec = new SyncJobExecutor(jobPersist, AlmaSodaJobRunner.class);
+    @Test
+    public void constructFromDesanitizedMOUSID() {
+        final AlmaUID testSubject = new AlmaUID("uid://C0/C1/C2");
+        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getArchiveUID().getDesanitisedUid());
+        assertFalse("Should not be filtering.", testSubject.isFiltering());
+    }
 
-        super.setJobPersistence(jobPersist);
-        super.setJobExecutor(jobExec);
-        super.setMaxExecDuration(MAX_EXEC_DURATION);
-        super.setMaxDestruction(MAX_DESTRUCTION);
-        super.setMaxQuote(MAX_QUOTE);
+    @Test
+    public void constructFromSanitizedMOUSID() {
+        final AlmaUID testSubject = new AlmaUID("uid___C0_C1_C2");
+        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getArchiveUID().getDesanitisedUid());
+        assertFalse("Should not be filtering.", testSubject.isFiltering());
+    }
+
+    @Test
+    public void constructFromBadInput() {
+        try {
+            new AlmaUID("");
+            fail("Should throw IllegalArgumentException.");
+        } catch (IllegalArgumentException e) {
+            // Good.
+        }
+
+        try {
+            new AlmaUID(null);
+            fail("Should throw IllegalArgumentException.");
+        } catch (IllegalArgumentException e) {
+            // Good.
+        }
+    }
+
+    @Test
+    public void constructFromTarfileID() {
+        final AlmaUID testSubject = new AlmaUID("2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar");
+        assertEquals("Wrong MOUS ID.", "uid://A002/Xc4f3ae/X537a",
+                     testSubject.getArchiveUID().getDesanitisedUid());
+        assertTrue("Should be filtering.", testSubject.isFiltering());
     }
 }

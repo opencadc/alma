@@ -67,26 +67,87 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.alma;
 
-import ca.nrc.cadc.util.PropertiesReader;
+import alma.asdm.domain.identifiers.Uid;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ca.nrc.cadc.util.StringUtil;
 
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-class DataLinkProperties extends PropertiesReader {
 
-    private static final String DEFAULT_PROPERTIES_FILE_NAME = "org.opencadc.datalink.properties";
+/**
+ * Class that can handle a UID in the form of archiveUID://C0/C1/C2 (or uid___C0_C1_C2), or a Project Tarfile ID that is
+ * in the form of 2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar.
+ */
+public class AlmaUID {
 
-    DataLinkProperties() {
-        this(DEFAULT_PROPERTIES_FILE_NAME);
+    private static final Logger LOGGER = LogManager.getLogger(AlmaUID.class);
+    private static final Pattern UID_PATTERN =
+            Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
+
+
+    private final String originalID;
+
+    private Uid archiveUID;
+
+    // Is a Filter ID
+    private boolean isFilterIDFlag;
+
+
+    public AlmaUID(final String originalID) {
+        if (!StringUtil.hasText(originalID)) {
+            throw new IllegalArgumentException("Passed ID cannot be null or empty.");
+        }
+
+        this.originalID = originalID;
+        parseID();
     }
 
-    DataLinkProperties(final String filename) {
-        super(filename);
+    private void parseID() {
+        final Matcher matcher = UID_PATTERN.matcher(this.originalID);
+
+        if (matcher.find()) {
+            final String uidMatch = matcher.group();
+            LOGGER.debug(String.format("Matched %s from %s", uidMatch, this.originalID));
+            this.isFilterIDFlag = !uidMatch.equals(this.originalID);
+            this.archiveUID = new Uid(uidMatch);
+        } else {
+            throw new IllegalArgumentException(String.format("No UID found in %s", this.originalID));
+        }
     }
 
-    String getFirstPropertyValue(final String key, final String defaultValue) {
-        final String s = super.getFirstPropertyValue(key);
-        return StringUtil.hasText(s) ? s : defaultValue;
+    public String getOriginalID() {
+        return originalID;
+    }
+
+    public boolean isFiltering() {
+        return isFilterIDFlag;
+    }
+
+    public Uid getArchiveUID() {
+        return archiveUID;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AlmaUID almaUID = (AlmaUID) o;
+        return isFilterIDFlag == almaUID.isFilterIDFlag &&
+               originalID.equals(almaUID.originalID) &&
+               archiveUID.equals(almaUID.archiveUID);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(originalID, archiveUID, isFilterIDFlag);
     }
 }

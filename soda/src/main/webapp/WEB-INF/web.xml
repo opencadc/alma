@@ -141,25 +141,25 @@
 
     <!-- security constraints -->
 
-<!--    <security-role>-->
-<!--        <description>Public security role</description>-->
-<!--        <role-name>public</role-name>-->
-<!--    </security-role>-->
+    <!--    <security-role>-->
+    <!--        <description>Public security role</description>-->
+    <!--        <role-name>public</role-name>-->
+    <!--    </security-role>-->
 
-<!--    <security-constraint>-->
-<!--        <web-resource-collection>-->
-<!--            <web-resource-name>auth</web-resource-name>-->
-<!--            <description/>-->
-<!--            <url-pattern>/logControl/*</url-pattern>-->
-<!--        </web-resource-collection>-->
-<!--        <auth-constraint>-->
-<!--            <description>force authentication for all requests</description>-->
-<!--            <role-name>public</role-name>-->
-<!--        </auth-constraint>-->
-<!--    </security-constraint>-->
+    <!--    <security-constraint>-->
+    <!--        <web-resource-collection>-->
+    <!--            <web-resource-name>auth</web-resource-name>-->
+    <!--            <description/>-->
+    <!--            <url-pattern>/logControl/*</url-pattern>-->
+    <!--        </web-resource-collection>-->
+    <!--        <auth-constraint>-->
+    <!--            <description>force authentication for all requests</description>-->
+    <!--            <role-name>public</role-name>-->
+    <!--        </auth-constraint>-->
+    <!--    </security-constraint>-->
 
-<!--    <login-config>-->
-<!--        <auth-method>BASIC</auth-method>-->
-<!--        <realm-name>Canadian Astronomy Data Centre</realm-name>-->
-<!--    </login-config>-->
+    <!--    <login-config>-->
+    <!--        <auth-method>BASIC</auth-method>-->
+    <!--        <realm-name>Canadian Astronomy Data Centre</realm-name>-->
+    <!--    </login-config>-->
 </web-app>

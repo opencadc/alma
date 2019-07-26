@@ -67,56 +67,44 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.server;
+package org.opencadc.alma.deliverable;
 
-import ca.nrc.cadc.dali.Interval;
-import ca.nrc.cadc.dali.Shape;
-import ca.nrc.cadc.rest.SyncOutput;
+import alma.asdm.domain.Deliverable;
+import alma.asdm.domain.DeliverableInfo;
+import alma.asdm.domain.identifiers.Uid;
+import org.opencadc.alma.AlmaUID;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.util.List;
+import java.util.Iterator;
+import java.util.Set;
 
 
-public class ALMAStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin {
+public class DeliverableInfoWalker {
 
-    /**
-     * Perform cutout operation and write output.
-     *
-     * @param uri  the ID value that identifies the data (file)
-     * @param pos  optional position cutout (may be null)
-     * @param band optional energy cutout (may be null)
-     * @param time optional time cutout (may be null)
-     * @param pol  optional polarization cutout (may be null)
-     * @param out  wrapper for setting output properties (HTTP headers) and opening the OutputStream
-     * @throws IOException failure to read or write data
-     */
-    @Override
-    public void write(URI uri, Cutout<Shape> pos, Cutout<Interval> band, Cutout<Interval> time,
-                      Cutout<List<String>> pol, SyncOutput out) throws IOException {
+    public DeliverableInfo navigateToRequestedID(final AlmaUID almaUID, final DeliverableInfo deliverableInfo) {
+        DeliverableInfo di = deliverableInfo;
+        final Set<DeliverableInfo> subDeliverables = di.getSubDeliverables();
+        for (final Iterator<DeliverableInfo> subDeliverableIterator = subDeliverables.iterator();
+             !deliverableInfoMatches(almaUID, di) && subDeliverableIterator.hasNext(); ) {
+            di = navigateToRequestedID(almaUID, subDeliverableIterator.next());
+        }
 
+        return di;
     }
 
-    /**
-     * Convert a cutout request to a specific data (file) to a URL for the result.
-     * The URL could be to an on-the-fly cutout backend (for SODA-sync) or the plugin
-     * method could retrieve data, perform the cutout operation, store the result
-     * in temporary storage, and return a URL to the result (SODA-async).
-     *
-     * @param serialNum number that increments for each call to the plugin within a single request
-     * @param uri       the ID value that identifies the data (file)
-     * @param pos       optional position cutout (may be null)
-     * @param band      optional energy cutout (may be null)
-     * @param time      optional time cutout (may be null)
-     * @param pol       optional polarization cutout (may be null)
-     * @return a URL to the result of the operation
-     *
-     * @throws IOException failure to read or write data
-     */
-    @Override
-    public URL toURL(int serialNum, URI uri, Cutout<Shape> pos, Cutout<Interval> band, Cutout<Interval> time,
-                     Cutout<List<String>> pol) throws IOException {
-        return null;
+    private boolean deliverableInfoMatches(final AlmaUID almaUID, final DeliverableInfo deliverableInfo) {
+        final boolean matchesFlag;
+
+        if (deliverableInfo.getType() == Deliverable.ASDM) {
+            matchesFlag = almaUID.getArchiveUID().equals(new Uid(deliverableInfo.getIdentifier()));
+        } else {
+            matchesFlag = almaUID.getOriginalID().equals(getIdentifier(deliverableInfo));
+        }
+
+        return matchesFlag;
+    }
+
+    private String getIdentifier(final DeliverableInfo deliverableInfo) {
+        return deliverableInfo == null ? null : (deliverableInfo.getType() == Deliverable.ASDM ?
+                                                 deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier());
     }
 }

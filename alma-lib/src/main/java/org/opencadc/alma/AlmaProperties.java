@@ -67,59 +67,26 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.alma;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import ca.nrc.cadc.util.PropertiesReader;
+import ca.nrc.cadc.util.StringUtil;
 
 
-public class DataLinkUIDTest {
+public class AlmaProperties extends PropertiesReader {
 
-    @Before
-    public void setup() {
-        Configurator.setLevel(DataLinkUID.class.getCanonicalName(), Level.DEBUG);
+    private static final String DEFAULT_PROPERTIES_FILE_NAME = "org.opencadc.alma.properties";
+
+    public AlmaProperties() {
+        this(DEFAULT_PROPERTIES_FILE_NAME);
     }
 
-    @Test
-    public void constructFromDesanitizedMOUSID() {
-        final DataLinkUID testSubject = new DataLinkUID("uid://C0/C1/C2");
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getArchiveUID().getDesanitisedUid());
-        assertFalse("Should not be filtering.", testSubject.isFiltering());
+    public AlmaProperties(final String filename) {
+        super(filename);
     }
 
-    @Test
-    public void constructFromSanitizedMOUSID() {
-        final DataLinkUID testSubject = new DataLinkUID("uid___C0_C1_C2");
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getArchiveUID().getDesanitisedUid());
-        assertFalse("Should not be filtering.", testSubject.isFiltering());
-    }
-
-    @Test
-    public void constructFromBadInput() {
-        try {
-            new DataLinkUID("");
-            fail("Should throw IllegalArgumentException.");
-        } catch (IllegalArgumentException e) {
-            // Good.
-        }
-
-        try {
-            new DataLinkUID(null);
-            fail("Should throw IllegalArgumentException.");
-        } catch (IllegalArgumentException e) {
-            // Good.
-        }
-    }
-
-    @Test
-    public void constructFromTarfileID() {
-        final DataLinkUID testSubject = new DataLinkUID("2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar");
-        assertEquals("Wrong MOUS ID.", "uid://A002/Xc4f3ae/X537a",
-                     testSubject.getArchiveUID().getDesanitisedUid());
-        assertTrue("Should be filtering.", testSubject.isFiltering());
+    public String getFirstPropertyValue(final String key, final String defaultValue) {
+        final String s = super.getFirstPropertyValue(key);
+        return StringUtil.hasText(s) ? s : defaultValue;
     }
 }

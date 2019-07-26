@@ -78,7 +78,7 @@ configurations {
 }
 
 dependencies {
-    compile 'log4j:log4j:1.2.17'
+    compile 'org.opencadc:alma-lib:[1.0.0,)'
     compile 'alma.archive:datapacker:2019.06.01'
     compile 'org.opencadc:cadc-datalink-server:[1.0.1,)'
 
