@@ -31,7 +31,7 @@ Docker
 This is a working prototype using a TAP implementation with an Oracle 11/12 database.  This assumes you have an Oracle
 database setup already and configured in the ``docker/config/alma-tap.properties`` file.
 
-``docker pull opencadc/alma-tap:1.1.9``
+``docker pull opencadc/alma-tap:1.1.10``
 
 Building for Docker
 ~~~~~~~~~~~~~~~~~~~
@@ -39,7 +39,7 @@ Building for Docker
 After the `Build`_ step above, we can create a Docker deployment like
 so:
 
--  ``docker build -t opencadc/alma-tap:1.1.9 .``
+-  ``docker build -t opencadc/alma-tap:1.1.10 .``
 -  ``docker-compose up -d``
 
 The necessary Docker images will be downloaded, including the large
