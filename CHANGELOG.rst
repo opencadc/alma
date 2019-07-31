@@ -1,6 +1,12 @@
 ALMA IVOA Service Stack
 =======================
 
+2019.07.29
+----------
+
+- Added integration tests for SODA.
+- Added README instructions.
+
 2019.07.26
 ----------
 
