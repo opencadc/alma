@@ -45,3 +45,9 @@ datalink
 ~~~~~~~~~
 
 DataLink service to expand an MOUS ID into download URLs
+
+
+soda
+~~~~
+
+IVOA SODA service.
