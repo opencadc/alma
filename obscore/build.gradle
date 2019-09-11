@@ -30,8 +30,8 @@ repositories {
 }
 
 group = 'org.opencadc'
-sourceCompatibility = 1.7
-version = '1009'
+sourceCompatibility = 1.8
+version = '1010'
 
 ext {
     default_app_name = 'tap'
@@ -72,7 +72,7 @@ dependencies {
     compile 'org.opencadc:cadc-tap-server-oracle:[1.2.3,)'
     compile 'org.opencadc:cadc-tap-server:[1.1.5,)'
     compile 'org.opencadc:cadc-adql:[1.1,)'
-    compile 'org.opencadc:cadc-vosi:[1.0.1,2.0)'
+    compile 'org.opencadc:cadc-vosi:[1.3.1,2.0)'
 
     runtime 'org.opencadc:cadc-registry:[1.2.1,)'
 

@@ -30,7 +30,7 @@ services:
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
   obscore.cadc.dao.nrc.ca:
-    image: opencadc/alma-tap:1.1.10
+    image: opencadc/alma-tap:1.1.11
     ports:
       - '35555:5555'
     networks:
