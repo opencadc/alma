@@ -13,7 +13,6 @@ services:
       - "obscore"
   obscore:
     image: opencadc/alma-tap:1.1.11
-    build: .
     ports:
       - "8080:8080"
       - "5555:5555"
