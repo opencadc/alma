@@ -7,4 +7,8 @@ jdk:
   - openjdk8
   - openjdk11
 
-script: ./gradlew -i assemble check javadoc
+script:
+  - cd alma-lib
+  - gradle -i assemble javadoc test install
+  - cd ../
+  - ./gradlew -i assemble check javadoc
