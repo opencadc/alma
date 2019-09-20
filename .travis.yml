@@ -1,14 +1,11 @@
 language: java
 
-dist: trusty
-sudo: required
-
 jdk:
   - openjdk8
   - openjdk11
 
 script:
   - cd alma-lib
-  - gradle -i assemble javadoc test install
-  - cd ../
+  - gradle -i build test install
+  - cd ..
   - ./gradlew -i assemble check javadoc
