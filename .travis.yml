@@ -1,10 +1,15 @@
 language: java
 
-dist: trusty
-sudo: required
-
 jdk:
   - openjdk8
   - openjdk11
 
-script: ./gradlew -i assemble check javadoc
+script:
+  - cd alma-lib
+  - echo "Should be in alma-lib and am in $(pwd)"
+  - gradle -i build test install
+  - echo "Installed alma-lib"
+  - ls -alh ~/.m2/repository/org/opencadc/
+  - cd ..
+  - echo "Now in $(pwd)"
+  - gradle -i assemble check javadoc

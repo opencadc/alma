@@ -12,7 +12,7 @@ services:
     depends_on:
       - "obscore"
   obscore:
-    image: opencadc/alma-tap:1.1.11
+    image: opencadc/alma-tap:1.1.12
     ports:
       - "8080:8080"
       - "5555:5555"
