@@ -12,14 +12,14 @@ services:
     depends_on:
       - "sia"
   sia:
-    image: opencadc/alma-sia:1.0.1
+    image: opencadc/alma-sia:1.0.2
     networks:
       - "sia_obscore"
     ports:
       - "8080:8080"
       - "5555:5555"
 #    volumes:
-#      - "./build/libs/sia#1000.war:/usr/local/tomcat/webapps/sia.war"
+#      - "./docker/SiaRunner.properties:/root/config/SiaRunner.properties"
 
 networks:
   sia_obscore:
