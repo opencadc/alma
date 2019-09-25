@@ -16,7 +16,7 @@ services:
       - 'soda.cadc.dao.nrc.ca'
       - 'datalink.cadc.dao.nrc.ca'
   sia.cadc.dao.nrc.ca:
-    image: opencadc/alma-sia:1.0.1
+    image: opencadc/alma-sia:1.0.2
     networks:
       - 'alma'
     ports:

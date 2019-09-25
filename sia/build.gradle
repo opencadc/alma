@@ -14,7 +14,7 @@ repositories {
 
 sourceCompatibility = 1.7
 group = 'ca.nrc.cadc'
-version = '1000'
+version = '1001'
 
 ext {
     default_app_name = 'sia2'
@@ -54,7 +54,7 @@ dependencies {
 
     compile 'org.opencadc:cadc-access-control-identity:1.+'
     compile 'org.opencadc:cadc-cdp:1.+'
-    compile 'org.opencadc:cadc-sia:[1.1.4,)'
+    compile 'org.opencadc:cadc-sia:[1.1.8,)'
     compile 'org.opencadc:cadc-uws-server:[1.2.0,)'
     compile 'org.opencadc:cadc-tap:[1.0,2.0)'
     compile 'ca.nrc.cadc:uws-util:1.+'
