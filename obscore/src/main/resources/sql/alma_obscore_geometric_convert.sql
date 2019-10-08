@@ -93,7 +93,7 @@ create or replace function TO_GEOMETRIC_OBJECT(in_footprint_icrs in varchar2)
 return SDO_GEOMETRY is
 	geo_shape SDO_GEOMETRY;
 	footprint_type varchar2(8);
-	parsed_footprint varchar2(2048);
+	parsed_footprint varchar2(4096);
 	begin
 		select lower(regexp_substr(in_footprint_icrs, '^\w+')) into footprint_type from DUAL;
 		select trim(substr(in_footprint_icrs, length(footprint_type) + 1)) into parsed_footprint from DUAL;
