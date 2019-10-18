@@ -31,7 +31,7 @@ repositories {
 
 group = 'org.opencadc'
 sourceCompatibility = 1.8
-version = '1010'
+version = '1011'
 
 ext {
     default_app_name = 'tap'
