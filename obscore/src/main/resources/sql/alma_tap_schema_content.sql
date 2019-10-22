@@ -1,3 +1,12 @@
+DELETE FROM TAP_SCHEMA.columns11
+  WHERE table_name = 'ivoa.obscore';
+
+DELETE FROM TAP_SCHEMA.tables11
+  WHERE table_name = 'ivoa.obscore';
+
+DELETE FROM TAP_SCHEMA.schemas11
+  WHERE schema_name = 'ivoa';
+
 INSERT INTO TAP_SCHEMA.schemas11 (schema_name, utype, description, schema_index) VALUES ('ivoa', null, 'IVOA tables', 10);
 
 INSERT INTO TAP_SCHEMA.tables11 (schema_name, table_name, table_type, utype, description, table_index) VALUES ('ivoa', 'ivoa.obscore', 'view', null, 'ObsCore-1.1 observation table', 10);
@@ -28,7 +37,6 @@ INSERT ALL
     INTO TAP_SCHEMA.columns11 (table_name, column_name, utype, ucd, unit, description, datatype, arraysize, xtype, "size", principal, indexed, std, column_index, id) VALUES ('ivoa.obscore', 'target_name', 'obscore:Target.Name', 'meta.id;src', null, 'name of intended target', 'char', '32*', null, 32, 1, 0, 1, 9, null)
     INTO TAP_SCHEMA.columns11 (table_name, column_name, utype, ucd, unit, description, datatype, arraysize, xtype, "size", principal, indexed, std, column_index, id) VALUES ('ivoa.obscore', 'pol_states', 'obscore:Char.PolarizationAxis.stateList', 'meta.code;phys.polarization', null, 'polarization states present in the data', 'char', '32*', null, 32, 1, 0, 1, 27, null)
     INTO TAP_SCHEMA.columns11 (table_name, column_name, utype, ucd, unit, description, datatype, arraysize, xtype, "size", principal, indexed, std, column_index, id) VALUES ('ivoa.obscore', 'o_ucd', 'obscore:Char.ObservableAxis.ucd', 'meta.ucd', null, 'UCD describing the observable axis (pixel values)', 'char', '32*', null, 32, 1, 0, 1, 29, null)
-    INTO TAP_SCHEMA.columns11 (table_name, column_name, utype, ucd, unit, description, datatype, arraysize, xtype, "size", principal, indexed, std, column_index, id) VALUES ('ivoa.obscore', 'footprint', 'obscore:Characterisation.SpatialAxis.Coverage.Support.Area', 'pos', 'deg', 'Footprint of the field in STC-S form. Corresponds to IVOA.ObsCore.s_region', 'char', NULL, 'adql:REGION', 1024, 0, 0, 1, 33, null)
     INTO TAP_SCHEMA.columns11 (table_name, column_name, utype, ucd, unit, description, datatype, arraysize, xtype, "size", principal, indexed, std, column_index, id) VALUES ('ivoa.obscore', 'data_rights', NULL, NULL, NULL, 'OUS Project Code', 'char', NULL, 'adql:VARCHAR', 64, 0, 0, 0, 34, null)
     INTO TAP_SCHEMA.columns11 (table_name, column_name, utype, ucd, unit, description, datatype, arraysize, xtype, "size", principal, indexed, std, column_index, id) VALUES ('ivoa.obscore', 'gal_longitude', NULL, 'pos.galactic.lon', 'deg', 'Galactic longitude of the observation for RA/Dec. Estimated using PyEphem and RA/Dec.', 'double', NULL, 'adql:DOUBLE', NULL, 0, 0, 0, 35, null)
     INTO TAP_SCHEMA.columns11 (table_name, column_name, utype, ucd, unit, description, datatype, arraysize, xtype, "size", principal, indexed, std, column_index, id) VALUES ('ivoa.obscore', 'gal_latitude', NULL, 'pos.galactic.lat', 'deg', 'Galactic latitude of the observation for RA/Dec. Estimated using PyEphem and RA/Dec.', 'double', NULL, 'adql:DOUBLE', NULL, 0, 0, 0, 36, null)
