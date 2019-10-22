@@ -88,7 +88,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     science.gal_latitude,
     science.band_list,
     science.frequency_resolution,
-    science.antenna_string,
+    science.antennas,
     science.is_mosaic,
     (case when ads.release_date is null then TO_TIMESTAMP('3000-01-01T00:00:00.000Z', 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"')
           else TO_TIMESTAMP(ads.release_date, 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"') end),

@@ -1,9 +1,10 @@
+
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2011.                            (c) 2011.
+ *  (c) 2019.                            (c) 2019.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,90 +63,58 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *  $Revision: 5 $
  *
  ************************************************************************
  */
 
-package org.opencadc.tap.impl;
+package org.opencadc.tap.parser.converter;
 
-import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
-import net.sf.jsqlparser.util.deparser.SelectDeParser;
-import ca.nrc.cadc.tap.AdqlQuery;
-import ca.nrc.cadc.tap.expression.OracleExpressionDeParser;
-import ca.nrc.cadc.tap.parser.OracleQuerySelectDeParser;
-import ca.nrc.cadc.tap.parser.QuerySelectDeParser;
-import ca.nrc.cadc.tap.parser.converter.OracleCeilingConverter;
-import ca.nrc.cadc.tap.parser.converter.OracleRegionConverter;
-import ca.nrc.cadc.tap.parser.converter.OracleSubstringConverter;
-import ca.nrc.cadc.tap.parser.converter.TableNameConverter;
-import ca.nrc.cadc.tap.parser.converter.TableNameReferenceConverter;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser.statement.select.SelectItem;
 import ca.nrc.cadc.tap.parser.navigator.ExpressionNavigator;
+import ca.nrc.cadc.tap.parser.navigator.FromItemNavigator;
+import ca.nrc.cadc.tap.parser.navigator.ReferenceNavigator;
 import ca.nrc.cadc.tap.parser.navigator.SelectNavigator;
 
-import org.opencadc.tap.parser.converter.OracleObsCoreSelectListConverter;
+import java.util.List;
 
 
-/**
- * TAP service implementors must implement this class and add customisations of the
- * navigatorList as shown below. Custom query visitors can be used to validate or modify
- * the query; the base class runs all the visitors in the navigatorList once before
- * converting the result into SQL for execution.
- *
- * @author pdowler
- */
-public class AdqlQueryImpl extends AdqlQuery {
+public class OracleObsCoreSelectListConverter extends SelectNavigator {
 
-    public AdqlQueryImpl() {
-        super();
+    private static final String OBSCORE_REGION_COLUMN_NAME = "S_REGION";
+    private static final String OBSCORE_REGION_COLUMN_REPLACE_NAME = "FOOTPRINT";
+
+    public OracleObsCoreSelectListConverter(final ExpressionNavigator en, final ReferenceNavigator rn,
+                                            final FromItemNavigator fn) {
+        super(en, rn, fn);
     }
 
     @Override
-    protected void init() {
-        super.init();
+    public void visit(final PlainSelect plainSelect) {
+        enterPlainSelect(plainSelect);
 
-        // TAP-1.1 tap_schema version is encoded in table names
-        final TableNameConverter tnc = new TableNameConverter(true);
-        tnc.put("ivoa.obscore", "alma.obscore");
-        tnc.put("tap_schema.schemas", "tap_schema.schemas11");
-        tnc.put("tap_schema.tables", "tap_schema.tables11");
-        tnc.put("tap_schema.columns", "tap_schema.columns11");
-        tnc.put("tap_schema.keys", "tap_schema.keys11");
-        tnc.put("tap_schema.key_columns", "tap_schema.key_columns11");
+        @SuppressWarnings("unchecked") final List<SelectItem> selectItems = plainSelect.getSelectItems();
 
-        final TableNameReferenceConverter tnrc = new TableNameReferenceConverter(tnc.map);
+        if (selectItems != null) {
+            for (final SelectItem s : selectItems) {
+                if (s instanceof SelectExpressionItem) {
 
-        // For Oracle, the CEILING function is actually CEIL.
-        navigatorList.add(new OracleCeilingConverter(new ExpressionNavigator(), tnrc, tnc));
-        navigatorList.add(new OracleSubstringConverter(new ExpressionNavigator(), tnrc, tnc));
-        navigatorList.add(new OracleObsCoreSelectListConverter(new ExpressionNavigator(), tnrc, tnc));
-        navigatorList.add(new OracleRegionConverter(new ExpressionNavigator(), tnrc, tnc));
-        navigatorList.add(new SelectNavigator(new ExpressionNavigator(), tnrc, tnc));
+                    final SelectExpressionItem se = (SelectExpressionItem) s;
+                    final Expression e = se.getExpression();
 
-        // TODO: add more custom query visitors here
-    }
+                    if (e instanceof Column) {
+                        final Column c = (Column) e;
+                        if (c.getColumnName().equalsIgnoreCase(OBSCORE_REGION_COLUMN_NAME)) {
+                            c.setColumnName(OBSCORE_REGION_COLUMN_REPLACE_NAME);
+                        }
+                    }
+                }
+            }
+        }
 
-    /**
-     * Provide implementation of expression deparser if the default (BaseExpressionDeParser)
-     * is not sufficient. For example, postgresql+pg_sphere requires the PgsphereDeParser to
-     * support spoint and spoly. the default is to return a new BaseExpressionDeParser.
-     *
-     * @param dep The SelectDeParser used.
-     * @param sb  StringBuffer to write to.
-     * @return ExpressionDeParser implementation.  Never null.
-     */
-    @Override
-    protected ExpressionDeParser getExpressionDeparser(SelectDeParser dep, StringBuffer sb) {
-        return new OracleExpressionDeParser(dep, sb);
-    }
-
-    /**
-     * Provide implementation of select deparser if the default (SelectDeParser) is not sufficient.
-     *
-     * @return  QuerySelectDeParser
-     */
-    @Override
-    protected QuerySelectDeParser getSelectDeParser() {
-        return new OracleQuerySelectDeParser();
+        leavePlainSelect();
     }
 }

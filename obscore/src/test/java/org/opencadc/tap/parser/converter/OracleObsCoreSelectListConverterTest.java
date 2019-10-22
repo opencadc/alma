@@ -1,9 +1,10 @@
+
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2011.                            (c) 2011.
+ *  (c) 2019.                            (c) 2019.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,90 +63,100 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *  $Revision: 5 $
  *
  ************************************************************************
  */
 
-package org.opencadc.tap.impl;
+package org.opencadc.tap.parser.converter;
 
-import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
-import net.sf.jsqlparser.util.deparser.SelectDeParser;
-import ca.nrc.cadc.tap.AdqlQuery;
-import ca.nrc.cadc.tap.expression.OracleExpressionDeParser;
-import ca.nrc.cadc.tap.parser.OracleQuerySelectDeParser;
-import ca.nrc.cadc.tap.parser.QuerySelectDeParser;
-import ca.nrc.cadc.tap.parser.converter.OracleCeilingConverter;
-import ca.nrc.cadc.tap.parser.converter.OracleRegionConverter;
-import ca.nrc.cadc.tap.parser.converter.OracleSubstringConverter;
-import ca.nrc.cadc.tap.parser.converter.TableNameConverter;
-import ca.nrc.cadc.tap.parser.converter.TableNameReferenceConverter;
+import net.sf.jsqlparser.expression.DoubleValue;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import org.junit.Test;
 import ca.nrc.cadc.tap.parser.navigator.ExpressionNavigator;
-import ca.nrc.cadc.tap.parser.navigator.SelectNavigator;
+import ca.nrc.cadc.tap.parser.navigator.FromItemNavigator;
+import ca.nrc.cadc.tap.parser.navigator.ReferenceNavigator;
 
-import org.opencadc.tap.parser.converter.OracleObsCoreSelectListConverter;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 
-/**
- * TAP service implementors must implement this class and add customisations of the
- * navigatorList as shown below. Custom query visitors can be used to validate or modify
- * the query; the base class runs all the visitors in the navigatorList once before
- * converting the result into SQL for execution.
- *
- * @author pdowler
- */
-public class AdqlQueryImpl extends AdqlQuery {
+public class OracleObsCoreSelectListConverterTest {
 
-    public AdqlQueryImpl() {
-        super();
-    }
+    @Test
+    public void visit() {
+        final OracleObsCoreSelectListConverter testSubject =
+                new OracleObsCoreSelectListConverter(new ExpressionNavigator(), new ReferenceNavigator(),
+                                                     new FromItemNavigator());
 
-    @Override
-    protected void init() {
-        super.init();
+        final Table table = new Table("schema", "table");
+        final Column columnA = new Column(table, "A");
+        final Column columnB = new Column(table, "s_region");
+        final Column columnC = new Column(table, "C");
 
-        // TAP-1.1 tap_schema version is encoded in table names
-        final TableNameConverter tnc = new TableNameConverter(true);
-        tnc.put("ivoa.obscore", "alma.obscore");
-        tnc.put("tap_schema.schemas", "tap_schema.schemas11");
-        tnc.put("tap_schema.tables", "tap_schema.tables11");
-        tnc.put("tap_schema.columns", "tap_schema.columns11");
-        tnc.put("tap_schema.keys", "tap_schema.keys11");
-        tnc.put("tap_schema.key_columns", "tap_schema.key_columns11");
+        final List<Expression> substringParameters = new ArrayList<>();
 
-        final TableNameReferenceConverter tnrc = new TableNameReferenceConverter(tnc.map);
+        substringParameters.add(columnB);
+        substringParameters.add(new DoubleValue("1"));
+        substringParameters.add(new DoubleValue("3"));
 
-        // For Oracle, the CEILING function is actually CEIL.
-        navigatorList.add(new OracleCeilingConverter(new ExpressionNavigator(), tnrc, tnc));
-        navigatorList.add(new OracleSubstringConverter(new ExpressionNavigator(), tnrc, tnc));
-        navigatorList.add(new OracleObsCoreSelectListConverter(new ExpressionNavigator(), tnrc, tnc));
-        navigatorList.add(new OracleRegionConverter(new ExpressionNavigator(), tnrc, tnc));
-        navigatorList.add(new SelectNavigator(new ExpressionNavigator(), tnrc, tnc));
+        final ExpressionList expressionList = new ExpressionList(substringParameters);
 
-        // TODO: add more custom query visitors here
-    }
+        final List<SelectExpressionItem> selectItems = new ArrayList<>();
+        final SelectExpressionItem selectExpressionItemA = new SelectExpressionItem();
+        selectExpressionItemA.setExpression(columnA);
+        selectItems.add(selectExpressionItemA);
 
-    /**
-     * Provide implementation of expression deparser if the default (BaseExpressionDeParser)
-     * is not sufficient. For example, postgresql+pg_sphere requires the PgsphereDeParser to
-     * support spoint and spoly. the default is to return a new BaseExpressionDeParser.
-     *
-     * @param dep The SelectDeParser used.
-     * @param sb  StringBuffer to write to.
-     * @return ExpressionDeParser implementation.  Never null.
-     */
-    @Override
-    protected ExpressionDeParser getExpressionDeparser(SelectDeParser dep, StringBuffer sb) {
-        return new OracleExpressionDeParser(dep, sb);
-    }
+        final SelectExpressionItem selectExpressionItemB = new SelectExpressionItem();
+        selectExpressionItemB.setExpression(columnB);
+        selectItems.add(selectExpressionItemB);
 
-    /**
-     * Provide implementation of select deparser if the default (SelectDeParser) is not sufficient.
-     *
-     * @return  QuerySelectDeParser
-     */
-    @Override
-    protected QuerySelectDeParser getSelectDeParser() {
-        return new OracleQuerySelectDeParser();
+        final SelectExpressionItem selectExpressionItemC = new SelectExpressionItem();
+        selectExpressionItemC.setExpression(columnC);
+        selectItems.add(selectExpressionItemC);
+
+        final PlainSelect plainSelect = new PlainSelect();
+        plainSelect.setSelectItems(selectItems);
+
+        // RUN THE TEST
+
+        testSubject.visit(plainSelect);
+
+        // END TEST RUN
+
+        final Column expectedColumnB = new Column(table, "FOOTPRINT");
+
+        final List<SelectExpressionItem> expectedSelectItems = new ArrayList<>();
+        final SelectExpressionItem expectedSelectExpressionItemA = new SelectExpressionItem();
+        expectedSelectExpressionItemA.setExpression(columnA);
+        expectedSelectItems.add(expectedSelectExpressionItemA);
+
+        final SelectExpressionItem expectedSelectExpressionItemB = new SelectExpressionItem();
+        expectedSelectExpressionItemB.setExpression(expectedColumnB);
+        expectedSelectItems.add(expectedSelectExpressionItemB);
+
+        final SelectExpressionItem expectedSelectExpressionItemC = new SelectExpressionItem();
+        expectedSelectExpressionItemC.setExpression(columnC);
+        expectedSelectItems.add(expectedSelectExpressionItemC);
+
+        final SelectExpressionItem[] expecteds = expectedSelectItems.toArray(new SelectExpressionItem[0]);
+        final SelectExpressionItem[] actuals = (SelectExpressionItem[])
+                plainSelect.getSelectItems().toArray(new SelectExpressionItem[0]);
+
+        assertEquals("Should be three.", 3, actuals.length);
+        assertEquals("Wrong length.", expecteds.length, actuals.length);
+
+        for (int i = 0, el = expecteds.length; i < el; i++) {
+            final SelectExpressionItem selectExpressionItem = expecteds[i];
+            final SelectExpressionItem actualExpressionItem = actuals[i];
+
+            assertEquals("Wrong item.", selectExpressionItem.toString(), actualExpressionItem.toString());
+        }
     }
 }
