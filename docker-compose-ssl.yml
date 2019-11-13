@@ -51,7 +51,7 @@ services:
     environment:
       CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca'
   datalink.cadc.dao.nrc.ca:
-    image: opencadc/alma-datalink:1.0.0
+    image: opencadc/alma-datalink:1.0.1
     networks:
       - "alma"
     env_file:
@@ -68,7 +68,7 @@ services:
     networks:
       - 'alma'
     env_file:
-      - "./soda/docker/config/alma-soda.properties"
+      - './soda/docker/config/alma-soda.properties'
     volumes:
       - 'server_certs:/usr/local/share/ca-certificates'
       - "./org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties"

@@ -89,16 +89,13 @@ import org.opencadc.alma.deliverable.DeliverableInfoWalker;
 import org.opencadc.datalink.server.DataLinkSource;
 import org.opencadc.datalink.server.LinkQueryRunner;
 
-import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.db.DBUtil;
-import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.uws.Parameter;
 import ca.nrc.cadc.uws.ParameterUtil;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import java.net.URI;
+import java.net.MalformedURLException;
 import java.util.List;
 
 
@@ -111,37 +108,33 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
     private static final String NGAS_HOSTS_PROPERTY_NAME = "ngasHosts";
     private static final String NGAS_TIMEOUT_SECONDS_PROPERTY_NAME = "ngasTimeoutSeconds";
     private static final String ALMA_DB_JNDI_NAME_KEY = "almaDataLinkJDBCName";
-    private static final String ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME = "almaDataLinkServiceURI";
-    private static final String ALMA_SODA_SERVICE_ID_PROPERTY_NAME = "almaSODAServiceURI";
-    private static final String DEFAULT_ALMA_DATALINK_SERVICE_ID = "ivo://cadc.nrc.ca/datalink";
-    private static final String DEFAULT_ALMA_SODA_SERVICE_ID = "ivo://cadc.nrc.ca/soda";
     private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/datalink";
     private static final String PARAMETER_KEY = "ID";
 
     private final DataPacker dataPacker;
     private final AlmaProperties almaProperties;
-    private final RegistryClient registryClient;
 
-
-    public DataLinkQueryRunner(final String propertiesFileName, final DataPacker dataPacker,
-                               final RegistryClient registryClient) {
+    public DataLinkQueryRunner(final String propertiesFileName, final DataPacker dataPacker) {
         this.almaProperties = new AlmaProperties(propertiesFileName);
         this.dataPacker = dataPacker;
-        this.registryClient = registryClient;
     }
 
     public DataLinkQueryRunner() {
         this.almaProperties = new AlmaProperties();
         this.dataPacker = createDataPacker();
-        this.registryClient = new RegistryClient();
     }
 
     @Override
     protected DataLinkSource getDataLinkSource() {
-        return new DataLinkDataPackerSource(createDataLinkIterator());
+        try {
+            return new DataLinkDataPackerSource(createDataLinkIterator());
+        } catch (MalformedURLException e) {
+            // Should never happen.
+            throw new RuntimeException("\n\nBUG: Unable to proceed\n\n", e);
+        }
     }
 
-    DataLinkIterator createDataLinkIterator() {
+    private DataLinkIterator createDataLinkIterator() throws MalformedURLException {
         final List<Parameter> jobParameterList = job.getParameterList();
         final List<String> dataSetIDList = ParameterUtil.findParameterValues(PARAMETER_KEY, jobParameterList);
 
@@ -153,23 +146,16 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
         }
     }
 
-    DeliverableInfoWalker createDeliverableInfoWalker() {
+    private DeliverableInfoWalker createDeliverableInfoWalker() {
         return new DeliverableInfoWalker();
     }
 
-    DataLinkURLBuilder createDataLinkURLBuilder() {
-        return new DataLinkURLBuilder(registryClient.getServiceURL(
-                URI.create(almaProperties.getFirstPropertyValue(ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME,
-                                                                DEFAULT_ALMA_DATALINK_SERVICE_ID)),
-                Standards.DATALINK_LINKS_10, AuthMethod.ANON),
-                                      registryClient.getServiceURL(
-                                              URI.create(almaProperties.getFirstPropertyValue(
-                                                      ALMA_SODA_SERVICE_ID_PROPERTY_NAME,
-                                                      DEFAULT_ALMA_SODA_SERVICE_ID)),
-                                              Standards.SODA_SYNC_10, AuthMethod.ANON));
+    private DataLinkURLBuilder createDataLinkURLBuilder() throws MalformedURLException {
+        return new DataLinkURLBuilder(DataLinkAvailabilityPlugin.getDataLinkBaseURL(almaProperties),
+                                      DataLinkAvailabilityPlugin.getSodaBaseURL(almaProperties));
     }
 
-    DataPacker createDataPacker() {
+    private DataPacker createDataPacker() {
         try {
             final DataSource dataSource = DBUtil.findJNDIDataSource(
                     almaProperties.getFirstPropertyValue(ALMA_DB_JNDI_NAME_KEY, DEFAULT_ALMA_DB_JNDI_NAME));
