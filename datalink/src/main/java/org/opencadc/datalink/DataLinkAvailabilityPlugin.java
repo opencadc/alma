@@ -69,12 +69,25 @@
 
 package org.opencadc.datalink;
 
+import org.opencadc.alma.AlmaProperties;
+import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.reg.Standards;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vosi.AvailabilityPlugin;
 import ca.nrc.cadc.vosi.AvailabilityStatus;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+
 
 public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
+
+    private static final String ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME = "almaDataLinkServiceURI";
+    private static final String ALMA_SODA_SERVICE_ID_PROPERTY_NAME = "almaSODAServiceURI";
+    private static final String DEFAULT_ALMA_DATALINK_SERVICE_ID = "ivo://cadc.nrc.ca/datalink";
+    private static final String DEFAULT_ALMA_SODA_SERVICE_ID = "ivo://cadc.nrc.ca/soda";
 
     private String applicationName;
     private String state;
@@ -100,7 +113,34 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
     public AvailabilityStatus getStatus() {
         return new AvailabilityStatus(true, null, null, null,
                                       String.format("%s state: %s", applicationName, StringUtil.hasText(state) ?
-                                              state : "ACTIVE"));
+                                                                                     state : "ACTIVE"));
+    }
+
+    public static URL getDataLinkBaseURL(final AlmaProperties almaProperties) throws MalformedURLException {
+        final URI configuredDataLinkURI = URI.create(
+                almaProperties.getFirstPropertyValue(ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME,
+                                                     DEFAULT_ALMA_DATALINK_SERVICE_ID));
+        return lookupBaseURL(configuredDataLinkURI, Standards.DATALINK_LINKS_10, AuthMethod.ANON);
+    }
+
+    public static URL getSodaBaseURL(final AlmaProperties almaProperties) throws MalformedURLException {
+        final URI configuredDataLinkURI = URI.create(
+                almaProperties.getFirstPropertyValue(ALMA_SODA_SERVICE_ID_PROPERTY_NAME,
+                                                     DEFAULT_ALMA_SODA_SERVICE_ID));
+        return lookupBaseURL(configuredDataLinkURI, Standards.SODA_SYNC_10, AuthMethod.ANON);
+    }
+
+    private static URL lookupBaseURL(final URI configuredURI, final URI standardsID, final AuthMethod authMethod)
+            throws MalformedURLException {
+        if (configuredURI.getScheme().equals("ivo")) {
+            final RegistryClient regClient = new RegistryClient();
+            // Attempt to load the URI as a resource URI from the Registry.
+            return regClient.getServiceURL(configuredURI, standardsID,
+                                           authMethod == null ? AuthMethod.ANON : authMethod);
+        } else {
+            // Fallback and assume the URI is an absolute one.
+            return configuredURI.toURL();
+        }
     }
 
     /**

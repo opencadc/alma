@@ -34,15 +34,15 @@ services:
     env_file:
       - './obscore/docker/config/alma-tap.properties'
   datalink.cadc.dao.nrc.ca:
-    image: opencadc/alma-datalink:1.0.0
+    image: opencadc/alma-datalink:1.0.1
     networks:
-      - "alma"
+      - 'alma'
     env_file:
-      - "./datalink/docker/config/alma-datalink.properties"
+      - './datalink/docker/config/alma-datalink.properties'
     ports:
-      - "45555:5555"
+      - '45555:5555'
     volumes:
-      - "./org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties"
+      - './org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties'
   reg.cadc.dao.nrc.ca:
     image: opencadc/alma-reg:1.0.1
     networks:
@@ -57,8 +57,10 @@ services:
       - '55555:5555'
     networks:
       - 'alma'
+    env_file:
+      - './soda/docker/config/alma-soda.properties'
     volumes:
-      - "./org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties"
+      - './org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties'
 
 networks:
   alma:

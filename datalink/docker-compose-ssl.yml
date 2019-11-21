@@ -12,7 +12,7 @@ services:
     depends_on:
       - "datalink.cadc.dao.nrc.ca"
   datalink.cadc.dao.nrc.ca:
-    image: opencadc/alma-datalink:1.0.0
+    image: opencadc/alma-datalink:1.0.1
     ports:
       - "5555:5555"
     networks:
