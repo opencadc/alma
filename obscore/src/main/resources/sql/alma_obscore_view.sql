@@ -1,4 +1,4 @@
-CREATE OR REPLACE FORCE VIEW ALMA.obscore (
+ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     dataproduct_type,
     calib_level,
     obs_collection,
@@ -25,6 +25,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     pol_states,
     facility_name,
     instrument_name,
+    proposal_id,
     data_rights,
     gal_longitude,
     gal_latitude,
@@ -64,7 +65,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     'ADS/JAO.ALMA#' || asap.code,
     'http://almascience.org/aq?member_ous_id=' || science.member_ouss_id,
     'text/html',
-    apf.stored_size,
+    (SELECT DISTINCT stored_size FROM ALMA.asa_product_files WHERE asa_energy_id = energy.asa_energy_id),
     science.source_name,
     science.ra,
     science.dec,
@@ -84,6 +85,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     'JAO',
     'ALMA',
     aous.asa_project_code,
+    CASE WHEN SYSDATE >= ads.release_date THEN 'Public' ELSE 'Proprietary' END,
     science.gal_longitude,
     science.gal_latitude,
     science.band_list,
@@ -91,7 +93,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     science.antennas,
     science.is_mosaic,
     (case when ads.release_date is null then TO_TIMESTAMP('3000-01-01T00:00:00.000Z', 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"')
-          else TO_TIMESTAMP(ads.release_date, 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"') end),
+          else CAST(ads.release_date AS TIMESTAMP) end),
     science.frequency_support,
     science.velocity_resolution,
     asap.pi_name,
@@ -108,7 +110,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     science.scan_intent,
     science.spatial_scale_max,
     ads.qa2_passed,
-    apb.bibcode,
+    (SELECT DISTINCT bibcode FROM ALMA.asa_project_bibliography WHERE project_code = aous.asa_project_code),
     asap.science_keyword,
     asap.scientific_category,
     science.last_updated
@@ -118,6 +120,4 @@ INNER JOIN ALMA.asa_project asap ON asap.code = science.project_code
 INNER JOIN ALMA.asa_ous aous ON aous.asa_ous_id = science.asa_ous_id
 LEFT OUTER JOIN alma.asa_delivery_asdm_ous adao ON science.asdm_uid = adao.asdm_uid
 LEFT OUTER JOIN ALMA.asa_delivery_status ads ON adao.deliverable_name = ads.delivery_id
-LEFT OUTER JOIN ALMA.asa_product_files apf ON energy.asa_energy_id = apf.asa_energy_id
-LEFT OUTER JOIN ALMA.asa_project_bibliography apb ON apb.project_code = aous.asa_project_code
 WHERE science.product_type = 'MOUS';
