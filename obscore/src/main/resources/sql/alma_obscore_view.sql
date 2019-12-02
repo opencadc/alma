@@ -1,4 +1,4 @@
- CREATE OR REPLACE FORCE VIEW ALMA.obscore (
+CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     dataproduct_type,
     calib_level,
     obs_collection,
