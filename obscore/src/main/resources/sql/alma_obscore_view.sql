@@ -61,7 +61,7 @@
          WHEN science.product_type = 'GOUS' THEN 3
          ELSE null END,
     'ALMA',
-    aous.asa_ous_id,
+    science.asa_ous_id,
     'ADS/JAO.ALMA#' || asap.code,
     'http://almascience.org/aq?member_ous_id=' || science.member_ouss_id,
     'text/html',
@@ -84,7 +84,7 @@
     energy.pol_product,
     'JAO',
     'ALMA',
-    aous.asa_project_code,
+    science.project_code,
     CASE WHEN SYSDATE >= ads.release_date THEN 'Public' ELSE 'Proprietary' END,
     science.gal_longitude,
     science.gal_latitude,
@@ -102,22 +102,21 @@
     energy.sensitivity_10kms,
     science.cont_sensitivity_bandwidth,
     science.pwv,
-    aous.group_ous_uid,
-    aous.member_ous_uid,
+    science.group_ouss_id,
+    science.member_ouss_id,
     science.asdm_uid,
     asap.title,
     asap.type,
     science.scan_intent,
     science.spatial_scale_max,
     ads.qa2_passed,
-    (SELECT DISTINCT bibcode FROM ALMA.asa_project_bibliography WHERE project_code = aous.asa_project_code),
+    (SELECT DISTINCT bibcode FROM ALMA.asa_project_bibliography WHERE project_code = science.project_code),
     asap.science_keyword,
     asap.scientific_category,
     science.last_updated
 FROM ALMA.asa_science science
 INNER JOIN ALMA.asa_energy energy ON energy.asa_dataset_id = science.dataset_id
 INNER JOIN ALMA.asa_project asap ON asap.code = science.project_code
-INNER JOIN ALMA.asa_ous aous ON aous.asa_ous_id = science.asa_ous_id
 LEFT OUTER JOIN alma.asa_delivery_asdm_ous adao ON science.asdm_uid = adao.asdm_uid
 LEFT OUTER JOIN ALMA.asa_delivery_status ads ON adao.deliverable_name = ads.delivery_id
 WHERE science.product_type = 'MOUS';
