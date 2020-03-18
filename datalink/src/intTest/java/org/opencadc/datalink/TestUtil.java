@@ -74,7 +74,7 @@ import ca.nrc.cadc.dali.tables.votable.VOTableDocument;
 import ca.nrc.cadc.dali.tables.votable.VOTableField;
 import ca.nrc.cadc.dali.tables.votable.VOTableReader;
 import ca.nrc.cadc.dali.tables.votable.VOTableTable;
-import ca.nrc.cadc.net.HttpDownload;
+import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.net.HttpPost;
 
 import java.io.ByteArrayOutputStream;
@@ -290,7 +290,7 @@ class TestUtil {
         URL url = getQueryURL(endpoint, parameters);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         log.debug("GET " + url);
-        HttpDownload get = new HttpDownload(url, out);
+        final HttpGet get = new HttpGet(url, out);
         get.setFollowRedirects(false);
         get.run();
 
@@ -321,7 +321,7 @@ class TestUtil {
     static String followGetRedirect(final URL endpoint) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         log.debug("GET " + endpoint);
-        final HttpDownload get = new HttpDownload(endpoint, out);
+        final HttpGet get = new HttpGet(endpoint, out);
         get.setFollowRedirects(false);
         get.run();
 

@@ -77,12 +77,15 @@ import ca.nrc.cadc.dali.tables.votable.VOTableField;
 import ca.nrc.cadc.dali.tables.votable.VOTableInfo;
 import ca.nrc.cadc.dali.tables.votable.VOTableResource;
 import ca.nrc.cadc.dali.tables.votable.VOTableTable;
+import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.Log4jInit;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
@@ -126,7 +129,7 @@ public class LinksTest {
     private static URL certURL;
 
     static {
-        Log4jInit.setLevel("org.opencac.datalink", Level.INFO);
+        Log4jInit.setLevel("org.opencadc.datalink", Level.INFO);
         Log4jInit.setLevel("ca.nrc.cadc.reg", Level.INFO);
     }
 
@@ -325,19 +328,11 @@ public class LinksTest {
         LOGGER.debug("testUsageFault_noID");
         try {
             // GET the query.
-            VOTableDocument getVotable = TestUtil.get(anonURL, new String[] {}, 400);
-            VOTableResource gvr = getVotable.getResourceByType("results");
-            VOTableInfo queryStatus = null;
-            for (VOTableInfo info : gvr.getInfos()) {
-                if (info.getName().equals("QUERY_STATUS")) {
-                    queryStatus = info;
-                }
-            }
-            Assert.assertNotNull("queryStatus", queryStatus);
-            Assert.assertEquals("ERROR", queryStatus.getValue());
-            Assert.assertEquals("Wrong content",
-                                "IllegalArgumentException: No dataset IDs provided.  Use ID=uid://XXX",
-                                queryStatus.content);
+            final HttpGet get = new HttpGet(anonURL, false);
+            get.run();
+
+            Assert.assertEquals("Wrong status code", 400, get.getResponseCode());
+            Assert.assertTrue("Wrong error.", get.getThrowable() instanceof IllegalArgumentException);
         } catch (Exception unexpected) {
             LOGGER.error("unexpected exception", unexpected);
             throw unexpected;
@@ -349,19 +344,13 @@ public class LinksTest {
         LOGGER.debug("testUsageFault_badID");
         try {
             // GET the query.
-            VOTableDocument getVotable = TestUtil.get(anonURL, new String[] {"ID=" + INVALID_URI}, 400);
-            VOTableResource gvr = getVotable.getResourceByType("results");
-            VOTableInfo queryStatus = null;
-            for (VOTableInfo info : gvr.getInfos()) {
-                if (info.getName().equals("QUERY_STATUS")) {
-                    queryStatus = info;
-                }
-            }
-            Assert.assertNotNull("queryStatus", queryStatus);
-            Assert.assertEquals("ERROR", queryStatus.getValue());
-            Assert.assertEquals("Wrong content",
-                                String.format("IllegalArgumentException: No UID found in %s", INVALID_URI),
-                                queryStatus.content);
+            final HttpGet get = new HttpGet(new URL(String.format("%s://%s:%s%s?%s", anonURL.getProtocol(),
+                                                                  anonURL.getHost(), anonURL.getPath(),
+                                                                  (anonURL.getPort() > 0 ? anonURL.getPort() : ""),
+                                                                  String.format("ID=%s", INVALID_URI))), false);
+            get.run();
+            Assert.assertEquals("Wrong status code", 400, get.getResponseCode());
+            Assert.assertTrue("Wrong error.", get.getThrowable() instanceof IllegalArgumentException);
         } catch (Exception unexpected) {
             LOGGER.error("unexpected exception", unexpected);
             throw unexpected;
