@@ -80,7 +80,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     (0.299792458 / energy.frequency_min),
     energy.resolving_power_max,
     'phot.flux.density;phys.polarization',
-    energy.pol_product,
+    '/' || REGEXP_REPLACE(LTRIM(RTRIM(energy.pol_product)), '\s', '/') || '/',
     'JAO',
     'ALMA',
     science.project_code,
