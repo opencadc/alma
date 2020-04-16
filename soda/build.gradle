@@ -43,7 +43,7 @@ repositories {
 
 group = 'org.opencadc'
 sourceCompatibility = 1.8
-version = '1000'
+version = '1.0.0'
 
 ext {
     default_app_name = 'soda'

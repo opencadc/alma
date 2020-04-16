@@ -12,7 +12,7 @@ services:
     depends_on:
       - "sia"
   sia:
-    image: opencadc/alma-sia:1.0.2
+    image: opencadc/alma-sia:1.0.3
     networks:
       - "sia_obscore"
     ports:
