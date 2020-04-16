@@ -12,9 +12,9 @@ repositories {
     }
 }
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 group = 'ca.nrc.cadc'
-version = '1001'
+version = '1.0.3'
 
 ext {
     default_app_name = 'sia2'
