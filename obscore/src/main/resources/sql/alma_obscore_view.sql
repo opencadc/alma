@@ -99,7 +99,7 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     science.frequency_support,
     science.velocity_resolution,
     asap.pi_name,
-    (SELECT authors FROM (SELECT DISTINCT aab.authors FROM ALMA.asa_bibliography aab JOIN ALMA.asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
+    (SELECT LISTAGG(authors, ' ') WITHIN GROUP (ORDER BY authors) AS authors FROM (SELECT DISTINCT aab.authors FROM ALMA.asa_bibliography aab JOIN ALMA.asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
     science.schedblock_name,
     asap.coi_name,
     energy.sensitivity_10kms,
