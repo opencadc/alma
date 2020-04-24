@@ -82,7 +82,8 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     (0.299792458 / energy.frequency_min),
     energy.resolving_power_max,
     'phot.flux.density;phys.polarization',
-    '/' || REGEXP_REPLACE(LTRIM(RTRIM(energy.pol_product)), '\s', '/') || '/',
+    -- Special case where the pol_products that include all of the states but omit the YX value.
+    CASE WHEN LTRIM(RTRIM(energy.pol_product)) = 'XX XY YY' THEN '/XX/XY/YX/YY/' ELSE '/' || REGEXP_REPLACE(LTRIM(RTRIM(energy.pol_product)), '\s', '/') || '/' END,
     'JAO',
     'ALMA',
     science.project_code,
