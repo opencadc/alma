@@ -5,7 +5,6 @@
     "description": "TODO\n",
     "version": "1.0.0"
   },
-  "host": "almascience.nrao.edu",
   "schemes": [
     "http",
     "https"
