@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2020.                            (c) 2020.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,49 +66,46 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.alma.deliverable;
 
-import org.opencadc.datalink.server.DataLinkSource;
+import org.junit.Assert;
+import org.junit.Test;
+import org.opencadc.alma.AlmaUID;
 
-import java.util.Collections;
-import java.util.Iterator;
+import ca.nrc.cadc.net.HttpGet;
+import ca.nrc.cadc.reg.client.RegistryClient;
+
+import java.net.URI;
+import java.net.URL;
+
+import static org.mockito.Mockito.*;
 
 
-public class DataLinkDataPackerSource implements DataLinkSource {
+public class RequestHandlerQueryTest {
 
-    private final DataLinkIterator dataLinkIterator;
-    private Integer maxRec;
-    private boolean downloadOnly;
+    @Test
+    public void createURL() throws Exception {
+        final URI resourceURI = URI.create("ivo://alma.org/rh");
+        final URI uidURI = URI.create("uid://C0/C1/C313");
+        final HttpGet mockHttpGet = mock(HttpGet.class);
+        final RegistryClient mockRegistryClient = mock(RegistryClient.class);
+        final RequestHandlerQuery testSubject = new RequestHandlerQuery(resourceURI) {
+            @Override
+            HttpGet createHttpGet(URL requestHandlerEndpointURL) {
+                return mockHttpGet;
+            }
 
+            @Override
+            RegistryClient createRegistryClient() {
+                return mockRegistryClient;
+            }
+        };
 
-    public DataLinkDataPackerSource(final DataLinkIterator dataLinkIterator, final Integer maxRec,
-                                    final boolean downloadOnly) {
-        this.dataLinkIterator = dataLinkIterator;
-        this.maxRec = maxRec;
-        this.downloadOnly = downloadOnly;
-    }
-
-    public DataLinkDataPackerSource(DataLinkIterator dataLinkIterator) {
-        this(dataLinkIterator, 1000, true);
-    }
-
-    @Override
-    public void setDownloadOnly(boolean b) {
-        this.downloadOnly = b;
-    }
-
-    @Override
-    public void setMaxrec(final Integer integer) {
-        this.maxRec = integer;
-    }
-
-    @Override
-    public Iterator<DataLink> links() {
-        return this.dataLinkIterator;
-    }
-
-    @Override
-    public Iterator<ServiceDescriptor> descriptors() {
-        return Collections.emptyIterator();
+        when(mockRegistryClient.getAccessURL(resourceURI)).thenReturn(
+                new URL("https://alma.org/requestHandler/tree"));
+        final URL endpointURL = testSubject.lookupBaseServiceURL(new AlmaUID(uidURI));
+        Assert.assertEquals("Wrong endpoint",
+                            new URL("https://alma.org/requestHandler/tree/ous/expand/uid___C0_C1_C313/downwards"),
+                            endpointURL);
     }
 }

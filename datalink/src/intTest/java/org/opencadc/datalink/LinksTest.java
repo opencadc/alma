@@ -138,14 +138,6 @@ public class LinksTest {
 
     @BeforeClass
     public static void before() {
-        //try {
-        //    File crt = FileUtil.getFileFromResource("x509_CADCRegtest1.pem", LinksTest.class);
-        //    SSLUtil.initSSL(crt);
-        //    LOGGER.debug("initSSL: " + crt);
-        //} catch (Throwable t) {
-        //    throw new RuntimeException("failed to init SSL", t);
-        //}
-
         URI serviceID = TestUtil.DATALINK_SERVICE_ID;
         RegistryClient rc = new RegistryClient();
         anonURL = rc.getServiceURL(serviceID, Standards.DATALINK_LINKS_10, AuthMethod.ANON);

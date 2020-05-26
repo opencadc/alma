@@ -70,40 +70,19 @@
 package org.opencadc.soda;
 
 
-import alma.asdm.action.asdm.AsdmWalker;
-import alma.asdm.dao.BulkStoreDao;
-import alma.asdm.dao.BulkStoreDaoImpl;
-import alma.asdm.dao.MetaDataDao;
-import alma.asdm.dao.MetaDataDaoImpl;
-import alma.asdm.dao.ProductMetaDataDao;
-import alma.asdm.dao.ProductMetaDataDaoImpl;
-import alma.asdm.service.AsdmService;
-import alma.asdm.service.AssetManagerService;
-import alma.asdm.service.AssetManagerServiceImpl;
-import alma.asdm.service.DataPacker;
-import alma.asdm.service.DataPackerImpl;
-import alma.asdm.service.OusService;
-import alma.asdm.service.ProductService;
-import alma.asdm.service.RetrieveService;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.DeliverableInfoWalker;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import org.opencadc.soda.server.AbstractSodaJobRunner;
 import org.opencadc.soda.server.AlmaStreamingSodaPlugin;
 import org.opencadc.soda.server.SodaPlugin;
 import org.opencadc.soda.server.SodaURLBuilder;
-import ca.nrc.cadc.db.DBUtil;
 
-import javax.naming.NamingException;
-import javax.sql.DataSource;
+import java.net.URI;
 
 
 public class AlmaSodaJobRunner extends AbstractSodaJobRunner {
 
-    private static final String NGAS_HOSTS_PROPERTY_NAME = "ngasHosts";
-    private static final String NGAS_TIMEOUT_SECONDS_PROPERTY_NAME = "ngasTimeoutSeconds";
-    private static final String ALMA_DB_JNDI_NAME_KEY = "almaSodaJDBCName";
-    private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/soda";
-
+    private static final String ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY = "almaRequestHandlerResourceID";
     private final AlmaProperties almaProperties;
 
 
@@ -117,43 +96,16 @@ public class AlmaSodaJobRunner extends AbstractSodaJobRunner {
 
     @Override
     public SodaPlugin getSodaPlugin() {
-        return new AlmaStreamingSodaPlugin(createDataPacker(), createDeliverableInfoWalker(),
-                                           createDeliverableURLBuilder());
-    }
-
-    DeliverableInfoWalker createDeliverableInfoWalker() {
-        return new DeliverableInfoWalker();
+        return new AlmaStreamingSodaPlugin(createRequestHandlerQuery(), createDeliverableURLBuilder());
     }
 
     SodaURLBuilder createDeliverableURLBuilder() {
         return new SodaURLBuilder(almaProperties);
     }
 
-    DataPacker createDataPacker() {
-        try {
-            final DataSource dataSource = DBUtil.findJNDIDataSource(
-                    almaProperties.getFirstPropertyValue(ALMA_DB_JNDI_NAME_KEY, DEFAULT_ALMA_DB_JNDI_NAME));
-            final MetaDataDao metaDataDao = new MetaDataDaoImpl(dataSource);
-            final BulkStoreDao bulkStoreDao =
-                    new BulkStoreDaoImpl(dataSource, almaProperties.getFirstPropertyValue(NGAS_HOSTS_PROPERTY_NAME),
-                                         Integer.parseInt(almaProperties
-                                                                  .getFirstPropertyValue(
-                                                                          NGAS_TIMEOUT_SECONDS_PROPERTY_NAME,
-                                                                          "0")));
-            final ProductMetaDataDao productMetaDataDao = new ProductMetaDataDaoImpl(dataSource);
-            final AsdmWalker asdmWalker = new AsdmWalker(metaDataDao, bulkStoreDao, 1L);
-            final ProductService productService = new ProductService(productMetaDataDao, bulkStoreDao);
-            final AsdmService asdmService = new AsdmService(asdmWalker, metaDataDao, bulkStoreDao);
-            final OusService ousService = new OusService(asdmService, productService, metaDataDao);
-            final RetrieveService retrieveService = new RetrieveService(asdmService, productService);
-            final AssetManagerService assetManagerService = new AssetManagerServiceImpl(asdmService, productService,
-                                                                                        metaDataDao, retrieveService,
-                                                                                        ousService,
-                                                                                        1);
-            return new DataPackerImpl(asdmService, ousService, null, productService, metaDataDao, assetManagerService);
-        } catch (NamingException ne) {
-            // This means the DataSource was not configured.
-            throw new RuntimeException("Unable to proceed when no DataSource is configured.", ne);
-        }
+    private RequestHandlerQuery createRequestHandlerQuery() {
+        final String configuredResourceID =
+                almaProperties.getFirstPropertyValue(ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY, null);
+        return new RequestHandlerQuery(URI.create(configuredResourceID));
     }
 }

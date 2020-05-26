@@ -70,7 +70,6 @@
 package org.opencadc.alma.deliverable;
 
 import alma.asdm.domain.Deliverable;
-import alma.asdm.domain.DeliverableInfo;
 import org.opencadc.alma.AlmaProperties;
 
 import ca.nrc.cadc.util.StringUtil;
@@ -83,13 +82,13 @@ public class DeliverableURLBuilder {
 
     private final AlmaProperties almaProperties;
 
-    public DeliverableURLBuilder(AlmaProperties almaProperties) {
+    public DeliverableURLBuilder(final AlmaProperties almaProperties) {
         this.almaProperties = almaProperties;
     }
 
-    public URL createDownloadURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        final String secureSchemeHost = almaProperties.getFirstPropertyValue("secureSchemeHost");
-        final String downloadPath = almaProperties.getFirstPropertyValue("downloadPath");
+    public URL createDownloadURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
+        final String secureSchemeHost = almaProperties.getFirstPropertyValue("secureSchemeHost", null);
+        final String downloadPath = almaProperties.getFirstPropertyValue("downloadPath", null);
 
         final String sanitizedURL = String.join("/", new String[] {
                 sanitizePath(secureSchemeHost),
@@ -100,8 +99,8 @@ public class DeliverableURLBuilder {
                 sanitizePath(new URL(sanitizedURL).toExternalForm()),
 
                 // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
-                sanitizePath(deliverableInfo.getType() == Deliverable.ASDM ?
-                             deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier())
+                sanitizePath(hierarchyItem.getType() == Deliverable.ASDM ?
+                             hierarchyItem.getName() : hierarchyItem.getId().toString())
         }));
     }
 

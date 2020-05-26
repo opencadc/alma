@@ -69,6 +69,7 @@
 
 package org.opencadc.alma;
 
+import ca.nrc.cadc.util.MultiValuedProperties;
 import ca.nrc.cadc.util.PropertiesReader;
 import ca.nrc.cadc.util.StringUtil;
 
@@ -86,7 +87,8 @@ public class AlmaProperties extends PropertiesReader {
     }
 
     public String getFirstPropertyValue(final String key, final String defaultValue) {
-        final String s = super.getFirstPropertyValue(key);
+        final MultiValuedProperties allProperties = super.getAllProperties();
+        final String s = allProperties.getFirstPropertyValue(key);
         return StringUtil.hasText(s) ? s : defaultValue;
     }
 }
