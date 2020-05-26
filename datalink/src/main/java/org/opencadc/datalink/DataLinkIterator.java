@@ -78,7 +78,6 @@ import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 import ca.nrc.cadc.util.StringUtil;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
