@@ -69,9 +69,9 @@
 
 package org.opencadc.soda.server;
 
-import alma.asdm.domain.DeliverableInfo;
 import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.deliverable.DeliverableURLBuilder;
+import org.opencadc.alma.deliverable.HierarchyItem;
 
 import ca.nrc.cadc.dali.Interval;
 import ca.nrc.cadc.dali.Shape;
@@ -89,9 +89,9 @@ public class SodaURLBuilder extends DeliverableURLBuilder {
         super(almaProperties);
     }
 
-    public URL createCutoutURL(final DeliverableInfo deliverableInfo, Cutout<Shape> pos, Cutout<Interval> band,
+    public URL createCutoutURL(final HierarchyItem hierarchyItem, Cutout<Shape> pos, Cutout<Interval> band,
                                Cutout<Interval> time, Cutout<List<String>> pol) throws MalformedURLException {
-        final URL downloadURL = createDownloadURL(deliverableInfo);
+        final URL downloadURL = createDownloadURL(hierarchyItem);
 
         URL cutoutURL = toCutoutURL(downloadURL, pos);
         cutoutURL = toCutoutURL(cutoutURL, band);
@@ -100,7 +100,7 @@ public class SodaURLBuilder extends DeliverableURLBuilder {
         return cutoutURL;
     }
 
-    private URL toCutoutURL(final URL downloadURL, Cutout cutout) throws MalformedURLException {
+    private URL toCutoutURL(final URL downloadURL, Cutout<?> cutout) throws MalformedURLException {
         if ((cutout == null) || (cutout.value == null)) {
             return downloadURL;
         } else {

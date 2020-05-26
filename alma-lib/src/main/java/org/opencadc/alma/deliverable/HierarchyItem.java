@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2020.                            (c) 2020.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,79 +66,124 @@
  ************************************************************************
  */
 
-package org.opencadc.alma;
+package org.opencadc.alma.deliverable;
 
+import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.identifiers.Uid;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import ca.nrc.cadc.util.StringUtil;
 
-import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 /**
- * Class that can handle a UID in the form of archiveUID://C0/C1/C2 (or uid___C0_C1_C2), or a Project Tarfile ID that is
- * in the form of 2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar.
+ * Represents a JSON Document parsed into a model from the RequestHandler hierarchy.
  */
-public class AlmaUID {
+public class HierarchyItem {
 
-    private static final Logger LOGGER = LogManager.getLogger(AlmaUID.class);
-    private static final Pattern UID_PATTERN =
-            Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
+    private final String id;
+    private final String name;
+    private final Deliverable type;
+    private final long sizeInBytes;
+    private final boolean readable;
+    private final HierarchyItem[] childrenArray;
+    private final Uid[] mousIDArray;
 
+    /**
+     * Create a hierarchy item from a JSON Document.
+     *
+     * @param document The JSONObject of the query.
+     * @return A new JSONHierarcyItem instance.  Never null.
+     */
+    public static HierarchyItem fromJSONObject(final JSONObject document) {
+        final String itemID = document.get("id").toString();
+        final JSONArray childrenJSONArray = document.getJSONArray("children");
+        final List<HierarchyItem> childrenList = new ArrayList<>(childrenJSONArray.length());
 
-    private final String originalID;
+        childrenJSONArray.forEach(child -> {
+            final JSONObject jsonObject = (JSONObject) child;
+            childrenList.add(HierarchyItem.fromJSONObject(jsonObject));
+        });
 
-    private Uid archiveUID;
+        final JSONArray mousIDJSONArray = document.getJSONArray("allMousUids");
+        final List<Uid> mousIDList = new ArrayList<>(mousIDJSONArray.length());
 
-    // Is a Filter ID
-    private boolean isFilterIDFlag;
+        mousIDJSONArray.forEach(mousID -> mousIDList.add(new Uid(mousID.toString())));
 
-
-    public AlmaUID(final URI originalIDURI) {
-        if (originalIDURI == null) {
-            throw new IllegalArgumentException("Passed ID cannot be null or empty.");
-        }
-
-        this.originalID = originalIDURI.toString();
-        parseID();
+        return new HierarchyItem((StringUtil.hasText(itemID) && !itemID.equals("null")) ? itemID : null,
+                                 document.get("name").toString(),
+                                 Deliverable.valueOf(document.get("type").toString()),
+                                 document.getLong("sizeInBytes"),
+                                 document.get("permission").toString().equals("ALLOWED"),
+                                 childrenList.toArray(new HierarchyItem[0]),
+                                 mousIDList.toArray(new Uid[0]));
     }
 
-    public AlmaUID(final String originalID) {
-        if (!StringUtil.hasText(originalID)) {
-            throw new IllegalArgumentException("Passed ID cannot be null or empty.");
-        }
-
-        this.originalID = originalID;
-        parseID();
+    /**
+     * Complete constructor.
+     *
+     * @param id            The identifier in the form of uid://c0/c1/c2.  Can be null.
+     * @param name          This article's name.
+     * @param type          This article's type.
+     * @param sizeInBytes   The size in bytes.
+     * @param readable      Whether this document's file is readable.
+     * @param childrenArray The Array of child objects.
+     * @param mousIDArray   The Array of MOUS IDs associated.
+     */
+    public HierarchyItem(String id, String name, Deliverable type, long sizeInBytes, boolean readable,
+                         HierarchyItem[] childrenArray, Uid[] mousIDArray) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.sizeInBytes = sizeInBytes;
+        this.readable = readable;
+        this.childrenArray = childrenArray;
+        this.mousIDArray = mousIDArray;
     }
 
-    private void parseID() {
-        final Matcher matcher = UID_PATTERN.matcher(this.originalID);
-
-        if (matcher.find()) {
-            final String uidMatch = matcher.group();
-            LOGGER.debug(String.format("Matched %s from %s", uidMatch, this.originalID));
-            this.isFilterIDFlag = !uidMatch.equals(this.originalID);
-            this.archiveUID = new Uid(uidMatch);
-        } else {
-            throw new IllegalArgumentException(String.format("No UID found in %s", this.originalID));
-        }
+    public String getId() {
+        return id;
     }
 
-    public String getOriginalID() {
-        return originalID;
+    public String getNullSafeId() {
+        return StringUtil.hasText(this.id) ? this.id : this.name;
     }
 
-    public boolean isFiltering() {
-        return isFilterIDFlag;
+    public String getName() {
+        return name;
     }
 
-    public Uid getArchiveUID() {
-        return archiveUID;
+    public Deliverable getType() {
+        return type;
+    }
+
+    public long getSizeInBytes() {
+        return sizeInBytes;
+    }
+
+    public boolean fileExists() {
+        return sizeInBytes > 0L;
+    }
+
+    public boolean isReadable() {
+        return readable;
+    }
+
+    public boolean hasChildren() {
+        return this.childrenArray.length > 0;
+    }
+
+    public HierarchyItem[] getChildrenArray() {
+        return childrenArray;
+    }
+
+    public Uid[] getMousIDArray() {
+        return mousIDArray;
     }
 
     @Override
@@ -150,14 +194,21 @@ public class AlmaUID {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AlmaUID almaUID = (AlmaUID) o;
-        return isFilterIDFlag == almaUID.isFilterIDFlag &&
-               originalID.equals(almaUID.originalID) &&
-               archiveUID.equals(almaUID.archiveUID);
+        HierarchyItem that = (HierarchyItem) o;
+        return sizeInBytes == that.sizeInBytes &&
+               readable == that.readable &&
+               id.equals(that.id) &&
+               name.equals(that.name) &&
+               type == that.type &&
+               Arrays.equals(childrenArray, that.childrenArray) &&
+               Arrays.equals(mousIDArray, that.mousIDArray);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(originalID, archiveUID, isFilterIDFlag);
+        int result = Objects.hash(id, name, type, sizeInBytes, readable);
+        result = 31 * result + Arrays.hashCode(childrenArray);
+        result = 31 * result + Arrays.hashCode(mousIDArray);
+        return result;
     }
 }

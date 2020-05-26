@@ -70,24 +70,24 @@
 package org.opencadc.datalink;
 
 import alma.asdm.domain.Deliverable;
-import alma.asdm.domain.DeliverableInfo;
-import alma.asdm.service.DataPacker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.DeliverableInfoWalker;
+import org.opencadc.alma.deliverable.HierarchyItem;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 import ca.nrc.cadc.util.StringUtil;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
 
 /**
@@ -101,19 +101,17 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private static final String VOTABLE_CONTENT_TYPE = "application/x-votable+xml;content=datalink";
     private static final String FITS_CONTENT_TYPE = "image/fits";
 
-    private final DeliverableInfoWalker deliverableInfoWalker;
     private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
-    private final Iterator<String> datasetIDIterator;
-    private final DataPacker dataPacker;
+    private final Iterator<URI> datasetIDIterator;
+    private final RequestHandlerQuery requestHandlerQuery;
 
 
-    DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
-                     final DataPacker dataPacker, final DeliverableInfoWalker deliverableInfoWalker) {
+    DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<URI> datasetIDIterator,
+                     final RequestHandlerQuery requestHandlerQuery) {
         this.dataLinkURLBuilder = dataLinkURLBuilder;
         this.datasetIDIterator = datasetIDIterator;
-        this.dataPacker = dataPacker;
-        this.deliverableInfoWalker = deliverableInfoWalker;
+        this.requestHandlerQuery = requestHandlerQuery;
     }
 
     @Override
@@ -121,16 +119,12 @@ public class DataLinkIterator implements Iterator<DataLink> {
         if (dataLinkQueue.isEmpty()) {
             if (datasetIDIterator.hasNext()) {
                 final AlmaUID currentUID = new AlmaUID(datasetIDIterator.next());
-                final DeliverableInfo currentTopLevelDeliverableInfo = dataPacker.expand(
-                        currentUID.getArchiveUID(), false);
+                final HierarchyItem hierarchyItem = requestHandlerQuery.query(currentUID);
 
-                final DeliverableInfo requestedDeliverableInfo =
-                        deliverableInfoWalker.navigateToRequestedID(currentUID, currentTopLevelDeliverableInfo);
-
-                if (isDeliverableInfoNotFound(requestedDeliverableInfo)) {
-                    dataLinkQueue.add(createNotFoundDataLink(requestedDeliverableInfo));
+                if (hierarchyItem.hasChildren()) {
+                    visitSubDeliverables(hierarchyItem);
                 } else {
-                    visitSubDeliverables(requestedDeliverableInfo);
+                    dataLinkQueue.add(createNotFoundDataLink(hierarchyItem));
                 }
 
                 return !dataLinkQueue.isEmpty();
@@ -142,13 +136,13 @@ public class DataLinkIterator implements Iterator<DataLink> {
         }
     }
 
-    private void visitSubDeliverables(final DeliverableInfo deliverableInfo) {
-        if (deliverableInfo != null) {
-            final Set<DeliverableInfo> subDeliverables = deliverableInfo.getSubDeliverables();
-            for (final DeliverableInfo nextDeliverableInfo : subDeliverables) {
-                dataLinkQueue.addAll(createDataLinks(nextDeliverableInfo));
+    private void visitSubDeliverables(final HierarchyItem hierarchyItem) {
+        Arrays.stream(hierarchyItem.getChildrenArray()).forEach(h -> {
+            final Deliverable type = h.getType();
+            if (type.isLeaf() || type.isAuxiliary() || type.isOus() || type.isTarfile()) {
+                dataLinkQueue.addAll(createDataLinks(h));
             }
-        }
+        });
     }
 
     /**
@@ -165,50 +159,46 @@ public class DataLinkIterator implements Iterator<DataLink> {
      * Create all of the necessary DataLink entries for the given source DeliverableInfo.  Some files will produce
      * multiple DataLink entries.
      *
-     * @param deliverableInfo The DeliverableInfo to create from.
+     * @param hierarchyItem The HierarchyItem to create from.
      * @return Collection of DataLink entries.  Never null.
      */
-    List<DataLink> createDataLinks(final DeliverableInfo deliverableInfo) {
+    List<DataLink> createDataLinks(final HierarchyItem hierarchyItem) {
         final List<DataLink> dataLinkCollection = new ArrayList<>();
-        final Deliverable deliverableType = deliverableInfo.getType();
+        final Deliverable deliverableType = hierarchyItem.getType();
 
-        dataLinkCollection.add(createDataLink(deliverableInfo));
+        dataLinkCollection.add(createDataLink(hierarchyItem));
 
         switch (deliverableType) {
             case PIPELINE_AUXILIARY_TARFILE:
-                dataLinkCollection.add(createRecursiveDataLink(deliverableInfo, DataLink.Term.AUXILIARY));
+                dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.AUXILIARY));
                 break;
             case PIPELINE_PRODUCT_TARFILE:
-                dataLinkCollection.add(createRecursiveDataLink(deliverableInfo, DataLink.Term.THIS));
+                dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.THIS));
                 break;
             case PIPELINE_PRODUCT:
-                if (getIdentifier(deliverableInfo).endsWith(".fits")) {
-                    dataLinkCollection.add(createCutoutDataLink(deliverableInfo));
+                if (getIdentifier(hierarchyItem).endsWith(".fits")) {
+                    dataLinkCollection.add(createCutoutDataLink(hierarchyItem));
                 } else {
-                    LOGGER.debug(String.format("No cutout available for %s.", deliverableInfo.getIdentifier()));
+                    LOGGER.debug(String.format("No cutout available for %s.", hierarchyItem.getNullSafeId()));
                 }
                 break;
             default:
-                LOGGER.debug(String.format("Nothing to add for %s.", deliverableInfo.getIdentifier()));
+                LOGGER.debug(String.format("Nothing to add for %s.", hierarchyItem.getNullSafeId()));
                 break;
         }
 
         return dataLinkCollection;
     }
 
-    private DataLink createNotFoundDataLink(final DeliverableInfo deliverableInfo) {
-        final DataLink errorDataLink = new DataLink(deliverableInfo.getIdentifier(), DataLink.Term.ERROR);
-        errorDataLink.errorMessage = String.format("NotFoundFault: %s", deliverableInfo.getIdentifier());
+    private DataLink createNotFoundDataLink(final HierarchyItem hierarchyItem) {
+        final DataLink errorDataLink = new DataLink(hierarchyItem.getNullSafeId(), DataLink.Term.ERROR);
+        errorDataLink.errorMessage = String.format("NotFoundFault: %s", hierarchyItem.getNullSafeId());
 
         return errorDataLink;
     }
 
-    private boolean isDeliverableInfoNotFound(final DeliverableInfo deliverableInfo) {
-        return deliverableInfo.getSizeInBytes() < 0;
-    }
-
-    private DataLink createDataLink(final DeliverableInfo deliverableInfo) {
-        final List<DataLink.Term> dataLinkTerms = determineTerms(deliverableInfo);
+    private DataLink createDataLink(final HierarchyItem hierarchyItem) {
+        final List<DataLink.Term> dataLinkTerms = determineTerms(hierarchyItem);
         final DataLink.Term primarySemantic = dataLinkTerms.get(0);
 
         // Already got it.
@@ -216,7 +206,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
         final DataLink dataLink;
 
         if (primarySemantic == DataLink.Term.DATALINK) {
-            dataLink = createRecursiveDataLink(deliverableInfo, null);
+            dataLink = createRecursiveDataLink(hierarchyItem, null);
         } else {
             //
             // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This
@@ -225,20 +215,20 @@ public class DataLinkIterator implements Iterator<DataLink> {
             //
             // jenkinsd 2019.07.11
             //
-            if (isDeliverableInfoNotFound(deliverableInfo)) {
-                dataLink = createNotFoundDataLink(deliverableInfo);
+            if (!hierarchyItem.fileExists()) {
+                dataLink = createNotFoundDataLink(hierarchyItem);
             } else {
-                dataLink = new DataLink(deliverableInfo.getIdentifier(), primarySemantic);
+                dataLink = new DataLink(hierarchyItem.getNullSafeId(), primarySemantic);
                 try {
-                    dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(deliverableInfo);
+                    dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(hierarchyItem);
                 } catch (MalformedURLException e) {
                     LOGGER.warn("Access URL creation failed.", e);
                     dataLink.errorMessage = String.format("Unable to create access URL for %s.",
-                                                          deliverableInfo.getIdentifier());
+                                                          hierarchyItem.getNullSafeId());
                 }
 
-                dataLink.contentLength = determineSizeInBytes(deliverableInfo);
-                dataLink.contentType = determineContentType(deliverableInfo);
+                dataLink.contentLength = determineSizeInBytes(hierarchyItem);
+                dataLink.contentType = determineContentType(hierarchyItem);
 
                 // TODO: How to determine this?
                 dataLink.readable = true;
@@ -250,19 +240,19 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLink;
     }
 
-    private DataLink createRecursiveDataLink(final DeliverableInfo deliverableInfo, final DataLink.Term dataLinkTerm) {
-        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), DataLink.Term.DATALINK);
+    private DataLink createRecursiveDataLink(final HierarchyItem hierarchyItem, final DataLink.Term dataLinkTerm) {
+        final DataLink dataLink = new DataLink(hierarchyItem.getNullSafeId(), DataLink.Term.DATALINK);
 
         if (dataLinkTerm != null) {
             dataLink.addSemantics(dataLinkTerm);
         }
 
         try {
-            dataLink.accessURL = createRecursiveURL(deliverableInfo);
+            dataLink.accessURL = createRecursiveURL(hierarchyItem);
         } catch (MalformedURLException e) {
             LOGGER.warn("Recursive URL creation failed.", e);
             dataLink.errorMessage = String.format("Unable to create recursive URL for %s.",
-                                                  deliverableInfo.getIdentifier());
+                                                  hierarchyItem.getNullSafeId());
         }
 
         dataLink.contentType = VOTABLE_CONTENT_TYPE;
@@ -270,15 +260,15 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLink;
     }
 
-    private DataLink createCutoutDataLink(final DeliverableInfo deliverableInfo) {
-        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), DataLink.Term.CUTOUT);
+    private DataLink createCutoutDataLink(final HierarchyItem hierarchyItem) {
+        final DataLink dataLink = new DataLink(hierarchyItem.getNullSafeId(), DataLink.Term.CUTOUT);
 
         try {
-            dataLink.accessURL = createCutoutURL(deliverableInfo);
+            dataLink.accessURL = createCutoutURL(hierarchyItem);
         } catch (MalformedURLException e) {
             LOGGER.warn("Cutout URL creation failed.", e);
             dataLink.errorMessage = String.format("Unable to create Cutout URL for %s.",
-                                                  deliverableInfo.getIdentifier());
+                                                  hierarchyItem.getNullSafeId());
         }
 
         dataLink.contentType = FITS_CONTENT_TYPE;
@@ -286,21 +276,21 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLink;
     }
 
-    private URL createRecursiveURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return dataLinkURLBuilder.createRecursiveDataLinkURL(deliverableInfo);
+    private URL createRecursiveURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
+        return dataLinkURLBuilder.createRecursiveDataLinkURL(hierarchyItem);
     }
 
-    private URL createCutoutURL(final DeliverableInfo deliverableInfo) throws MalformedURLException {
-        return dataLinkURLBuilder.createCutoutLinkURL(deliverableInfo);
+    private URL createCutoutURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
+        return dataLinkURLBuilder.createCutoutLinkURL(hierarchyItem);
     }
 
-    private Long determineSizeInBytes(final DeliverableInfo deliverableInfo) {
-        final long configuredSizeInBytes = deliverableInfo.getSizeInBytes();
+    private Long determineSizeInBytes(final HierarchyItem hierarchyItem) {
+        final long configuredSizeInBytes = hierarchyItem.getSizeInBytes();
         return configuredSizeInBytes >= 0 ? configuredSizeInBytes : null;
     }
 
-    private String determineContentType(final DeliverableInfo deliverableInfo) {
-        final String fileCheckInput = getIdentifier(deliverableInfo);
+    private String determineContentType(final HierarchyItem hierarchyItem) {
+        final String fileCheckInput = getIdentifier(hierarchyItem);
         final String contentType;
 
         if (StringUtil.hasText(fileCheckInput)) {
@@ -313,16 +303,17 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return contentType;
     }
 
-    private String getIdentifier(final DeliverableInfo deliverableInfo) {
-        return deliverableInfo == null ? null : (deliverableInfo.getType() == Deliverable.ASDM ?
-                                                 deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier());
+    private String getIdentifier(final HierarchyItem hierarchyItem) {
+        return hierarchyItem == null ? null : (hierarchyItem.getType() == Deliverable.ASDM
+                                               ? hierarchyItem.getName()
+                                               : hierarchyItem.getNullSafeId());
     }
 
-    private List<DataLink.Term> determineTerms(final DeliverableInfo deliverableInfo) {
+    private List<DataLink.Term> determineTerms(final HierarchyItem hierarchyItem) {
         final List<DataLink.Term> dataLinkTermCollection = new ArrayList<>();
-        final Deliverable deliverableType = deliverableInfo.getType();
+        final Deliverable deliverableType = hierarchyItem.getType();
 
-        if (isPackageFile(deliverableInfo)) {
+        if (isPackageFile(hierarchyItem)) {
             dataLinkTermCollection.add(DataLink.Term.PKG);
         }
 
@@ -343,9 +334,9 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return dataLinkTermCollection;
     }
 
-    private boolean isPackageFile(final DeliverableInfo deliverableInfo) {
-        final String identifier = getIdentifier(deliverableInfo);
-        return deliverableInfo.getType().isTarfile()
+    private boolean isPackageFile(final HierarchyItem hierarchyItem) {
+        final String identifier = getIdentifier(hierarchyItem);
+        return hierarchyItem.getType().isTarfile()
                || (StringUtil.hasLength(identifier) && identifier.trim().endsWith(".tar"));
     }
 }

@@ -69,9 +69,8 @@
 
 package org.opencadc.soda.server;
 
-import alma.asdm.domain.DeliverableInfo;
+import alma.asdm.domain.Deliverable;
 import alma.asdm.domain.identifiers.Uid;
-import alma.asdm.service.DataPacker;
 
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Point;
@@ -86,44 +85,40 @@ import static org.mockito.Mockito.*;
 import org.junit.Test;
 import org.junit.Assert;
 import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.DeliverableInfoWalker;
+import org.opencadc.alma.deliverable.HierarchyItem;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 
 public class AlmaStreamingSodaPluginTest {
 
     @Test
-    public void simpleCutoutURL() throws Exception {
-        final DataPacker mockDataPacker = mock(DataPacker.class);
-        final DeliverableInfoWalker mockDeliverableInfoWalker = mock(DeliverableInfoWalker.class);
+    public void simpleCutoutURL() throws Throwable {
+        final RequestHandlerQuery mockRequestHandlerQuery = mock(RequestHandlerQuery.class);
         final SodaURLBuilder mockSodaURLBuilder = mock(SodaURLBuilder.class);
-        final AlmaStreamingSodaPlugin testSubject = new AlmaStreamingSodaPlugin(mockDataPacker,
-                                                                                mockDeliverableInfoWalker,
+        final AlmaStreamingSodaPlugin testSubject = new AlmaStreamingSodaPlugin(mockRequestHandlerQuery,
                                                                                 mockSodaURLBuilder);
-        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-
-        final Uid targetParentURI = new Uid("uid://C1/C2/C3");
+        final String targetParentUid = "uid://C1/C2/C3";
         final URI targetURI = URI.create("1977.11.25_uid___C1_C2_C3.myfile.fits");
         final AlmaUID targetAlmaUID = new AlmaUID(targetURI.toString());
         final Circle circle = new Circle(new Point(18.0D, 78.5D), 0.5D);
         final Cutout<Shape> testCutout = new Cutout<>("TESTCIRC", "TESTCIRC1", circle);
+        final HierarchyItem hierarchyItem = new HierarchyItem(targetParentUid, "myfile.fits",
+                                                              Deliverable.ASDM, 88L, true,
+                                                              new HierarchyItem[0], new Uid[0]);
 
-        when(mockDataPacker.expand(targetParentURI, false)).thenReturn(mockDeliverableInfo);
-        when(mockDeliverableInfo.getSubDeliverables()).thenReturn(Collections.emptySet());
-        when(mockDeliverableInfoWalker.navigateToRequestedID(targetAlmaUID,
-                                                             mockDeliverableInfo)).thenReturn(mockDeliverableInfo);
-        when(mockSodaURLBuilder.createCutoutURL(mockDeliverableInfo, testCutout, null, null, null)).thenReturn(
+        when(mockRequestHandlerQuery.query(targetAlmaUID)).thenReturn(hierarchyItem);
+        when(mockSodaURLBuilder.createCutoutURL(hierarchyItem, testCutout, null, null, null)).thenReturn(
                 new URL("https://almaserver.com/sodacutout/downloads/1977.11.25_uid___C1_C2_C3.myfile.fits?CIRCLE=18" +
                         ".0+78.5+0.5"));
 
-        final URL cutoutURL = testSubject.toURL(88, targetURI, testCutout, null, null, null);
+        final URL cutoutURL = testSubject.toURL(88, targetURI, testCutout, null, null, null,
+                                                Collections.emptyList(), Collections.emptyMap());
 
         Assert.assertEquals("Wrong result URL.",
                             "https://almaserver.com/sodacutout/downloads/1977.11.25_uid___C1_C2_C3.myfile" +
                             ".fits?CIRCLE=18.0+78.5+0.5",
                             cutoutURL.toExternalForm());
 
-        verify(mockDataPacker, times(1)).expand(targetParentURI, false);
-        verify(mockDeliverableInfoWalker, times(1)).navigateToRequestedID(targetAlmaUID, mockDeliverableInfo);
-        verify(mockSodaURLBuilder, times(1)).createCutoutURL(mockDeliverableInfo, testCutout, null, null, null);
+        verify(mockRequestHandlerQuery, times(1)).query(targetAlmaUID);
     }
 }

@@ -6,23 +6,11 @@ plugins {
 
 repositories {
     mavenLocal()
-    jcenter()
 
-    // To obtain access to the Oracle Maven repository, put your credentials into environment variables:
-    // - MAVEN_ORACLE_USERNAME
-    // - MAVEN_ORACLE_PASSWORD
-    //
-    // or, create a gradle.properties in your ~/.gradle directory with the following variables set:
-    // - mavenOracleUsername
-    // - mavenOraclePassword
-    maven {
-        name 'maven.oracle.com'
-        url 'https://maven.oracle.com'
-        credentials {
-            username = System.getenv("MAVEN_ORACLE_USERNAME") ?: mavenOracleUsername
-            password = System.getenv("MAVEN_ORACLE_PASSWORD") ?: mavenOraclePassword
-        }
-    }
+    // We use maven central to get the Oracle JDBC driver.
+    mavenCentral()
+    
+    jcenter()
 
     maven {
         url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
@@ -67,7 +55,7 @@ configurations {
 
 dependencies {
     compile 'log4j:log4j:1.2.+'
-    compile 'com.oracle:ojdbc6:11.2.0.3'
+    compile 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
     compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.3'
     compile 'org.opencadc:cadc-tap-server-oracle:[1.2.4,)'
     compile 'org.opencadc:cadc-tap-server:[1.1.5,)'

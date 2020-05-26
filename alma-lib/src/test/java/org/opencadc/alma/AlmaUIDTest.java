@@ -74,6 +74,8 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.net.URI;
+
 import static org.junit.Assert.*;
 
 
@@ -99,6 +101,13 @@ public class AlmaUIDTest {
     }
 
     @Test
+    public void constructFromURI() {
+        final AlmaUID testSubject = new AlmaUID(URI.create("uid://C0/C1/C2"));
+        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getArchiveUID().getDesanitisedUid());
+        assertFalse("Should not be filtering.", testSubject.isFiltering());
+    }
+
+    @Test
     public void constructFromBadInput() {
         try {
             new AlmaUID("");
@@ -108,7 +117,14 @@ public class AlmaUIDTest {
         }
 
         try {
-            new AlmaUID(null);
+            new AlmaUID((String) null);
+            fail("Should throw IllegalArgumentException.");
+        } catch (IllegalArgumentException e) {
+            // Good.
+        }
+
+        try {
+            new AlmaUID((URI) null);
             fail("Should throw IllegalArgumentException.");
         } catch (IllegalArgumentException e) {
             // Good.

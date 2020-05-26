@@ -69,14 +69,12 @@
 
 package org.opencadc.soda.server;
 
-import alma.asdm.domain.DeliverableInfo;
-import alma.asdm.domain.identifiers.Uid;
-import alma.asdm.service.DataPacker;
 import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.DeliverableInfoWalker;
+import org.opencadc.alma.deliverable.HierarchyItem;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import ca.nrc.cadc.dali.Interval;
 import ca.nrc.cadc.dali.Shape;
-import ca.nrc.cadc.net.HttpDownload;
+import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.rest.SyncOutput;
 
 import java.io.IOException;
@@ -84,19 +82,17 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 
 public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin {
 
-    private final DataPacker dataPacker;
-    private final DeliverableInfoWalker deliverableInfoWalker;
+    private final RequestHandlerQuery requestHandlerQuery;
     private final SodaURLBuilder sodaURLBuilder;
 
 
-    public AlmaStreamingSodaPlugin(final DataPacker dataPacker, final DeliverableInfoWalker deliverableInfoWalker,
-                                   final SodaURLBuilder sodaURLBuilder) {
-        this.dataPacker = dataPacker;
-        this.deliverableInfoWalker = deliverableInfoWalker;
+    public AlmaStreamingSodaPlugin(final RequestHandlerQuery requestHandlerQuery, final SodaURLBuilder sodaURLBuilder) {
+        this.requestHandlerQuery = requestHandlerQuery;
         this.sodaURLBuilder = sodaURLBuilder;
     }
 
@@ -104,24 +100,23 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
     /**
      * Perform cutout operation and write output.
      *
-     * @param uri  the ID value that identifies the data (file)
-     * @param pos  optional position cutout (may be null)
-     * @param band optional energy cutout (may be null)
-     * @param time optional time cutout (may be null)
-     * @param pol  optional polarization cutout (may be null)
-     * @param out  wrapper for setting output properties (HTTP headers) and opening the OutputStream
+     * @param uri           the ID value that identifies the data (file)
+     * @param pos           optional position cutout (may be null)
+     * @param band          optional energy cutout (may be null)
+     * @param time          optional time cutout (may be null)
+     * @param pol           optional polarization cutout (may be null)
+     * @param customCutouts list of orthogonal cutouts of custom axes (may be empty)
+     * @param customParams  custom parameters and values (may be empty)
+     * @param out           wrapper for setting output properties (HTTP headers) and opening the OutputStream
      * @throws IOException failure to read or write data
      */
     @Override
     public void write(URI uri, Cutout<Shape> pos, Cutout<Interval> band, Cutout<Interval> time,
-                      Cutout<List<String>> pol, SyncOutput out) throws IOException {
-        final URL cutoutURL = toURL(1, uri, pos, band, time, pol);
-        final HttpDownload httpDownload = createDownloader(cutoutURL, out.getOutputStream());
-        httpDownload.run();
-    }
-
-    HttpDownload createDownloader(final URL url, final OutputStream outputStream) {
-        return new HttpDownload(url, outputStream);
+                      Cutout<List<String>> pol, List<Cutout<Interval>> customCutouts,
+                      Map<String, List<String>> customParams, SyncOutput out) throws IOException {
+        final URL cutoutURL = toURL(1, uri, pos, band, time, pol, customCutouts, customParams);
+        final HttpGet httpGet = createDownloader(cutoutURL, out.getOutputStream());
+        httpGet.run();
     }
 
     /**
@@ -130,22 +125,28 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
      * method could retrieve data, perform the cutout operation, store the result
      * in temporary storage, and return a URL to the result (SODA-async).
      *
-     * @param serialNum number that increments for each call to the plugin within a single request
-     * @param uri       the ID value that identifies the data (file)
-     * @param pos       optional position cutout (may be null)
-     * @param band      optional energy cutout (may be null)
-     * @param time      optional time cutout (may be null)
-     * @param pol       optional polarization cutout (may be null)
+     * @param serialNum     number that increments for each call to the plugin within a single request
+     * @param uri           the ID value that identifies the data (file)
+     * @param pos           optional position cutout (may be null)
+     * @param band          optional energy cutout (may be null)
+     * @param time          optional time cutout (may be null)
+     * @param pol           optional polarization cutout (may be null)
+     * @param customCutouts list of orthogonal cutouts of custom axes (may be empty)
+     * @param customParams  custom parameters and values (may be empty)
      * @return a URL to the result of the operation
      *
      * @throws IOException failure to read or write data
      */
     @Override
     public URL toURL(int serialNum, URI uri, Cutout<Shape> pos, Cutout<Interval> band, Cutout<Interval> time,
-                     Cutout<List<String>> pol) throws IOException {
+                     Cutout<List<String>> pol, List<Cutout<Interval>> customCutouts,
+                     Map<String, List<String>> customParams) throws IOException {
         final AlmaUID almaUID = new AlmaUID(uri.toString());
-        final DeliverableInfo cutoutTargetParent = dataPacker.expand(almaUID.getArchiveUID(), false);
-        final DeliverableInfo cutoutTarget = deliverableInfoWalker.navigateToRequestedID(almaUID, cutoutTargetParent);
-        return sodaURLBuilder.createCutoutURL(cutoutTarget, pos, band, time, pol);
+        final HierarchyItem hierarchyItem = requestHandlerQuery.query(almaUID);
+        return sodaURLBuilder.createCutoutURL(hierarchyItem, pos, band, time, pol);
+    }
+
+    HttpGet createDownloader(final URL url, final OutputStream outputStream) {
+        return new HttpGet(url, outputStream);
     }
 }

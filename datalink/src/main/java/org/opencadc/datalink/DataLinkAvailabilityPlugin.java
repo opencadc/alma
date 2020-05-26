@@ -86,8 +86,8 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
 
     private static final String ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME = "almaDataLinkServiceURI";
     private static final String ALMA_SODA_SERVICE_ID_PROPERTY_NAME = "almaSODAServiceURI";
-    private static final String DEFAULT_ALMA_DATALINK_SERVICE_ID = "ivo://cadc.nrc.ca/datalink";
-    private static final String DEFAULT_ALMA_SODA_SERVICE_ID = "ivo://cadc.nrc.ca/soda";
+    private static final String DEFAULT_ALMA_DATALINK_SERVICE_ID = "ivo://almascience.org/datalink";
+    private static final String DEFAULT_ALMA_SODA_SERVICE_ID = "ivo://almascience.org/soda";
 
     private String applicationName;
     private String state;

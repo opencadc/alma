@@ -69,10 +69,10 @@
 
 package org.opencadc.soda.server;
 
-import alma.asdm.domain.DeliverableInfo;
 import org.opencadc.alma.AlmaProperties;
 
 import ca.nrc.cadc.dali.Circle;
+import ca.nrc.cadc.dali.DoubleInterval;
 import ca.nrc.cadc.dali.Interval;
 import ca.nrc.cadc.dali.Point;
 import ca.nrc.cadc.dali.Polygon;
@@ -82,6 +82,7 @@ import java.net.URL;
 
 import org.junit.Test;
 import org.junit.Assert;
+import org.opencadc.alma.deliverable.HierarchyItem;
 
 import static org.mockito.Mockito.*;
 
@@ -91,30 +92,30 @@ public class SodaURLBuilderTest {
     @Test
     public void createCircleCutoutURL() throws Exception {
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
-        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
+        final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
         final Circle circle = new Circle(new Point(12.0D, 56.0D), 0.6D);
         final Cutout<Shape> shapeCutout = new Cutout<>("CIRCLE", "12.4 56.7 0.6", circle);
         final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
 
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        when(mockHierarchyItem.getId()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
 
-        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost")).thenReturn("https://almaservices.com");
-        when(mockAlmaProperties.getFirstPropertyValue("downloadPath")).thenReturn("/sodacutout/download");
+        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
+        when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
 
         final URL expectedURL = new URL(
                 "https://almaservices.com/sodacutout/download/1977.11.25_uid___C1_C2_C3.fits?CIRCLE%3D12.4+56.7+0.6");
-        final URL resultURL = testSubject.createCutoutURL(mockDeliverableInfo, shapeCutout, null, null, null);
+        final URL resultURL = testSubject.createCutoutURL(mockHierarchyItem, shapeCutout, null, null, null);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost");
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath");
-        verify(mockDeliverableInfo, times(1)).getIdentifier();
+        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
+        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
+        verify(mockHierarchyItem, times(1)).getId();
     }
 
     @Test
     public void createPolygonCutoutURL() throws Exception {
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
-        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
+        final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
 
         final Polygon polygon = new Polygon();
         polygon.getVertices().add(new Point(12.4D, 56.7D));
@@ -124,42 +125,42 @@ public class SodaURLBuilderTest {
         final Cutout<Shape> shapeCutout = new Cutout<>("POLYGON", "12.4 56.7 5.6 44.5 18.3 33.5", polygon);
         final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
 
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        when(mockHierarchyItem.getId()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
 
-        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost")).thenReturn("https://almaservices.com");
-        when(mockAlmaProperties.getFirstPropertyValue("downloadPath")).thenReturn("/sodacutout/download");
+        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
+        when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
 
         final URL expectedURL = new URL(
                 "https://almaservices.com/sodacutout/download/1977.11.25_uid___C1_C2_C3.fits?POLYGON%3D12.4+56.7+5" +
                 ".6+44.5+18.3+33.5");
-        final URL resultURL = testSubject.createCutoutURL(mockDeliverableInfo, shapeCutout, null, null, null);
+        final URL resultURL = testSubject.createCutoutURL(mockHierarchyItem, shapeCutout, null, null, null);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost");
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath");
-        verify(mockDeliverableInfo, times(1)).getIdentifier();
+        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
+        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
+        verify(mockHierarchyItem, times(1)).getId();
     }
 
     @Test
     public void createBandCutoutURL() throws Exception {
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
-        final DeliverableInfo mockDeliverableInfo = mock(DeliverableInfo.class);
-        final Interval<Double> bandInterval = new Interval<>(9.8D, 76.4);
+        final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
+        final DoubleInterval bandInterval = new DoubleInterval(9.8D, 76.4);
         final Cutout<Interval> bandCutout = new Cutout<>("BAND", "9.8 76.4", bandInterval);
         final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
 
-        when(mockDeliverableInfo.getIdentifier()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        when(mockHierarchyItem.getId()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
 
-        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost")).thenReturn("https://almaservices.com");
-        when(mockAlmaProperties.getFirstPropertyValue("downloadPath")).thenReturn("/sodacutout/download");
+        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
+        when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
 
         final URL expectedURL = new URL(
                 "https://almaservices.com/sodacutout/download/1977.11.25_uid___C1_C2_C3.fits?BAND%3D9.8+76.4");
-        final URL resultURL = testSubject.createCutoutURL(mockDeliverableInfo, null, bandCutout, null, null);
+        final URL resultURL = testSubject.createCutoutURL(mockHierarchyItem, null, bandCutout, null, null);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost");
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath");
-        verify(mockDeliverableInfo, times(1)).getIdentifier();
+        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
+        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
+        verify(mockHierarchyItem, times(1)).getId();
     }
 }

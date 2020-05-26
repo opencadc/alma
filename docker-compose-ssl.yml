@@ -1,7 +1,7 @@
 version: "3.2"
 services:
   traefik:
-    hostname: mach378.cadc.dao.nrc.ca
+    hostname: proxy.cadc.dao.nrc.ca
     image: traefik:v2.2
     command:
         - "--log.level=DEBUG"
@@ -37,7 +37,7 @@ services:
       - "ca_certs:/usr/local/share/ca-certificates"
       - "./sia/docker/SiaRunner.properties:/root/config/SiaRunner.properties"
     environment:
-      CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=mach378.cadc.dao.nrc.ca"
+      CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.sia.loadbalancer.server.port=8080"
@@ -47,7 +47,7 @@ services:
       - "traefik.http.routers.sia.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.sia.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   obscore:
-    image: opencadc/alma-tap:1.1.13
+    image: opencadc/alma-tap:1.1.14
     ports:
       - "35555:5555"
     networks:
@@ -74,7 +74,7 @@ services:
       - "./reg/docker/reg-resource-caps.properties:/root/config/reg-resource-caps.properties"
       - "ca_certs:/usr/local/share/ca-certificates"
     environment:
-      CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=mach378.cadc.dao.nrc.ca"
+      CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.reg.loadbalancer.server.port=8080"
@@ -84,7 +84,7 @@ services:
       - "traefik.http.routers.reg.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   datalink:
-    image: opencadc/alma-datalink:1.0.1
+    image: opencadc/alma-datalink:1.1.0
     networks:
       - "alma"
     env_file:
@@ -103,7 +103,7 @@ services:
       - "traefik.http.routers.datalink.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.datalink.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   soda:
-    image: opencadc/alma-soda:1.0.0
+    image: opencadc/alma-soda:1.1.0
     ports:
       - "55555:5555"
     networks:

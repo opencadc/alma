@@ -69,23 +69,25 @@
 
 package org.opencadc.datalink;
 
-import alma.asdm.domain.Deliverable;
-import alma.asdm.domain.DeliverableInfo;
-import alma.asdm.domain.identifiers.Uid;
-import alma.asdm.service.DataPacker;
-
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.junit.Test;
 import org.junit.Assert;
-import org.opencadc.alma.deliverable.DeliverableInfoWalker;
+import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.deliverable.HierarchyItem;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
+import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.PropertiesReader;
 
 import static org.mockito.Mockito.*;
@@ -150,107 +152,88 @@ public class DataLinkIteratorTest {
     }
 
     @Test
-    public void runThrough() throws Exception {
+    public void runThroughFiltering() throws Throwable {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
-        final DeliverableInfo PROJECT = new DeliverableInfo("2016.1.0001.S", Deliverable.PROJECT);
-
-        final DeliverableInfo SGOUS = new DeliverableInfo("uid://C1/C10/C100", Deliverable.SGOUS);
-        PROJECT.addSubDeliverable(SGOUS);
-
-        final DeliverableInfo GOUS = new DeliverableInfo("uid://C2/C20/C200", Deliverable.GOUS);
-        SGOUS.addSubDeliverable(GOUS);
-
-        final DeliverableInfo MOUS1 = new DeliverableInfo("uid___C3_C30_C300", Deliverable.MOUS);
-        final DeliverableInfo MOUS2 = new DeliverableInfo("uid___C31_C301_C3001", Deliverable.MOUS);
-        GOUS.addSubDeliverable(MOUS1);
-        GOUS.addSubDeliverable(MOUS2);
-
-        final DeliverableInfo README = new DeliverableInfo("member.uid___C3_C30_C300",
-                                                           Deliverable.PIPELINE_AUXILIARY_README);
-        MOUS1.addSubDeliverable(README);
-
-        final DeliverableInfo RAW1 = new DeliverableInfo("uid://C4/C40/C400", Deliverable.ASDM);
-        RAW1.setDisplayName("2016.1.00001.S_uid___C4_C40_C400.asdm.sdm.tar");
-        MOUS1.addSubDeliverable(RAW1);
-
-        final DeliverableInfo PRODUCT1 = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar",
-                                                             Deliverable.PIPELINE_PRODUCT_TARFILE);
-        MOUS1.addSubDeliverable(PRODUCT1);
-
-        final DeliverableInfo FITS1 = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.fits",
-                                                          Deliverable.PIPELINE_PRODUCT);
-        PRODUCT1.addSubDeliverable(FITS1);
-
-        final DeliverableInfo FITSGZ = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.fits.gz",
-                                                           Deliverable.PIPELINE_PRODUCT);
-        PRODUCT1.addSubDeliverable(FITSGZ);
-
-        final DeliverableInfo RAW2 = new DeliverableInfo("uid://C4/C40/C400", Deliverable.ASDM);
-        RAW2.setDisplayName("2016.2.00002.S_uid___C4_C40_C400.asdm.sdm.tar");
-        MOUS2.addSubDeliverable(RAW2);
-
-        final DeliverableInfo PRODUCT2 = new DeliverableInfo("2016.2.00002.S_uid___C31_C301_C3001_001_of_001.tar",
-                                                             Deliverable.PIPELINE_PRODUCT_TARFILE);
-        MOUS2.addSubDeliverable(PRODUCT2);
-
-        final DeliverableInfo FITS2 = new DeliverableInfo("2016.2.00002.S_uid___C31_C301_C3001_001_of_001.fits",
-                                                          Deliverable.PIPELINE_PRODUCT);
-        PRODUCT2.addSubDeliverable(FITS2);
-
-
-        final DataPacker mockDataPacker = mock(DataPacker.class);
+        final RequestHandlerQuery mockRequestHandlerQuery = mock(RequestHandlerQuery.class);
         final DataLinkURLBuilder dataLinkURLBuilder =
                 new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"),
                                        new URL("https://myhost.com/mysoda/sync"));
-        final Iterator<String> dataSetIDIterator =
-                Arrays.asList("uid___C3_C30_C300", "uid___C31_C301_C3001").iterator();
+        final Iterator<URI> dataSetIDIterator =
+                Collections.singletonList(URI.create("uid://A001/X879/X8f1")).iterator();
+        final HierarchyItem hierarchy = fromJSONFile(DataLinkIteratorTest.class.getSimpleName() + ".json");
 
-        when(mockDataPacker.expand(new Uid("uid___C3_C30_C300"), false)).thenReturn(PROJECT);
-        when(mockDataPacker.expand(new Uid("uid___C31_C301_C3001"), false)).thenReturn(PROJECT);
+        when(mockRequestHandlerQuery.query(new AlmaUID("uid://A001/X879/X8f1"))).thenReturn(hierarchy);
 
-        // Keep them sorted the same.
-        final List<DataLink> resultDataLinks = new ArrayList<>();
         final List<DataLink> expectedDataLinks = new ArrayList<>();
+        final List<DataLink> resultDataLinks = new ArrayList<>();
+        new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator, mockRequestHandlerQuery)
+                .forEachRemaining(resultDataLinks::add);
+        final String itemFileNameTemplate = "%s.%d.json";
 
-        final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator,
-                                                                  mockDataPacker, new DeliverableInfoWalker());
-
-        while (testSubject.hasNext()) {
-            resultDataLinks.add(testSubject.next());
-        }
-
-        expectedDataLinks.add(createDataLink(README, "text/plain",
-                                             new URL(String.format("https://myhost.com/mydownloads/%s",
-                                                                   README.getIdentifier())),
-                                             DataLink.Term.AUXILIARY, new ArrayList<>()));
-        expectedDataLinks.add(createDataLink(RAW1, "application/x-tar",
-                                             new URL(String.format("https://myhost.com/mydownloads/%s",
-                                                                   RAW1.getIdentifier())),
-                                             DataLink.Term.PROGENITOR, Collections.singletonList(DataLink.Term.PKG)));
-        expectedDataLinks.add(createDataLink(PRODUCT1, "application/x-tar",
-                                             new URL(String.format("https://myhost.com/mydownloads/%s",
-                                                                   PRODUCT1.getIdentifier())),
-                                             DataLink.Term.THIS, Collections.singletonList(DataLink.Term.PKG)));
-        expectedDataLinks.add(createDataLink(PRODUCT1, "application/x-tar",
+        int index = 1;
+        final HierarchyItem hierarchyItemOne =
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+        expectedDataLinks.add(createDataLink(hierarchyItemOne, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
-                                                                   PRODUCT1.getIdentifier())),
-                                             DataLink.Term.THIS, Collections.singletonList(DataLink.Term.DATALINK)));
-        expectedDataLinks.add(createDataLink(RAW2, "application/x-tar",
-                                             new URL(String.format("https://myhost.com/mydownloads/%s",
-                                                                   RAW2.getIdentifier())),
-                                             DataLink.Term.PROGENITOR, Collections.singletonList(DataLink.Term.PKG)));
-        expectedDataLinks.add(createDataLink(PRODUCT2, "application/x-tar",
-                                             new URL(String.format("https://myhost.com/mydownloads/%s",
-                                                                   PRODUCT2.getIdentifier())),
-                                             DataLink.Term.THIS, Collections.singletonList(DataLink.Term.PKG)));
-        expectedDataLinks.add(createDataLink(PRODUCT2, "application/x-tar",
+                                                                   hierarchyItemOne.getId())),
+                                             DataLink.Term.THIS,
+                                             Collections.singletonList(DataLink.Term.DATALINK)));
+        final HierarchyItem hierarchyItemTwo =
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+        expectedDataLinks.add(createDataLink(hierarchyItemTwo, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
-                                                                   PRODUCT2.getIdentifier())),
-                                             DataLink.Term.THIS, Collections.singletonList(DataLink.Term.DATALINK)));
+                                                                   hierarchyItemTwo.getId())),
+                                             DataLink.Term.PROGENITOR,
+                                             Collections.singletonList(DataLink.Term.PKG)));
 
-        verify(mockDataPacker, times(1)).expand(new Uid("uid___C3_C30_C300"), false);
-        verify(mockDataPacker, times(1)).expand(new Uid("uid___C31_C301_C3001"), false);
+        final HierarchyItem hierarchyItemThree =
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+        expectedDataLinks.add(createDataLink(hierarchyItemThree, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
+                                                                   hierarchyItemThree.getId())),
+                                             DataLink.Term.PROGENITOR,
+                                             Collections.singletonList(DataLink.Term.PKG)));
+
+        final HierarchyItem hierarchyItemFour =
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+        expectedDataLinks.add(createDataLink(hierarchyItemFour, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
+                                                                   hierarchyItemFour.getId())),
+                                             DataLink.Term.PROGENITOR,
+                                             Collections.singletonList(DataLink.Term.PKG)));
+
+        final HierarchyItem hierarchyItemFive =
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+        expectedDataLinks.add(createDataLink(hierarchyItemFive, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
+                                                                   hierarchyItemFive.getId())),
+                                             DataLink.Term.PROGENITOR,
+                                             Collections.singletonList(DataLink.Term.PKG)));
+
+        final HierarchyItem hierarchyItemSix =
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+        expectedDataLinks.add(createDataLink(hierarchyItemSix, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
+                                                                   hierarchyItemSix.getId())),
+                                             DataLink.Term.PROGENITOR,
+                                             Collections.singletonList(DataLink.Term.PKG)));
+
+        final HierarchyItem hierarchyItemSeven =
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+        expectedDataLinks.add(createDataLink(hierarchyItemSeven, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
+                                                                   hierarchyItemSeven.getId())),
+                                             DataLink.Term.PROGENITOR,
+                                             Collections.singletonList(DataLink.Term.PKG)));
+
+        final HierarchyItem hierarchyItemEight =
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index));
+        expectedDataLinks.add(createDataLink(hierarchyItemEight, "application/x-tar",
+                                             new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
+                                                                   hierarchyItemEight.getId())),
+                                             DataLink.Term.PROGENITOR,
+                                             Collections.singletonList(DataLink.Term.PKG)));
 
         // Even footing before comparing each item individually.
         resultDataLinks.sort(new DataLinkComparator());
@@ -267,89 +250,17 @@ public class DataLinkIteratorTest {
         }
     }
 
-    @Test
-    public void runThroughFiltering() throws Exception {
-        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
-
-        final DeliverableInfo PROJECT = new DeliverableInfo("2016.1.0001.S", Deliverable.PROJECT);
-        final DeliverableInfo SGOUS = new DeliverableInfo("uid://C1/C10/C100", Deliverable.SGOUS);
-        PROJECT.addSubDeliverable(SGOUS);
-
-        final DeliverableInfo GOUS = new DeliverableInfo("uid://C2/C20/C200", Deliverable.GOUS);
-        SGOUS.addSubDeliverable(GOUS);
-        final DeliverableInfo MOUS = new DeliverableInfo("uid___C3_C30_C300", Deliverable.MOUS);
-        GOUS.addSubDeliverable(MOUS);
-
-        final DeliverableInfo README = new DeliverableInfo("member.uid___C3_C30_C300",
-                                                           Deliverable.PIPELINE_AUXILIARY_README);
-        MOUS.addSubDeliverable(README);
-        final DeliverableInfo RAW = new DeliverableInfo("uid://C454/C4545/C5454", Deliverable.ASDM);
-        RAW.setDisplayName("2016.1.00001.S_uid___C544_C4545_C5454.asdm.sdm.tar");
-        MOUS.addSubDeliverable(RAW);
-        final DeliverableInfo PRODUCT = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar",
-                                                            Deliverable.PIPELINE_PRODUCT_TARFILE);
-        MOUS.addSubDeliverable(PRODUCT);
-
-        final DeliverableInfo FITS = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.fits",
-                                                         Deliverable.PIPELINE_PRODUCT);
-        PRODUCT.addSubDeliverable(FITS);
-
-        final DeliverableInfo FITSGZ = new DeliverableInfo("2016.1.00001.S_uid___C3_C30_C300_001_of_001.fits.gz",
-                                                           Deliverable.PIPELINE_PRODUCT);
-        PRODUCT.addSubDeliverable(FITSGZ);
-
-        final DataPacker mockDataPacker = mock(DataPacker.class);
-        final DataLinkURLBuilder dataLinkURLBuilder =
-                new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"),
-                                       new URL("https://myhost.com/mysoda/sync"));
-        final Iterator<String> dataSetIDIterator =
-                Collections.singletonList("2016.1.00001.S_uid___C3_C30_C300_001_of_001.tar").iterator();
-
-        when(mockDataPacker.expand(new Uid("uid___C3_C30_C300"), false)).thenReturn(PROJECT);
-
-        final List<DataLink> expectedDataLinks = new ArrayList<>();
-        final List<DataLink> resultDataLinks = new ArrayList<>();
-        final DataLinkIterator testSubject = new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator,
-                                                                  mockDataPacker, new DeliverableInfoWalker());
-
-        while (testSubject.hasNext()) {
-            resultDataLinks.add(testSubject.next());
-        }
-
-        expectedDataLinks.add(createDataLink(FITS, "image/fits",
-                                             new URL(String.format("https://myhost.com/mydownloads/%s",
-                                                                   FITS.getIdentifier())), DataLink.Term.THIS,
-                                             new ArrayList<>()));
-        expectedDataLinks.add(createDataLink(FITS, "image/fits",
-                                             new URL(String.format("https://myhost.com/mycutoutservice/sync?ID=%s",
-                                                                   FITS.getIdentifier())), DataLink.Term.CUTOUT,
-                                             new ArrayList<>()));
-        expectedDataLinks.add(createDataLink(FITSGZ, "image/fits",
-                                             new URL(String.format("https://myhost.com/mydownloads/%s",
-                                                                   FITSGZ.getIdentifier())), DataLink.Term.THIS,
-                                             new ArrayList<>()));
-
-        verify(mockDataPacker, times(1)).expand(new Uid("uid___C3_C30_C300"), false);
-
-        // Even footing before comparing each item individually.
-        resultDataLinks.sort(new DataLinkComparator());
-        expectedDataLinks.sort(new DataLinkComparator());
-
-        Assert.assertEquals("Wrong sizes.", expectedDataLinks.size(), resultDataLinks.size());
-
-        final DataLinkComparator comparator = new DataLinkComparator();
-        for (int i = 0; i < resultDataLinks.size(); i++) {
-            final DataLink resultDataLink = resultDataLinks.get(i);
-            final DataLink expectedDataLink = expectedDataLinks.get(i);
-
-            Assert.assertEquals("DataLinks are not equal.", 0, comparator.compare(resultDataLink, expectedDataLink));
-        }
+    private HierarchyItem fromJSONFile(final String filename) throws Throwable {
+        final File jsonFile = FileUtil.getFileFromResource(filename, DataLinkIteratorTest.class);
+        final FileInputStream fileInputStream = new FileInputStream(jsonFile);
+        final JSONObject jsonObject = new JSONObject(new JSONTokener(fileInputStream));
+        return HierarchyItem.fromJSONObject(jsonObject);
     }
 
-    private DataLink createDataLink(final DeliverableInfo deliverableInfo, final String contentType,
+    private DataLink createDataLink(final HierarchyItem hierarchyItem, final String contentType,
                                     final URL accessURL, final DataLink.Term semantic,
                                     final List<DataLink.Term> otherSemantics) {
-        final DataLink dataLink = new DataLink(deliverableInfo.getIdentifier(), semantic);
+        final DataLink dataLink = new DataLink(hierarchyItem.getId(), semantic);
 
         otherSemantics.forEach(dataLink::addSemantics);
 
@@ -357,69 +268,5 @@ public class DataLinkIteratorTest {
         dataLink.contentType = contentType;
 
         return dataLink;
-    }
-
-    @Test
-    public void createDataLinks() throws Exception {
-        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
-
-        final DataLinkIterator testSubject =
-                new DataLinkIterator(new DataLinkURLBuilder(new URL("https://myhost.com/datalink/do"),
-                                                            new URL("https://myhost.com/mysoda/sync")),
-                                     null, null, null);
-
-        final DeliverableInfo deliverableInfoOne = new DeliverableInfo("uid___C7_C8_C9.tar",
-                                                                       Deliverable.PIPELINE_PRODUCT);
-        final List<DataLink> dataLinksOne = testSubject.createDataLinks(deliverableInfoOne);
-        Assert.assertEquals("Should have one element.", 1, dataLinksOne.size());
-        final DataLink datalinkOne = dataLinksOne.get(0);
-
-        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.PKG, DataLink.Term.THIS},
-                                 datalinkOne.getSemantics().toArray());
-
-
-        final DeliverableInfo deliverableInfoTwo = new DeliverableInfo("uid__C8_C9_C100.aux.tar",
-                                                                       Deliverable.PIPELINE_AUXILIARY_TARFILE);
-        final List<DataLink> dataLinksTwo = testSubject.createDataLinks(deliverableInfoTwo);
-        Assert.assertEquals("Should contain two elements.", 2, dataLinksTwo.size());
-        final DataLink datalinkTwo = dataLinksTwo.get(0);
-
-        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.PKG, DataLink.Term.AUXILIARY},
-                                 datalinkTwo.getSemantics().toArray());
-
-        final DataLink datalinkTwoPointOne = testSubject.createDataLinks(deliverableInfoTwo).get(1);
-
-        Assert.assertArrayEquals("Wrong semantics.",
-                                 new DataLink.Term[] {DataLink.Term.DATALINK, DataLink.Term.AUXILIARY},
-                                 datalinkTwoPointOne.getSemantics().toArray());
-
-
-        final DeliverableInfo deliverableInfoThree = new DeliverableInfo("README.aux.txt",
-                                                                         Deliverable.PIPELINE_AUXILIARY_README);
-        final List<DataLink> dataLinksThree = testSubject.createDataLinks(deliverableInfoThree);
-        Assert.assertEquals("Should have one element.", 1, dataLinksThree.size());
-        final DataLink datalinkThree = dataLinksThree.get(0);
-
-        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.AUXILIARY},
-                                 datalinkThree.getSemantics().toArray());
-
-
-        final DeliverableInfo deliverableInfoFour = new DeliverableInfo("uid__C5_C6.science.fits",
-                                                                        Deliverable.PIPELINE_PRODUCT);
-        final List<DataLink> dataLinksFour = testSubject.createDataLinks(deliverableInfoFour);
-        Assert.assertEquals("Should have one element.", 2, dataLinksFour.size());
-        final DataLink datalinkFour = dataLinksFour.get(0);
-
-        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.THIS},
-                                 datalinkFour.getSemantics().toArray());
-
-        final DeliverableInfo deliverableInfoFive = new DeliverableInfo("uid__C5_C6_C7.tar",
-                                                                        Deliverable.PIPELINE_PRODUCT_TARFILE);
-        final List<DataLink> dataLinksFive = testSubject.createDataLinks(deliverableInfoFive);
-        Assert.assertEquals("Should have two elements.", 2, dataLinksFive.size());
-        final DataLink datalinkFive = dataLinksFive.get(0);
-
-        Assert.assertArrayEquals("Wrong semantics.", new DataLink.Term[] {DataLink.Term.PKG, DataLink.Term.THIS},
-                                 datalinkFive.getSemantics().toArray());
     }
 }

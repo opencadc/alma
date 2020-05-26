@@ -69,48 +69,47 @@
 
 package org.opencadc.datalink;
 
-import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.DeliverableURLBuilder;
-import org.opencadc.alma.deliverable.HierarchyItem;
-import ca.nrc.cadc.util.StringUtil;
+import org.opencadc.datalink.server.DataLinkSource;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.Collections;
+import java.util.Iterator;
 
 
-public class DataLinkURLBuilder extends DeliverableURLBuilder {
+public class ALMADataLinkSource implements DataLinkSource {
 
-    private final URL dataLinkServiceEndpoint;
-    private final URL cutoutServiceEndpoint;
+    private final DataLinkIterator dataLinkIterator;
+    private Integer maxRec;
+    private boolean downloadOnly;
 
 
-    public DataLinkURLBuilder(final URL dataLinkServiceEndpoint, final URL cutoutServiceEndpoint) {
-        this(new AlmaProperties(), dataLinkServiceEndpoint, cutoutServiceEndpoint);
+    public ALMADataLinkSource(final DataLinkIterator dataLinkIterator, final Integer maxRec,
+                              final boolean downloadOnly) {
+        this.dataLinkIterator = dataLinkIterator;
+        this.maxRec = maxRec;
+        this.downloadOnly = downloadOnly;
     }
 
-    public DataLinkURLBuilder(final AlmaProperties almaProperties, final URL dataLinkServiceEndpoint,
-                              final URL cutoutServiceEndpoint) {
-
-        super(almaProperties);
-        this.dataLinkServiceEndpoint = dataLinkServiceEndpoint;
-        this.cutoutServiceEndpoint = cutoutServiceEndpoint;
+    public ALMADataLinkSource(DataLinkIterator dataLinkIterator) {
+        this(dataLinkIterator, 1000, true);
     }
 
-    URL createRecursiveDataLinkURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
-        return createServiceLinkURL(hierarchyItem, dataLinkServiceEndpoint);
+    @Override
+    public void setDownloadOnly(boolean b) {
+        this.downloadOnly = b;
     }
 
-    URL createCutoutLinkURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
-        return createServiceLinkURL(hierarchyItem, cutoutServiceEndpoint);
+    @Override
+    public void setMaxrec(final Integer integer) {
+        this.maxRec = integer;
     }
 
-    private URL createServiceLinkURL(final HierarchyItem hierarchyItem, final URL serviceURLEndpoint)
-            throws MalformedURLException {
-        final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
-                                             StringUtil.hasText(serviceURLEndpoint.getQuery()) ? "&" : "?",
-                                             hierarchyItem.getId());
+    @Override
+    public Iterator<DataLink> links() {
+        return this.dataLinkIterator;
+    }
 
-        return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
-                       serviceURLEndpoint.getPort(), urlFile);
+    @Override
+    public Iterator<ServiceDescriptor> descriptors() {
+        return Collections.emptyIterator();
     }
 }

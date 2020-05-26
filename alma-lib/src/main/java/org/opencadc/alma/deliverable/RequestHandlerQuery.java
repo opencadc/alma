@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2020.                            (c) 2020.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -69,42 +68,80 @@
 
 package org.opencadc.alma.deliverable;
 
-import alma.asdm.domain.Deliverable;
-import alma.asdm.domain.DeliverableInfo;
-import alma.asdm.domain.identifiers.Uid;
+import org.apache.log4j.Logger;
+import org.bouncycastle.ocsp.Req;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.opencadc.alma.AlmaUID;
 
-import java.util.Iterator;
-import java.util.Set;
+import ca.nrc.cadc.net.HttpGet;
+import ca.nrc.cadc.reg.client.RegistryClient;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 
 
-public class DeliverableInfoWalker {
+public class RequestHandlerQuery {
 
-    public DeliverableInfo navigateToRequestedID(final AlmaUID almaUID, final DeliverableInfo deliverableInfo) {
-        DeliverableInfo di = deliverableInfo;
-        final Set<DeliverableInfo> subDeliverables = di.getSubDeliverables();
-        for (final Iterator<DeliverableInfo> subDeliverableIterator = subDeliverables.iterator();
-             !deliverableInfoMatches(almaUID, di) && subDeliverableIterator.hasNext(); ) {
-            di = navigateToRequestedID(almaUID, subDeliverableIterator.next());
-        }
+    private static final Logger LOGGER = Logger.getLogger(RequestHandlerQuery.class);
+    private static final String ALT_REGISTRY_LOOKUP = "https://www.almascience.org/reg/applications";
+    private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
+            "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
+            + "\"children\":[],\"allMousUids\":[]}";
+    private final URI requestHandlerResourceID;
 
-        return di;
+    public RequestHandlerQuery(final URI requestHandlerResourceID) {
+        this.requestHandlerResourceID = requestHandlerResourceID;
     }
 
-    private boolean deliverableInfoMatches(final AlmaUID almaUID, final DeliverableInfo deliverableInfo) {
-        final boolean matchesFlag;
+    public HierarchyItem query(final AlmaUID almaUID) {
+        try {
+            final JSONObject document = new JSONObject(new JSONTokener(jsonStream(almaUID)));
+            return HierarchyItem.fromJSONObject(document);
+        } catch (IOException ioException) {
+            LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.",
+                                       almaUID.getOriginalID()));
+            return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
+                                                                             almaUID.getOriginalID())));
+        }
+    }
 
-        if (deliverableInfo.getType() == Deliverable.ASDM) {
-            matchesFlag = almaUID.getArchiveUID().equals(new Uid(deliverableInfo.getIdentifier()));
+    /**
+     * Obtain an InputStream to JSON data representing the hierarchy of elements.
+     *
+     * @param almaUID The UID to query for.
+     * @return InputStream to feed to a JSON Object.
+     *
+     * @throws IOException Any errors are passed back up the stack.
+     */
+    InputStream jsonStream(final AlmaUID almaUID) throws IOException {
+        final URL requestHandlerURL = lookupBaseServiceURL(almaUID);
+        final HttpGet httpGet = createHttpGet(requestHandlerURL);
+        httpGet.run();
+
+        final Throwable throwable = httpGet.getThrowable();
+        if (throwable != null) {
+            throw new IOException(throwable.getMessage(), throwable);
         } else {
-            matchesFlag = almaUID.getOriginalID().equals(getIdentifier(deliverableInfo));
+            return httpGet.getInputStream();
         }
-
-        return matchesFlag;
     }
 
-    private String getIdentifier(final DeliverableInfo deliverableInfo) {
-        return deliverableInfo == null ? null : (deliverableInfo.getType() == Deliverable.ASDM ?
-                                                 deliverableInfo.getDisplayName() : deliverableInfo.getIdentifier());
+    URL lookupBaseServiceURL(final AlmaUID almaUID) throws IOException {
+        final RegistryClient registryClient = createRegistryClient();
+        final URL baseAccessURL = registryClient.getAccessURL(requestHandlerResourceID);
+        return new URL(String.format("%s/ous/expand/%s/downwards", baseAccessURL.toExternalForm(),
+                                     almaUID.getArchiveUID().getSanitisedUid()));
+    }
+
+    HttpGet createHttpGet(final URL requestHandlerEndpointURL) {
+        return new HttpGet(requestHandlerEndpointURL, true);
+    }
+
+    RegistryClient createRegistryClient() throws MalformedURLException {
+        return new RegistryClient(new URL(ALT_REGISTRY_LOOKUP));
     }
 }

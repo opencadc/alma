@@ -98,7 +98,7 @@ class TestUtil {
 
     private static final Logger log = Logger.getLogger(TestUtil.class);
 
-    static final URI DATALINK_SERVICE_ID = URI.create("ivo://cadc.nrc.ca/datalink");
+    static final URI DATALINK_SERVICE_ID = URI.create("ivo://almascience.org/datalink");
 
     /**
      * Compare the GET and POST FIELD.

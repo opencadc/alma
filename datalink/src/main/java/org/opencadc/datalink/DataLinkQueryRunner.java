@@ -4,7 +4,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2020.                            (c) 2020.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -69,33 +69,16 @@
 
 package org.opencadc.datalink;
 
-import alma.asdm.action.asdm.AsdmWalker;
-import alma.asdm.dao.BulkStoreDao;
-import alma.asdm.dao.BulkStoreDaoImpl;
-import alma.asdm.dao.MetaDataDao;
-import alma.asdm.dao.MetaDataDaoImpl;
-import alma.asdm.dao.ProductMetaDataDao;
-import alma.asdm.dao.ProductMetaDataDaoImpl;
-import alma.asdm.service.AsdmService;
-import alma.asdm.service.AssetManagerService;
-import alma.asdm.service.AssetManagerServiceImpl;
-import alma.asdm.service.DataPacker;
-import alma.asdm.service.DataPackerImpl;
-import alma.asdm.service.OusService;
-import alma.asdm.service.ProductService;
-import alma.asdm.service.RetrieveService;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.DeliverableInfoWalker;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import org.opencadc.datalink.server.DataLinkSource;
 import org.opencadc.datalink.server.LinkQueryRunner;
 
-import ca.nrc.cadc.db.DBUtil;
 import ca.nrc.cadc.uws.Parameter;
 import ca.nrc.cadc.uws.ParameterUtil;
 
-import javax.naming.NamingException;
-import javax.sql.DataSource;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.List;
 
 
@@ -105,29 +88,25 @@ import java.util.List;
  */
 public class DataLinkQueryRunner extends LinkQueryRunner {
 
-    private static final String NGAS_HOSTS_PROPERTY_NAME = "ngasHosts";
-    private static final String NGAS_TIMEOUT_SECONDS_PROPERTY_NAME = "ngasTimeoutSeconds";
-    private static final String ALMA_DB_JNDI_NAME_KEY = "almaDataLinkJDBCName";
-    private static final String DEFAULT_ALMA_DB_JNDI_NAME = "jdbc/datalink";
+    private static final String ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY = "almaRequestHandlerServiceURI";
     private static final String PARAMETER_KEY = "ID";
 
-    private final DataPacker dataPacker;
+    //private final DataPacker dataPacker;
     private final AlmaProperties almaProperties;
 
-    public DataLinkQueryRunner(final String propertiesFileName, final DataPacker dataPacker) {
+
+    public DataLinkQueryRunner(final String propertiesFileName) {
         this.almaProperties = new AlmaProperties(propertiesFileName);
-        this.dataPacker = dataPacker;
     }
 
     public DataLinkQueryRunner() {
         this.almaProperties = new AlmaProperties();
-        this.dataPacker = createDataPacker();
     }
 
     @Override
     protected DataLinkSource getDataLinkSource() {
         try {
-            return new DataLinkDataPackerSource(createDataLinkIterator());
+            return new ALMADataLinkSource(createDataLinkIterator());
         } catch (MalformedURLException e) {
             // Should never happen.
             throw new RuntimeException("\n\nBUG: Unable to proceed\n\n", e);
@@ -141,13 +120,10 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
         if (dataSetIDList.isEmpty()) {
             throw new IllegalArgumentException("No dataset IDs provided.  Use ID=uid://XXX");
         } else {
-            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), dataPacker,
-                                        createDeliverableInfoWalker());
+            final RequestHandlerQuery requestHandlerQuery = createRequestHandlerQuery();
+            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.stream().map(URI::create).iterator(),
+                                        requestHandlerQuery);
         }
-    }
-
-    private DeliverableInfoWalker createDeliverableInfoWalker() {
-        return new DeliverableInfoWalker();
     }
 
     private DataLinkURLBuilder createDataLinkURLBuilder() throws MalformedURLException {
@@ -155,31 +131,9 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
                                       DataLinkAvailabilityPlugin.getSodaBaseURL(almaProperties));
     }
 
-    private DataPacker createDataPacker() {
-        try {
-            final DataSource dataSource = DBUtil.findJNDIDataSource(
-                    almaProperties.getFirstPropertyValue(ALMA_DB_JNDI_NAME_KEY, DEFAULT_ALMA_DB_JNDI_NAME));
-            final MetaDataDao metaDataDao = new MetaDataDaoImpl(dataSource);
-            final BulkStoreDao bulkStoreDao =
-                    new BulkStoreDaoImpl(dataSource, almaProperties.getFirstPropertyValue(NGAS_HOSTS_PROPERTY_NAME),
-                                         Integer.parseInt(almaProperties
-                                                                  .getFirstPropertyValue(
-                                                                          NGAS_TIMEOUT_SECONDS_PROPERTY_NAME,
-                                                                          "0")));
-            final ProductMetaDataDao productMetaDataDao = new ProductMetaDataDaoImpl(dataSource);
-            final AsdmWalker asdmWalker = new AsdmWalker(metaDataDao, bulkStoreDao, 1L);
-            final ProductService productService = new ProductService(productMetaDataDao, bulkStoreDao);
-            final AsdmService asdmService = new AsdmService(asdmWalker, metaDataDao, bulkStoreDao);
-            final OusService ousService = new OusService(asdmService, productService, metaDataDao);
-            final RetrieveService retrieveService = new RetrieveService(asdmService, productService);
-            final AssetManagerService assetManagerService = new AssetManagerServiceImpl(asdmService, productService,
-                                                                                        metaDataDao, retrieveService,
-                                                                                        ousService,
-                                                                                        1);
-            return new DataPackerImpl(asdmService, ousService, null, productService, metaDataDao, assetManagerService);
-        } catch (NamingException ne) {
-            // This means the DataSource was not configured.
-            throw new RuntimeException("Unable to proceed when no DataSource is configured.", ne);
-        }
+    private RequestHandlerQuery createRequestHandlerQuery() {
+        final String configuredResourceID =
+                almaProperties.getFirstPropertyValue(ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY, null);
+        return new RequestHandlerQuery(URI.create(configuredResourceID));
     }
 }

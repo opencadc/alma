@@ -70,7 +70,6 @@
 package org.opencadc.datalink;
 
 import ca.nrc.cadc.auth.AuthMethod;
-import ca.nrc.cadc.auth.SSLUtil;
 import ca.nrc.cadc.dali.tables.TableData;
 import ca.nrc.cadc.dali.tables.votable.VOTableDocument;
 import ca.nrc.cadc.dali.tables.votable.VOTableField;
@@ -80,12 +79,8 @@ import ca.nrc.cadc.dali.tables.votable.VOTableTable;
 import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.Log4jInit;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
@@ -115,12 +110,10 @@ import org.opencadc.datalink.server.ManifestWriter;
  */
 public class LinksTest {
 
-    private static Logger LOGGER = Logger.getLogger(LinksTest.class);
+    private static final Logger LOGGER = Logger.getLogger(LinksTest.class);
 
     private static final String PUB_QUERY_URI1 = "uid://A002/X327408/X211";
     private static final String QUERY_URI2 = "uid://A001/X87c/X3f1";
-
-    //private static final String QUERY_PUB1 = "ivo://cadc.nrc.ca/IRIS?f212h000/IRAS-25um";
 
     private static final String INVALID_URI = "uid://foo/bar";
     private static final String NOT_FOUND_URI = "uid://C0/C1/C2";
@@ -138,14 +131,6 @@ public class LinksTest {
 
     @BeforeClass
     public static void before() {
-        //try {
-        //    File crt = FileUtil.getFileFromResource("x509_CADCRegtest1.pem", LinksTest.class);
-        //    SSLUtil.initSSL(crt);
-        //    LOGGER.debug("initSSL: " + crt);
-        //} catch (Throwable t) {
-        //    throw new RuntimeException("failed to init SSL", t);
-        //}
-
         URI serviceID = TestUtil.DATALINK_SERVICE_ID;
         RegistryClient rc = new RegistryClient();
         anonURL = rc.getServiceURL(serviceID, Standards.DATALINK_LINKS_10, AuthMethod.ANON);
@@ -324,7 +309,7 @@ public class LinksTest {
     }
 
     @Test
-    public void testUsageFault_noID() throws Exception {
+    public void testUsageFault_noID() {
         LOGGER.debug("testUsageFault_noID");
         try {
             // GET the query.
