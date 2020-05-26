@@ -80,6 +80,7 @@ import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.Log4jInit;
+import ca.nrc.cadc.util.StringUtil;
 
 import java.net.URI;
 import java.net.URL;
@@ -130,11 +131,19 @@ public class LinksTest {
     }
 
     @BeforeClass
-    public static void before() {
+    public static void before() throws Exception {
         URI serviceID = TestUtil.DATALINK_SERVICE_ID;
-        RegistryClient rc = new RegistryClient();
-        anonURL = rc.getServiceURL(serviceID, Standards.DATALINK_LINKS_10, AuthMethod.ANON);
-        certURL = rc.getServiceURL(serviceID, Standards.DATALINK_LINKS_10, AuthMethod.CERT);
+        final String configuredRegistryURL = System.getenv("DATALINK_REGISTRY_URL");
+        final RegistryClient registryClient;
+
+        if (StringUtil.hasText(configuredRegistryURL)) {
+            registryClient = new RegistryClient(new URL(configuredRegistryURL));
+        } else {
+            registryClient = new RegistryClient();
+        }
+
+        anonURL = registryClient.getServiceURL(serviceID, Standards.DATALINK_LINKS_10, AuthMethod.ANON);
+        certURL = registryClient.getServiceURL(serviceID, Standards.DATALINK_LINKS_10, AuthMethod.CERT);
         LOGGER.info("anon URL: " + anonURL);
         LOGGER.info("cert URL: " + certURL);
     }

@@ -10,6 +10,7 @@ import ca.nrc.cadc.tap.schema.SchemaDesc;
 import ca.nrc.cadc.tap.schema.TableDesc;
 import ca.nrc.cadc.tap.schema.TapSchema;
 import ca.nrc.cadc.util.Log4jInit;
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vosi.TableReader;
 import ca.nrc.cadc.vosi.TableSetReader;
 import org.apache.log4j.Level;
@@ -22,10 +23,12 @@ import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URL;
 
+
 /**
  * @author pdowler
  */
 public class VosiTablesTest {
+
     private static final Logger log = Logger.getLogger(VosiTablesTest.class);
 
     static {
@@ -34,10 +37,17 @@ public class VosiTablesTest {
 
     URL tablesURL;
 
-    public VosiTablesTest() {
-        RegistryClient rc = new RegistryClient();
-        this.tablesURL = rc.getServiceURL(URI.create("ivo://cadc.nrc.ca/tap"), Standards.VOSI_TABLES_11,
-                                          AuthMethod.ANON);
+    public VosiTablesTest() throws Exception {
+        final String configuredRegistryURL = System.getenv("DATALINK_REGISTRY_URL");
+        final RegistryClient registryClient;
+
+        if (StringUtil.hasText(configuredRegistryURL)) {
+            registryClient = new RegistryClient(new URL(configuredRegistryURL));
+        } else {
+            registryClient = new RegistryClient();
+        }
+        this.tablesURL = registryClient.getServiceURL(URI.create("ivo://almascience.org/tap"), Standards.VOSI_TABLES_11,
+                                                      AuthMethod.ANON);
         log.info(String.format("VosiTablesTest: Using URL %s", this.tablesURL));
     }
 

@@ -91,7 +91,6 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
     private static final String ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY = "almaRequestHandlerServiceURI";
     private static final String PARAMETER_KEY = "ID";
 
-    //private final DataPacker dataPacker;
     private final AlmaProperties almaProperties;
 
 

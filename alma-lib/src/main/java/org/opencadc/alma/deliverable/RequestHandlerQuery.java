@@ -69,12 +69,12 @@
 package org.opencadc.alma.deliverable;
 
 import org.apache.log4j.Logger;
-import org.bouncycastle.ocsp.Req;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.opencadc.alma.AlmaUID;
 
 import ca.nrc.cadc.net.HttpGet;
+import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.client.RegistryClient;
 
 import java.io.IOException;
@@ -106,6 +106,9 @@ public class RequestHandlerQuery {
                                        almaUID.getOriginalID()));
             return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
                                                                              almaUID.getOriginalID())));
+        } catch (ResourceNotFoundException resourceNotFoundException) {
+            LOGGER.fatal("Unable to find Registry lookup.");
+            throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
         }
     }
 
@@ -117,7 +120,7 @@ public class RequestHandlerQuery {
      *
      * @throws IOException Any errors are passed back up the stack.
      */
-    InputStream jsonStream(final AlmaUID almaUID) throws IOException {
+    InputStream jsonStream(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
         final URL requestHandlerURL = lookupBaseServiceURL(almaUID);
         final HttpGet httpGet = createHttpGet(requestHandlerURL);
         httpGet.run();
@@ -130,7 +133,7 @@ public class RequestHandlerQuery {
         }
     }
 
-    URL lookupBaseServiceURL(final AlmaUID almaUID) throws IOException {
+    URL lookupBaseServiceURL(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
         final RegistryClient registryClient = createRegistryClient();
         final URL baseAccessURL = registryClient.getAccessURL(requestHandlerResourceID);
         return new URL(String.format("%s/ous/expand/%s/downwards", baseAccessURL.toExternalForm(),
