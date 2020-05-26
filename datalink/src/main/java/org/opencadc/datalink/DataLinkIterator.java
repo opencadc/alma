@@ -120,20 +120,15 @@ public class DataLinkIterator implements Iterator<DataLink> {
         if (dataLinkQueue.isEmpty()) {
             if (datasetIDIterator.hasNext()) {
                 final AlmaUID currentUID = new AlmaUID(datasetIDIterator.next());
-                try {
-                    final HierarchyItem hierarchyItem = requestHandlerQuery.query(currentUID);
+                final HierarchyItem hierarchyItem = requestHandlerQuery.query(currentUID);
 
-                    if (hierarchyItem.hasChildren()) {
-                        visitSubDeliverables(hierarchyItem);
-                    } else {
-                        dataLinkQueue.add(createNotFoundDataLink(hierarchyItem));
-                    }
-
-                    return !dataLinkQueue.isEmpty();
-                } catch (IOException e) {
-                    LOGGER.error("Unable to query RequestHandler.");
-                    throw new RuntimeException(e.getMessage(), e);
+                if (hierarchyItem.hasChildren()) {
+                    visitSubDeliverables(hierarchyItem);
+                } else {
+                    dataLinkQueue.add(createNotFoundDataLink(hierarchyItem));
                 }
+
+                return !dataLinkQueue.isEmpty();
             } else {
                 return false;
             }

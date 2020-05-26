@@ -73,5 +73,5 @@ import java.net.URI;
 
 
 public class TestUtil {
-    static final URI SODA_SERVICE_ID = URI.create("ivo://cadc.nrc.ca/soda");
+    static final URI SODA_SERVICE_ID = URI.create("ivo://almascience.org/soda");
 }

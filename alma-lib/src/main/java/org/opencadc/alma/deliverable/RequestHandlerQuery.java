@@ -68,6 +68,8 @@
 
 package org.opencadc.alma.deliverable;
 
+import org.apache.log4j.Logger;
+import org.bouncycastle.ocsp.Req;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.opencadc.alma.AlmaUID;
@@ -83,24 +85,37 @@ import java.net.URL;
 
 
 public class RequestHandlerQuery {
+
+    private static final Logger LOGGER = Logger.getLogger(RequestHandlerQuery.class);
     private static final String ALT_REGISTRY_LOOKUP = "https://www.almascience.org/reg/applications";
+    private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
+            "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
+            + "\"children\":[],\"allMousUids\":[]}";
     private final URI requestHandlerResourceID;
 
     public RequestHandlerQuery(final URI requestHandlerResourceID) {
         this.requestHandlerResourceID = requestHandlerResourceID;
     }
 
-    public HierarchyItem query(final AlmaUID almaUID) throws IOException {
-        final JSONObject document = new JSONObject(new JSONTokener(jsonStream(almaUID)));
-        return HierarchyItem.fromJSONObject(document);
+    public HierarchyItem query(final AlmaUID almaUID) {
+        try {
+            final JSONObject document = new JSONObject(new JSONTokener(jsonStream(almaUID)));
+            return HierarchyItem.fromJSONObject(document);
+        } catch (IOException ioException) {
+            LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.",
+                                       almaUID.getOriginalID()));
+            return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
+                                                                             almaUID.getOriginalID())));
+        }
     }
 
     /**
      * Obtain an InputStream to JSON data representing the hierarchy of elements.
      *
-     * @param almaUID       The UID to query for.
-     * @return              InputStream to feed to a JSON Object.
-     * @throws IOException  Any errors are passed back up the stack.
+     * @param almaUID The UID to query for.
+     * @return InputStream to feed to a JSON Object.
+     *
+     * @throws IOException Any errors are passed back up the stack.
      */
     InputStream jsonStream(final AlmaUID almaUID) throws IOException {
         final URL requestHandlerURL = lookupBaseServiceURL(almaUID);
