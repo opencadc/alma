@@ -1,4 +1,4 @@
-ALMA DataLink (1.0.0)
+ALMA DataLink (1.1.0)
 ================
 
 Current implementation can be found at the CADC here:
@@ -25,7 +25,7 @@ Alternatively, there is an ``alma_datalink_app_name`` parameter that will replac
 
 will create the ``build/libs/my_alma_datalink##%VERSION%.war`` file.  This can also be set in a local ``gradle
 .properties``,
-or in you ``~/.gradle/gradle.properties`` file.
+or in your ``~/.gradle/gradle.properties`` file.
 
 Deployment
 ----------
@@ -36,7 +36,7 @@ Docker
 This is a working prototype using a DataLink implementation with an Oracle 11/12 database.  An existing image can be
 found here:
 
-``docker pull opencadc/alma-datalink:1.0.0``
+``docker pull opencadc/alma-datalink:1.1.0``
 
 Building for Docker
 ~~~~~~~~~~~~~~~~~~~
@@ -67,6 +67,22 @@ Dedicated web server
 If you have a dedicated Servlet Container (i.e. `Tomcat`_) running
 already, run the `Build`_ step above, then copy the WAR artifact from
 ``build/libs/`` to your Servlet Container’s webapp deployment directory.
+
+Integration Testing
+-------------------
+
+Integration tests are provided to test the deployed system.  From the root run:
+
+``gradle -i clean intTest``
+
+Set the Registry to a custom host, which will look for the IVOA registry capabilities document at myhost.nrao.edu/reg/resource-caps:
+
+``gradle -i -Dca.nrc.cadc.reg.client.RegistryClient.host=myhost.nrao.edu clean intTest``
+
+Or set to a completely custom location:
+
+``DATALINK_REGISTRY_URL=https://myreghost.nrao.edu/alt-reg/capabilities.out gradle -i clean intTest``
+
 
 .. _IVOA DataLink: http://www.ivoa.net/documents/DataLink/
 .. _ALMA Science Archive: http://almascience.nrao.edu/

@@ -86,6 +86,7 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
 
     private static final String ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME = "almaDataLinkServiceURI";
     private static final String ALMA_SODA_SERVICE_ID_PROPERTY_NAME = "almaSODAServiceURI";
+    private static final String ALMA_REGISTRY_CAPABILITIES_URL_PROPERTY_NAME = "almaRegistryURL";
     private static final String DEFAULT_ALMA_DATALINK_SERVICE_ID = "ivo://almascience.org/datalink";
     private static final String DEFAULT_ALMA_SODA_SERVICE_ID = "ivo://almascience.org/soda";
 
@@ -120,23 +121,31 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
         final URI configuredDataLinkURI = URI.create(
                 almaProperties.getFirstPropertyValue(ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME,
                                                      DEFAULT_ALMA_DATALINK_SERVICE_ID));
-        return lookupBaseURL(configuredDataLinkURI, Standards.DATALINK_LINKS_10, AuthMethod.ANON);
+        return lookupBaseURL(almaProperties, configuredDataLinkURI, Standards.DATALINK_LINKS_10, AuthMethod.ANON);
     }
 
     public static URL getSodaBaseURL(final AlmaProperties almaProperties) throws MalformedURLException {
         final URI configuredDataLinkURI = URI.create(
                 almaProperties.getFirstPropertyValue(ALMA_SODA_SERVICE_ID_PROPERTY_NAME,
                                                      DEFAULT_ALMA_SODA_SERVICE_ID));
-        return lookupBaseURL(configuredDataLinkURI, Standards.SODA_SYNC_10, AuthMethod.ANON);
+        return lookupBaseURL(almaProperties, configuredDataLinkURI, Standards.SODA_SYNC_10, AuthMethod.ANON);
     }
 
-    private static URL lookupBaseURL(final URI configuredURI, final URI standardsID, final AuthMethod authMethod)
+    private static URL lookupBaseURL(final AlmaProperties almaProperties, final URI configuredURI,
+                                     final URI standardsID, final AuthMethod authMethod)
             throws MalformedURLException {
         if (configuredURI.getScheme().equals("ivo")) {
-            final RegistryClient regClient = new RegistryClient();
+            final String registryCapabilitiesDocumentURL =
+                    almaProperties.getFirstPropertyValue(ALMA_REGISTRY_CAPABILITIES_URL_PROPERTY_NAME, null);
+            final RegistryClient registryClient;
+            if (StringUtil.hasText(registryCapabilitiesDocumentURL)) {
+                registryClient = new RegistryClient(new URL(registryCapabilitiesDocumentURL));
+            } else {
+                registryClient = new RegistryClient();
+            }
             // Attempt to load the URI as a resource URI from the Registry.
-            return regClient.getServiceURL(configuredURI, standardsID,
-                                           authMethod == null ? AuthMethod.ANON : authMethod);
+            return registryClient.getServiceURL(configuredURI, standardsID,
+                                                authMethod == null ? AuthMethod.ANON : authMethod);
         } else {
             // Fallback and assume the URI is an absolute one.
             return configuredURI.toURL();

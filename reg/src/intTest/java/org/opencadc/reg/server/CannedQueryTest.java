@@ -72,6 +72,8 @@ import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.Log4jInit;
+import ca.nrc.cadc.util.StringUtil;
+
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URL;
@@ -86,7 +88,7 @@ import org.junit.Test;
  */
 public class CannedQueryTest {
     private static final Logger log = Logger.getLogger(CannedQueryTest.class);
-    private static String TEST_APP_RESOURCE_ID = "ivo://cadc.nrc.ca/reg";
+    private static String TEST_APP_RESOURCE_ID = "ivo://almascience.org/reg";
     private static final URI TEST_APP_URI = URI.create(TEST_APP_RESOURCE_ID);
     private static final URI TEST_CAPABILITIES_URI = URI.create("intTest:canned-apps-query-test");
     private URL returnedAppUrl;
@@ -102,8 +104,16 @@ public class CannedQueryTest {
     public void testApplicationsLookup() {
         try {
             // Get applications endpoint from intTest entry in /reg capabilities.xml
-            RegistryClient applicationsRC = new RegistryClient();
-            returnedAppUrl = applicationsRC.getServiceURL(TEST_APP_URI, TEST_CAPABILITIES_URI, AuthMethod.ANON);
+            final String configuredRegistryURL = System.getenv("DATALINK_REGISTRY_URL");
+            final RegistryClient registryClient;
+
+            if (StringUtil.hasText(configuredRegistryURL)) {
+                registryClient = new RegistryClient(new URL(configuredRegistryURL));
+            } else {
+                registryClient = new RegistryClient();
+            }
+
+            returnedAppUrl = registryClient.getServiceURL(TEST_APP_URI, TEST_CAPABILITIES_URI, AuthMethod.ANON);
             log.info("applications URL endpoint: " + returnedAppUrl.getHost() + returnedAppUrl.getPath());
 
             // Should be the applications endpoint
