@@ -71,7 +71,6 @@ package org.opencadc.datalink;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -159,8 +158,8 @@ public class DataLinkIteratorTest {
         final DataLinkURLBuilder dataLinkURLBuilder =
                 new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"),
                                        new URL("https://myhost.com/mysoda/sync"));
-        final Iterator<URI> dataSetIDIterator =
-                Collections.singletonList(URI.create("uid://A001/X879/X8f1")).iterator();
+        final Iterator<String> dataSetIDIterator =
+                Collections.singletonList("uid://A001/X879/X8f1").iterator();
         final HierarchyItem hierarchy = fromJSONFile(DataLinkIteratorTest.class.getSimpleName() + ".json");
 
         when(mockRequestHandlerQuery.query(new AlmaUID("uid://A001/X879/X8f1"))).thenReturn(hierarchy);

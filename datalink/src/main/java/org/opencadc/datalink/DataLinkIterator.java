@@ -69,7 +69,6 @@
 
 package org.opencadc.datalink;
 
-import alma.asdm.domain.Deliverable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaUID;
@@ -79,7 +78,6 @@ import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import ca.nrc.cadc.util.StringUtil;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -103,11 +101,11 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
     private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
-    private final Iterator<URI> datasetIDIterator;
+    private final Iterator<String> datasetIDIterator;
     private final RequestHandlerQuery requestHandlerQuery;
 
 
-    DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<URI> datasetIDIterator,
+    DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
                      final RequestHandlerQuery requestHandlerQuery) {
         this.dataLinkURLBuilder = dataLinkURLBuilder;
         this.datasetIDIterator = datasetIDIterator;
@@ -138,7 +136,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
     private void visitSubDeliverables(final HierarchyItem hierarchyItem) {
         Arrays.stream(hierarchyItem.getChildrenArray()).forEach(h -> {
-            final Deliverable type = h.getType();
+            final HierarchyItem.Type type = h.getType();
             if (type.isLeaf() || type.isAuxiliary() || type.isOus() || type.isTarfile()) {
                 dataLinkQueue.addAll(createDataLinks(h));
             }
@@ -164,7 +162,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
      */
     List<DataLink> createDataLinks(final HierarchyItem hierarchyItem) {
         final List<DataLink> dataLinkCollection = new ArrayList<>();
-        final Deliverable deliverableType = hierarchyItem.getType();
+        final HierarchyItem.Type deliverableType = hierarchyItem.getType();
 
         dataLinkCollection.add(createDataLink(hierarchyItem));
 
@@ -304,14 +302,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     private String getIdentifier(final HierarchyItem hierarchyItem) {
-        return hierarchyItem == null ? null : (hierarchyItem.getType() == Deliverable.ASDM
+        return hierarchyItem == null ? null : (hierarchyItem.getType() == HierarchyItem.Type.ASDM
                                                ? hierarchyItem.getName()
                                                : hierarchyItem.getNullSafeId());
     }
 
     private List<DataLink.Term> determineTerms(final HierarchyItem hierarchyItem) {
         final List<DataLink.Term> dataLinkTermCollection = new ArrayList<>();
-        final Deliverable deliverableType = hierarchyItem.getType();
+        final HierarchyItem.Type deliverableType = hierarchyItem.getType();
 
         if (isPackageFile(hierarchyItem)) {
             dataLinkTermCollection.add(DataLink.Term.PKG);
@@ -321,9 +319,9 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLinkTermCollection.add(DataLink.Term.AUXILIARY);
         }
 
-        if (deliverableType == Deliverable.PIPELINE_AUXILIARY_CALIBRATION) {
+        if (deliverableType == HierarchyItem.Type.PIPELINE_AUXILIARY_CALIBRATION) {
             dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
-        } else if (deliverableType == Deliverable.ASDM) {
+        } else if (deliverableType == HierarchyItem.Type.ASDM) {
             dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
         } else if (deliverableType.isOus()) {
             dataLinkTermCollection.add(DataLink.Term.DATALINK);

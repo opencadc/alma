@@ -120,8 +120,7 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
             throw new IllegalArgumentException("No dataset IDs provided.  Use ID=uid://XXX");
         } else {
             final RequestHandlerQuery requestHandlerQuery = createRequestHandlerQuery();
-            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.stream().map(URI::create).iterator(),
-                                        requestHandlerQuery);
+            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), requestHandlerQuery);
         }
     }
 

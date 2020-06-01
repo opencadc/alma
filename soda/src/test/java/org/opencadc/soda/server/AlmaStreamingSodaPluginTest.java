@@ -69,9 +69,6 @@
 
 package org.opencadc.soda.server;
 
-import alma.asdm.domain.Deliverable;
-import alma.asdm.domain.identifiers.Uid;
-
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Point;
 import ca.nrc.cadc.dali.Shape;
@@ -103,8 +100,8 @@ public class AlmaStreamingSodaPluginTest {
         final Circle circle = new Circle(new Point(18.0D, 78.5D), 0.5D);
         final Cutout<Shape> testCutout = new Cutout<>("TESTCIRC", "TESTCIRC1", circle);
         final HierarchyItem hierarchyItem = new HierarchyItem(targetParentUid, "myfile.fits",
-                                                              Deliverable.ASDM, 88L, true,
-                                                              new HierarchyItem[0], new Uid[0]);
+                                                              HierarchyItem.Type.ASDM, 88L, true,
+                                                              new HierarchyItem[0], new AlmaUID[0]);
 
         when(mockRequestHandlerQuery.query(targetAlmaUID)).thenReturn(hierarchyItem);
         when(mockSodaURLBuilder.createCutoutURL(hierarchyItem, testCutout, null, null, null)).thenReturn(

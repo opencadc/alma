@@ -97,15 +97,20 @@ public class RequestHandlerQuery {
         this.requestHandlerResourceID = requestHandlerResourceID;
     }
 
+    /**
+     * Obtain the HierarchyItem representing the top level downwards from the given UID.
+     * @param almaUID   The UID to start from.
+     * @return  HierarchyItem for the UID, or a NotFound HierarchyItem.
+     */
     public HierarchyItem query(final AlmaUID almaUID) {
         try {
             final JSONObject document = new JSONObject(new JSONTokener(jsonStream(almaUID)));
             return HierarchyItem.fromJSONObject(document);
         } catch (IOException ioException) {
             LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.",
-                                       almaUID.getOriginalID()));
+                                       almaUID.getUID()));
             return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
-                                                                             almaUID.getOriginalID())));
+                                                                             almaUID.getUID())));
         } catch (ResourceNotFoundException resourceNotFoundException) {
             LOGGER.fatal("Unable to find Registry lookup.");
             throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
@@ -137,7 +142,7 @@ public class RequestHandlerQuery {
         final RegistryClient registryClient = createRegistryClient();
         final URL baseAccessURL = registryClient.getAccessURL(requestHandlerResourceID);
         return new URL(String.format("%s/ous/expand/%s/downwards", baseAccessURL.toExternalForm(),
-                                     almaUID.getArchiveUID().getSanitisedUid()));
+                                     almaUID.getSanitisedUid()));
     }
 
     HttpGet createHttpGet(final URL requestHandlerEndpointURL) {

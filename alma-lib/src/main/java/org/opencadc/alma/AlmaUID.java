@@ -69,12 +69,10 @@
 
 package org.opencadc.alma;
 
-import alma.asdm.domain.identifiers.Uid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ca.nrc.cadc.util.StringUtil;
 
-import java.net.URI;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -85,61 +83,53 @@ import java.util.regex.Pattern;
  * in the form of 2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar.
  */
 public class AlmaUID {
-
     private static final Logger LOGGER = LogManager.getLogger(AlmaUID.class);
     private static final Pattern UID_PATTERN =
             Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
 
 
-    private final String originalID;
-
-    private Uid archiveUID;
-
-    // Is a Filter ID
-    private boolean isFilterIDFlag;
+    // The original UID as provided by the constructor.
+    private final String uid;
+    private final AlmaUID archiveUID;
 
 
-    public AlmaUID(final URI originalIDURI) {
-        if (originalIDURI == null) {
+    public AlmaUID(final String uid) {
+        if (!StringUtil.hasText(uid)) {
             throw new IllegalArgumentException("Passed ID cannot be null or empty.");
         }
 
-        this.originalID = originalIDURI.toString();
-        parseID();
+        this.uid = desanitize(uid);
+        archiveUID = parseArchiveID();
     }
 
-    public AlmaUID(final String originalID) {
-        if (!StringUtil.hasText(originalID)) {
-            throw new IllegalArgumentException("Passed ID cannot be null or empty.");
-        }
-
-        this.originalID = originalID;
-        parseID();
-    }
-
-    private void parseID() {
-        final Matcher matcher = UID_PATTERN.matcher(this.originalID);
+    private AlmaUID parseArchiveID() {
+        final Matcher matcher = UID_PATTERN.matcher(this.uid);
 
         if (matcher.find()) {
             final String uidMatch = matcher.group();
-            LOGGER.debug(String.format("Matched %s from %s", uidMatch, this.originalID));
-            this.isFilterIDFlag = !uidMatch.equals(this.originalID);
-            this.archiveUID = new Uid(uidMatch);
+
+            LOGGER.debug(String.format("Found match (%s)", uidMatch));
+            // If the parent matches this current one then don't set it.
+            return desanitize(uidMatch).equals(this.uid) ? null : new AlmaUID(uidMatch);
         } else {
-            throw new IllegalArgumentException(String.format("No UID found in %s", this.originalID));
+            throw new IllegalArgumentException(String.format("No UID found in %s", this.uid));
         }
     }
 
-    public String getOriginalID() {
-        return originalID;
+    public String getUID() {
+        return uid;
     }
 
-    public boolean isFiltering() {
-        return isFilterIDFlag;
+    public AlmaUID getArchiveUID() {
+        return this.archiveUID == null ? new AlmaUID(this.uid) : this.archiveUID;
     }
 
-    public Uid getArchiveUID() {
-        return archiveUID;
+    public String getSanitisedUid() {
+        return this.uid.replace(':', '_').replaceAll("/", "_");
+    }
+
+    String desanitize(final String uid) {
+        return uid.replace("uid___", "uid://").replaceAll("_", "/");
     }
 
     @Override
@@ -151,13 +141,38 @@ public class AlmaUID {
             return false;
         }
         AlmaUID almaUID = (AlmaUID) o;
-        return isFilterIDFlag == almaUID.isFilterIDFlag &&
-               originalID.equals(almaUID.originalID) &&
-               archiveUID.equals(almaUID.archiveUID);
+        return uid.equals(almaUID.uid) &&
+               Objects.equals(archiveUID, almaUID.archiveUID);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(originalID, archiveUID, isFilterIDFlag);
+        return Objects.hash(uid, archiveUID);
+    }
+
+    /**
+     * Returns a string representation of the object. In general, the
+     * {@code toString} method returns a string that
+     * "textually represents" this object. The result should
+     * be a concise but informative representation that is easy for a
+     * person to read.
+     * It is recommended that all subclasses override this method.
+     * <p>
+     * The {@code toString} method for class {@code Object}
+     * returns a string consisting of the name of the class of which the
+     * object is an instance, the at-sign character `{@code @}', and
+     * the unsigned hexadecimal representation of the hash code of the
+     * object. In other words, this method returns a string equal to the
+     * value of:
+     * <blockquote>
+     * <pre>
+     * getClass().getName() + '@' + Integer.toHexString(hashCode())
+     * </pre></blockquote>
+     *
+     * @return a string representation of the object.
+     */
+    @Override
+    public String toString() {
+        return this.uid;
     }
 }
