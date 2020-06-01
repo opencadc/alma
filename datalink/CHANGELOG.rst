@@ -4,9 +4,9 @@ ALMA DataLink Service (1.1.0)
 2020.05.26 - 1.1.0 (Released) - opencadc/alma-datalink:1.1.0
 ------------------------------------------------------------
 
-- Remove dependency on DataPacker API
+- Remove dependency on all ALMA APIs
 - Code cleanup
-- Rework to look up a custom registry
+- Remove all configuration for databases and ALMA APIs
 
 
 2019.07.12 - 1.0.0 (Released) - opencadc/alma-datalink:1.0.0
