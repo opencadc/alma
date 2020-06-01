@@ -86,7 +86,6 @@ public class RequestHandlerQueryTest {
     @Test
     public void createURL() throws Exception {
         final URI resourceURI = URI.create("ivo://alma.org/rh");
-        final URI uidURI = URI.create("uid://C0/C1/C313");
         final HttpGet mockHttpGet = mock(HttpGet.class);
         final RegistryClient mockRegistryClient = mock(RegistryClient.class);
         final RequestHandlerQuery testSubject = new RequestHandlerQuery(resourceURI) {
@@ -103,7 +102,7 @@ public class RequestHandlerQueryTest {
 
         when(mockRegistryClient.getAccessURL(resourceURI)).thenReturn(
                 new URL("https://alma.org/requestHandler/tree"));
-        final URL endpointURL = testSubject.lookupBaseServiceURL(new AlmaUID(uidURI));
+        final URL endpointURL = testSubject.lookupBaseServiceURL(new AlmaUID("uid://C0/C1/C313"));
         Assert.assertEquals("Wrong endpoint",
                             new URL("https://alma.org/requestHandler/tree/ous/expand/uid___C0_C1_C313/downwards"),
                             endpointURL);

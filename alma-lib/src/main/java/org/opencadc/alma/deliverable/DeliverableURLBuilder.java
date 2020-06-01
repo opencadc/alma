@@ -69,7 +69,6 @@
 
 package org.opencadc.alma.deliverable;
 
-import alma.asdm.domain.Deliverable;
 import org.opencadc.alma.AlmaProperties;
 
 import ca.nrc.cadc.util.StringUtil;
@@ -99,7 +98,7 @@ public class DeliverableURLBuilder {
                 sanitizePath(new URL(sanitizedURL).toExternalForm()),
 
                 // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
-                sanitizePath(hierarchyItem.getType() == Deliverable.ASDM ?
+                sanitizePath(hierarchyItem.getType() == HierarchyItem.Type.ASDM ?
                              hierarchyItem.getName() : hierarchyItem.getId())
         }));
     }

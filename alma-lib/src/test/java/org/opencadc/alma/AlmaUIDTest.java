@@ -89,22 +89,19 @@ public class AlmaUIDTest {
     @Test
     public void constructFromDesanitizedMOUSID() {
         final AlmaUID testSubject = new AlmaUID("uid://C0/C1/C2");
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getArchiveUID().getDesanitisedUid());
-        assertFalse("Should not be filtering.", testSubject.isFiltering());
+        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getUID());
     }
 
     @Test
     public void constructFromSanitizedMOUSID() {
         final AlmaUID testSubject = new AlmaUID("uid___C0_C1_C2");
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getArchiveUID().getDesanitisedUid());
-        assertFalse("Should not be filtering.", testSubject.isFiltering());
+        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getUID());
     }
 
     @Test
     public void constructFromURI() {
-        final AlmaUID testSubject = new AlmaUID(URI.create("uid://C0/C1/C2"));
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getArchiveUID().getDesanitisedUid());
-        assertFalse("Should not be filtering.", testSubject.isFiltering());
+        final AlmaUID testSubject = new AlmaUID("uid://C0/C1/C2");
+        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getUID());
     }
 
     @Test
@@ -117,14 +114,7 @@ public class AlmaUIDTest {
         }
 
         try {
-            new AlmaUID((String) null);
-            fail("Should throw IllegalArgumentException.");
-        } catch (IllegalArgumentException e) {
-            // Good.
-        }
-
-        try {
-            new AlmaUID((URI) null);
+            new AlmaUID(null);
             fail("Should throw IllegalArgumentException.");
         } catch (IllegalArgumentException e) {
             // Good.
@@ -135,7 +125,6 @@ public class AlmaUIDTest {
     public void constructFromTarfileID() {
         final AlmaUID testSubject = new AlmaUID("2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar");
         assertEquals("Wrong MOUS ID.", "uid://A002/Xc4f3ae/X537a",
-                     testSubject.getArchiveUID().getDesanitisedUid());
-        assertTrue("Should be filtering.", testSubject.isFiltering());
+                     testSubject.getArchiveUID().toString());
     }
 }

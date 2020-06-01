@@ -33,8 +33,7 @@ Deployment
 Docker
 ~~~~~~
 
-This is a working prototype using a DataLink implementation with an Oracle 11/12 database.  An existing image can be
-found here:
+This is a working prototype using a DataLink implementation.  An existing image can be found here:
 
 ``docker pull opencadc/alma-datalink:1.1.0``
 

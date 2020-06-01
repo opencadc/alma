@@ -7,22 +7,6 @@ plugins {
 repositories {
     mavenLocal()
     jcenter()
-
-    // To obtain access to the Oracle Maven repository, put your credentials into environment variables:
-    // - ALMA_MAVEN_USERNAME
-    // - ALMA_MAVEN_PASSWORD
-    //
-    // or, create a gradle.properties in your ~/.gradle directory with the following variables set:
-    // - almaMavenUsername
-    // - almaMavenPassword
-    maven {
-        name 'alma-central'
-        url 'https://maven-repo.hq.eso.org/artifactory/ALMA'
-        credentials {
-            username = System.getenv("ALMA_MAVEN_USERNAME") ?: almaMavenUsername
-            password = System.getenv("ALMA_MAVEN_PASSWORD") ?: almaMavenPassword
-        }
-    }
 }
 
 group = 'org.opencadc'
@@ -62,10 +46,11 @@ configurations {
 }
 
 dependencies {
+    implementation 'org.apache.logging.log4j:log4j-core:[2.13.0,3.0)'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:[2.13.0,3.0)'
     implementation 'org.opencadc:alma-lib:[1.1.0,2.0)'
     implementation 'org.json:json:20190722'
-    implementation 'org.opencadc:cadc-util:[1.3.5,1.4.0]'
-    implementation 'alma.archive:domainmodel:ARCHIVE-2020.05.01'
+    implementation 'org.opencadc:cadc-util:[1.3.7,2.0)'
     implementation 'org.opencadc:cadc-datalink-server:[1.0.2,1.1.0)'
 
     testImplementation 'junit:junit:[4.12,5)'
