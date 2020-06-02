@@ -103,7 +103,7 @@ public class SodaAvailabilityPlugin implements AvailabilityPlugin {
     }
 
     /**
-     * The AvailabilitySerlet supports a POST with state=??? that it will pass
+     * The AvailabilityServlet supports a POST with state=??? that it will pass
      * on to the WebService. This can be used to implement state-changes in the
      * service, e.g. disabling or enabling features.
      *
