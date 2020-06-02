@@ -227,9 +227,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
                 dataLink.contentLength = determineSizeInBytes(hierarchyItem);
                 dataLink.contentType = determineContentType(hierarchyItem);
-
-                // TODO: How to determine this?
-                dataLink.readable = true;
+                dataLink.readable = hierarchyItem.isReadable();
 
                 dataLinkTerms.forEach(dataLink::addSemantics);
             }
