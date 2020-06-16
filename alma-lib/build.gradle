@@ -14,22 +14,6 @@ plugins {
 repositories {
     mavenLocal()
     jcenter()
-
-    // To obtain access to the Oracle Maven repository, put your credentials into environment variables:
-    // - ALMA_MAVEN_USERNAME
-    // - ALMA_MAVEN_PASSWORD
-    //
-    // or, create a gradle.properties in your ~/.gradle directory with the following variables set:
-    // - almaMavenUsername
-    // - almaMavenPassword
-    maven {
-        name 'alma-central'
-        url 'https://maven-repo.hq.eso.org/artifactory/ALMA'
-        credentials {
-            username = System.getenv("ALMA_MAVEN_USERNAME") ?: almaMavenUsername
-            password = System.getenv("ALMA_MAVEN_PASSWORD") ?: almaMavenPassword
-        }
-    }
 }
 
 sourceCompatibility = 1.8
