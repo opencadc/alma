@@ -97,7 +97,7 @@ public class HierarchyItem {
      * Create a hierarchy item from a JSON Document.
      *
      * @param document The JSONObject of the query.
-     * @return A new JSONHierarcyItem instance.  Never null.
+     * @return A new HierarchyItem instance.  Never null.
      */
     public static HierarchyItem fromJSONObject(final JSONObject document) {
         final String itemID = document.get("id").toString();
