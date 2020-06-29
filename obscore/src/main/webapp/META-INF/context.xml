@@ -7,7 +7,7 @@
               type="javax.sql.DataSource"
               factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
               minEvictableIdleTimeMillis="30000"
-              maxActive="1" maxIdle="1" maxWait="20000"
+              maxActive="4" maxIdle="4" maxWait="20000"
               username="${alma.tapuser.username}" password="${alma.tapuser.password}"
               driverClassName="${alma.tapuser.driverClassName}"
               url="${alma.tapuser.url}"
