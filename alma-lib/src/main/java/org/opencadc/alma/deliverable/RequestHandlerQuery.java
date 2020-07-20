@@ -107,8 +107,8 @@ public class RequestHandlerQuery {
             final JSONObject document = new JSONObject(new JSONTokener(jsonStream(almaUID)));
             return HierarchyItem.fromJSONObject(document);
         } catch (IOException ioException) {
-            LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.",
-                                       almaUID.getUID()));
+            LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.\n\n%s",
+                                       almaUID.getUID(), ioException));
             return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
                                                                              almaUID.getUID())));
         } catch (ResourceNotFoundException resourceNotFoundException) {
@@ -127,6 +127,7 @@ public class RequestHandlerQuery {
      */
     InputStream jsonStream(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
         final URL requestHandlerURL = lookupBaseServiceURL(almaUID);
+        LOGGER.debug(String.format("Base URL for Request Handler is %s", requestHandlerURL));
         final HttpGet httpGet = createHttpGet(requestHandlerURL);
         httpGet.run();
 
