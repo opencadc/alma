@@ -99,7 +99,7 @@ public class DeliverableURLBuilder {
 
                 // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
                 sanitizePath(hierarchyItem.getType() == HierarchyItem.Type.ASDM ?
-                             hierarchyItem.getName() : hierarchyItem.getId())
+                     hierarchyItem.getName() : hierarchyItem.getNullSafeId(true))
         }));
     }
 

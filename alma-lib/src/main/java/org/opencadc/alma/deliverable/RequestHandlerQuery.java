@@ -142,6 +142,7 @@ public class RequestHandlerQuery {
     URL lookupBaseServiceURL(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
         final RegistryClient registryClient = createRegistryClient();
         final URL baseAccessURL = registryClient.getAccessURL(requestHandlerResourceID);
+        LOGGER.debug(String.format("Using Request Handler URL %s", baseAccessURL));
         return new URL(String.format("%s/ous/expand/%s/downwards", baseAccessURL.toExternalForm(),
                                      almaUID.getSanitisedUid()));
     }

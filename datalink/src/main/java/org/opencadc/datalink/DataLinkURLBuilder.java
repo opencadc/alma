@@ -108,7 +108,7 @@ public class DataLinkURLBuilder extends DeliverableURLBuilder {
             throws MalformedURLException {
         final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
                                              StringUtil.hasText(serviceURLEndpoint.getQuery()) ? "&" : "?",
-                                             hierarchyItem.getId());
+                                             hierarchyItem.getNullSafeId(true));
 
         return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
                        serviceURLEndpoint.getPort(), urlFile);

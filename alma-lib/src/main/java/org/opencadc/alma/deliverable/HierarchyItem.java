@@ -114,7 +114,7 @@ public class HierarchyItem {
 
         mousIDJSONArray.forEach(mousID -> mousIDList.add(new AlmaUID(mousID.toString())));
 
-        return new HierarchyItem((StringUtil.hasText(itemID) && !itemID.equals("null")) ? itemID : null,
+        return new HierarchyItem((StringUtil.hasText(itemID) && !itemID.trim().equalsIgnoreCase("null")) ? itemID : null,
                                  document.get("name").toString(),
                                  Type.valueOf(document.get("type").toString()),
                                  document.getLong("sizeInBytes"),
@@ -151,6 +151,10 @@ public class HierarchyItem {
 
     public String getNullSafeId() {
         return StringUtil.hasText(this.id) ? this.id : this.name;
+    }
+
+    public String getNullSafeId(final boolean sanitize) {
+        return sanitize ? this.getNullSafeId().replace(':', '_').replaceAll("/", "_") : this.getNullSafeId();
     }
 
     public String getName() {

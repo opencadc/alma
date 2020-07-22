@@ -69,14 +69,6 @@
 
 package org.opencadc.datalink;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.HierarchyItem;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
-
-import ca.nrc.cadc.util.StringUtil;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -86,6 +78,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.deliverable.HierarchyItem;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
+
+import ca.nrc.cadc.util.StringUtil;
 
 
 /**
@@ -168,10 +168,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
         switch (deliverableType) {
             case PIPELINE_AUXILIARY_TARFILE:
-                dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.AUXILIARY));
+                if (deliverableType.isOus()) {
+                    dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.AUXILIARY));
+                }
                 break;
             case PIPELINE_PRODUCT_TARFILE:
-                dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.THIS));
+                if (deliverableType.isOus()) {
+                    dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.THIS));
+                }
                 break;
             case PIPELINE_PRODUCT:
                 if (getIdentifier(hierarchyItem).endsWith(".fits")) {
