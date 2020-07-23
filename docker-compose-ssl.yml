@@ -72,6 +72,7 @@ services:
       - "25555:5555"
     volumes:
       - "./reg/docker/reg-resource-caps.properties:/root/config/reg-resource-caps.properties"
+      - "./reg/docker/reg-applications.properties:/root/config/reg-applications.properties"
       - "ca_certs:/usr/local/share/ca-certificates"
     environment:
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca"
@@ -84,7 +85,7 @@ services:
       - "traefik.http.routers.reg.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   datalink:
-    image: opencadc/alma-datalink:1.1.0
+    image: opencadc/alma-datalink:1.2.0
     networks:
       - "alma"
     env_file:

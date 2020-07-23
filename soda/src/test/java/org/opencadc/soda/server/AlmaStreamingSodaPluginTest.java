@@ -99,7 +99,7 @@ public class AlmaStreamingSodaPluginTest {
         final AlmaUID targetAlmaUID = new AlmaUID(targetURI.toString());
         final Circle circle = new Circle(new Point(18.0D, 78.5D), 0.5D);
         final Cutout<Shape> testCutout = new Cutout<>("TESTCIRC", "TESTCIRC1", circle);
-        final HierarchyItem hierarchyItem = new HierarchyItem(targetParentUid, "myfile.fits",
+        final HierarchyItem hierarchyItem = new HierarchyItem(new AlmaUID(targetParentUid), targetAlmaUID.toString(), "myfile.fits",
                                                               HierarchyItem.Type.ASDM, 88L, true,
                                                               new HierarchyItem[0], new AlmaUID[0]);
 

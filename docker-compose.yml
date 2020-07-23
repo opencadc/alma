@@ -8,7 +8,6 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.file.directory=/configuration/"
       - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
     ports:
@@ -69,7 +68,7 @@ services:
       - "traefik.http.routers.reg.rule=PathPrefix(`/reg`)"
       - "traefik.http.routers.reg.entrypoints=web"
   datalink:
-    image: opencadc/alma-datalink:1.1.0
+    image: opencadc/alma-datalink:1.2.0
     networks:
       - "alma"
     env_file:

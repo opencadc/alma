@@ -69,6 +69,8 @@
 
 package org.opencadc.alma.deliverable;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
 
 import ca.nrc.cadc.util.StringUtil;
@@ -79,6 +81,8 @@ import java.net.URL;
 
 public class DeliverableURLBuilder {
 
+    private static final Logger LOGGER = LogManager.getLogger(DeliverableURLBuilder.class);
+
     private final AlmaProperties almaProperties;
 
     public DeliverableURLBuilder(final AlmaProperties almaProperties) {
@@ -88,17 +92,20 @@ public class DeliverableURLBuilder {
     public URL createDownloadURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
         final String secureSchemeHost = almaProperties.getFirstPropertyValue("secureSchemeHost", null);
         final String downloadPath = almaProperties.getFirstPropertyValue("downloadPath", null);
+        final HierarchyItem.Type type = hierarchyItem.getType();
 
         final String sanitizedURL = String.join("/", new String[] {
                 sanitizePath(secureSchemeHost),
                 sanitizePath(downloadPath)
         });
 
+        LOGGER.debug(String.format("Sanitized URL is %s from type %s.", sanitizedURL, type));
+
         return new URL(String.join("/", new String[] {
                 sanitizePath(new URL(sanitizedURL).toExternalForm()),
 
                 // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
-                sanitizePath(hierarchyItem.getType() == HierarchyItem.Type.ASDM ?
+                sanitizePath(type == HierarchyItem.Type.ASDM ?
                      hierarchyItem.getName() : hierarchyItem.getNullSafeId(true))
         }));
     }

@@ -105,12 +105,13 @@ public class RequestHandlerQuery {
     public HierarchyItem query(final AlmaUID almaUID) {
         try {
             final JSONObject document = new JSONObject(new JSONTokener(jsonStream(almaUID)));
-            return HierarchyItem.fromJSONObject(document);
+            return HierarchyItem.fromJSONObject(almaUID, document);
         } catch (IOException ioException) {
             LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.\n\n%s",
                                        almaUID.getUID(), ioException));
-            return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
-                                                                             almaUID.getUID())));
+            return HierarchyItem.fromJSONObject(almaUID, 
+                                                new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
+                                                               almaUID.getUID())));
         } catch (ResourceNotFoundException resourceNotFoundException) {
             LOGGER.fatal("Unable to find Registry lookup.");
             throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
