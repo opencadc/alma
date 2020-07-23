@@ -72,6 +72,7 @@ services:
       - "25555:5555"
     volumes:
       - "./reg/docker/reg-resource-caps.properties:/root/config/reg-resource-caps.properties"
+      - "./reg/docker/reg-applications.properties:/root/config/reg-applications.properties"
       - "ca_certs:/usr/local/share/ca-certificates"
     environment:
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=proxy.cadc.dao.nrc.ca"
