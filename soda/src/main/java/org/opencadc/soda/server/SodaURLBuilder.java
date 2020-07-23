@@ -69,6 +69,8 @@
 
 package org.opencadc.soda.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.deliverable.DeliverableURLBuilder;
 import org.opencadc.alma.deliverable.HierarchyItem;
@@ -84,6 +86,8 @@ import java.util.List;
 
 
 public class SodaURLBuilder extends DeliverableURLBuilder {
+
+    private static final Logger LOGGER = LogManager.getLogger(SodaURLBuilder.class);
 
     public SodaURLBuilder(final AlmaProperties almaProperties) {
         super(almaProperties);
@@ -113,6 +117,8 @@ public class SodaURLBuilder extends DeliverableURLBuilder {
             }
 
             cutoutURLString.append(queryParam);
+
+            LOGGER.debug(String.format("CutoutURL from %s is %s.", cutout, cutoutURLString));
 
             return new URL(cutoutURLString.toString());
         }

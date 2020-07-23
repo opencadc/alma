@@ -10,95 +10,96 @@ import ca.nrc.cadc.tap.schema.SchemaDesc;
 import ca.nrc.cadc.tap.schema.TableDesc;
 import ca.nrc.cadc.tap.schema.TapSchema;
 import ca.nrc.cadc.util.Log4jInit;
-import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vosi.TableReader;
 import ca.nrc.cadc.vosi.TableSetReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.net.URI;
+import java.net.URL;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.net.URI;
-import java.net.URL;
-
-
 /**
+ *
  * @author pdowler
  */
-public class VosiTablesTest {
-
+public class VosiTablesTest
+{
     private static final Logger log = Logger.getLogger(VosiTablesTest.class);
 
-    static {
-        Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
+    static
+    {
+        Log4jInit.setLevel("ca.nrc.cadc.argus.integration", Level.INFO);
     }
-
+    
     URL tablesURL;
-
-    public VosiTablesTest() throws Exception {
-        final String configuredRegistryURL = System.getenv("DATALINK_REGISTRY_URL");
-        final RegistryClient registryClient;
-
-        if (StringUtil.hasText(configuredRegistryURL)) {
-            registryClient = new RegistryClient(new URL(configuredRegistryURL));
-        } else {
-            registryClient = new RegistryClient();
-        }
-        this.tablesURL = registryClient.getServiceURL(URI.create("ivo://almascience.org/tap"), Standards.VOSI_TABLES_11,
-                                                      AuthMethod.ANON);
-        log.info(String.format("VosiTablesTest: Using URL %s", this.tablesURL));
+    
+    public VosiTablesTest()
+    {
+        RegistryClient rc = new RegistryClient();
+        this.tablesURL = rc.getServiceURL(URI.create("ivo://cadc.nrc.ca/argus"), Standards.VOSI_TABLES_11, AuthMethod.ANON);
     }
 
     @Test
-    public void testValidateTablesetDoc() throws Exception {
-        try {
+    public void testValidateTablesetDoc()
+    {
+        try
+        {
             TableSetReader tsr = new TableSetReader(true);
-            log.info("testValidateTablesetDoc: " + tablesURL.toExternalForm());
-
+            log.info("testValidateTablesetDoc: " + tablesURL.toExternalForm()); 
+            
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             HttpDownload get = new HttpDownload(tablesURL, bos);
             get.run();
             Assert.assertEquals(200, get.getResponseCode());
             ContentType ct = new ContentType(get.getContentType());
             Assert.assertEquals("text/xml", ct.getBaseType());
-
+            
             TapSchema ts = tsr.read(new ByteArrayInputStream(bos.toByteArray()));
             Assert.assertNotNull(ts);
-        } catch (Exception unexpected) {
+        }
+        catch(Exception unexpected)
+        {
             log.error("unexpected exception", unexpected);
-            throw unexpected;
+            Assert.fail("unexpected exception: " + unexpected);
         }
     }
-
+    
     @Test
-    public void testValidateTableDoc() throws Exception {
-        try {
+    public void testValidateTableDoc()
+    {
+        try
+        {
             TableReader tr = new TableReader(true);
-            String s = tablesURL.toExternalForm() + "/ALMA.ASA_TABLES";
+            String s = tablesURL.toExternalForm() + "/tap_schema.tables";
             log.info("testValidateTableDoc: " + s);
-
+            
             URL url = new URL(s);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             HttpDownload get = new HttpDownload(url, bos);
             get.run();
-            Assert.assertEquals(String.format("Wrong response code from %s", s), 200, get.getResponseCode());
+            Assert.assertEquals(200, get.getResponseCode());
             ContentType ct = new ContentType(get.getContentType());
             Assert.assertEquals("text/xml", ct.getBaseType());
-
+            
             TableDesc td = tr.read(new ByteArrayInputStream(bos.toByteArray()));
             Assert.assertNotNull(td);
-            Assert.assertEquals("TAP_SCHEMA.schemas", td.getTableName());
-        } catch (Exception unexpected) {
+            Assert.assertEquals("tap_schema.tables", td.getTableName());
+        }
+        catch(Exception unexpected)
+        {
             log.error("unexpected exception", unexpected);
-            throw unexpected;
+            Assert.fail("unexpected exception: " + unexpected);
         }
     }
-
+    
     @Test
-    public void testTableNotFound() throws Exception {
-        try {
+    public void testTableNotFound()
+    {
+        try
+        {
             String s = tablesURL.toExternalForm() + "/no_such_table";
             log.info("testTableNotFound: " + s);
 
@@ -107,15 +108,19 @@ public class VosiTablesTest {
             HttpDownload get = new HttpDownload(url, bos);
             get.run();
             Assert.assertEquals(404, get.getResponseCode());
-        } catch (Exception unexpected) {
+        }
+        catch(Exception unexpected)
+        {
             log.error("unexpected exception", unexpected);
-            throw unexpected;
+            Assert.fail("unexpected exception: " + unexpected);
         }
     }
-
+    
     @Test
-    public void testDetailMin() throws Exception {
-        try {
+    public void testDetailMin()
+    {
+        try
+        {
             TableSetReader tsr = new TableSetReader(true);
             String s = tablesURL.toExternalForm() + "?detail=min";
             log.info("testDetailMin: " + s);
@@ -124,16 +129,20 @@ public class VosiTablesTest {
             TapSchema ts = tsr.read(url.openStream());
             Assert.assertNotNull(ts);
             Assert.assertFalse(ts.getSchemaDescs().isEmpty());
-            for (SchemaDesc sd : ts.getSchemaDescs()) {
+            for (SchemaDesc sd : ts.getSchemaDescs())
+            {
                 log.debug("testDetailMin: " + sd.getSchemaName());
                 Assert.assertFalse(sd.getTableDescs().isEmpty());
-                for (TableDesc td : sd.getTableDescs()) {
+                for (TableDesc td : sd.getTableDescs())
+                {
                     Assert.assertTrue("no columns:" + td.getTableName(), td.getColumnDescs().isEmpty());
                 }
             }
-        } catch (Exception unexpected) {
+        }
+        catch(Exception unexpected)
+        {
             log.error("unexpected exception", unexpected);
-            throw unexpected;
+            Assert.fail("unexpected exception: " + unexpected);
         }
     }
 }

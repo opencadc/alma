@@ -85,6 +85,7 @@ import java.util.Objects;
  */
 public class HierarchyItem {
 
+    private final AlmaUID uid;
     private final String id;
     private final String name;
     private final Type type;
@@ -99,14 +100,14 @@ public class HierarchyItem {
      * @param document The JSONObject of the query.
      * @return A new HierarchyItem instance.  Never null.
      */
-    public static HierarchyItem fromJSONObject(final JSONObject document) {
+    public static HierarchyItem fromJSONObject(final AlmaUID almaUID, final JSONObject document) {
         final String itemID = document.get("id").toString();
         final JSONArray childrenJSONArray = document.getJSONArray("children");
         final List<HierarchyItem> childrenList = new ArrayList<>(childrenJSONArray.length());
 
         childrenJSONArray.forEach(child -> {
             final JSONObject jsonObject = (JSONObject) child;
-            childrenList.add(HierarchyItem.fromJSONObject(jsonObject));
+            childrenList.add(HierarchyItem.fromJSONObject(almaUID, jsonObject));
         });
 
         final JSONArray mousIDJSONArray = document.getJSONArray("allMousUids");
@@ -114,7 +115,9 @@ public class HierarchyItem {
 
         mousIDJSONArray.forEach(mousID -> mousIDList.add(new AlmaUID(mousID.toString())));
 
-        return new HierarchyItem((StringUtil.hasText(itemID) && !itemID.trim().equalsIgnoreCase("null")) ? itemID : null,
+        return new HierarchyItem(almaUID, 
+                                 (StringUtil.hasText(itemID) && !itemID.trim().equalsIgnoreCase("null")) 
+                                    ? itemID : null,
                                  document.get("name").toString(),
                                  Type.valueOf(document.get("type").toString()),
                                  document.getLong("sizeInBytes"),
@@ -126,7 +129,8 @@ public class HierarchyItem {
     /**
      * Complete constructor.
      *
-     * @param id            The identifier in the form of uid://c0/c1/c2.  Can be null.
+     * @param uid           The identifier in the form of uid://c0/c1/c2.  Can NOT be null.
+     * @param id            This article's ID parameter.
      * @param name          This article's name.
      * @param type          This article's type.
      * @param sizeInBytes   The size in bytes.
@@ -134,8 +138,9 @@ public class HierarchyItem {
      * @param childrenArray The Array of child objects.
      * @param mousIDArray   The Array of MOUS IDs associated.
      */
-    public HierarchyItem(String id, String name, Type type, long sizeInBytes, boolean readable,
+    public HierarchyItem(AlmaUID uid, String id, String name, Type type, long sizeInBytes, boolean readable,
                          HierarchyItem[] childrenArray, AlmaUID[] mousIDArray) {
+        this.uid = uid;
         this.id = id;
         this.name = name;
         this.type = type;
@@ -143,6 +148,14 @@ public class HierarchyItem {
         this.readable = readable;
         this.childrenArray = childrenArray;
         this.mousIDArray = mousIDArray;
+    }
+
+    public String getUidString() {
+        return this.getUid().toString();
+    }
+
+    public AlmaUID getUid() {
+        return uid;
     }
 
     public String getId() {

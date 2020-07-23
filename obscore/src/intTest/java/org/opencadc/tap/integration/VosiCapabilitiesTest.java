@@ -65,7 +65,7 @@
 *  $Revision: 5 $
 *
 ************************************************************************
-*/
+ */
 
 package org.opencadc.tap.integration;
 
@@ -76,50 +76,43 @@ import ca.nrc.cadc.reg.Interface;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.Log4jInit;
 import ca.nrc.cadc.vosi.CapabilitiesTest;
+import java.net.URI;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
-
-import java.net.URI;
 
 /**
  *
  * @author pdowler
  */
-public class VosiCapabilitiesTest extends CapabilitiesTest
-{
+public class VosiCapabilitiesTest extends CapabilitiesTest {
+
     private static final Logger log = Logger.getLogger(VosiCapabilitiesTest.class);
 
     static {
-        Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
+        Log4jInit.setLevel("ca.nrc.cadc.argus.integration", Level.INFO);
         Log4jInit.setLevel("ca.nrc.cadc.reg", Level.INFO);
     }
-    public VosiCapabilitiesTest() 
-    { 
-        super(URI.create("ivo://cadc.nrc.ca/tap"));
+
+    public VosiCapabilitiesTest() {
+        super(URI.create("ivo://cadc.nrc.ca/argus"));
     }
 
     @Override
     protected void validateContent(Capabilities caps) throws Exception {
         super.validateContent(caps);
-        
+
         // TAP-1.1
         Capability tap = caps.findCapability(Standards.TAP_10);
         Interface base = tap.findInterface(AuthMethod.ANON, Standards.INTERFACE_PARAM_HTTP);
         Assert.assertNotNull("base", base);
-        Assert.assertTrue("anon base", Standards.SECURITY_METHOD_ANON.equals(base.getSecurityMethod()));
-        
-        // interfaces that should be present
-        Assert.assertNotNull("anon async", tap.findInterface(Standards.SECURITY_METHOD_ANON, Standards.INTERFACE_UWS_ASYNC));
-        Assert.assertNotNull("cert async", tap.findInterface(Standards.SECURITY_METHOD_CERT, Standards.INTERFACE_UWS_ASYNC));
-        Assert.assertNotNull("cookie async", tap.findInterface(Standards.SECURITY_METHOD_COOKIE, Standards.INTERFACE_UWS_ASYNC));
-        Assert.assertNotNull("password async", tap.findInterface(Standards.SECURITY_METHOD_HTTP_BASIC, Standards.INTERFACE_UWS_ASYNC));
-        
-        Assert.assertNotNull("anon sync", tap.findInterface(Standards.SECURITY_METHOD_ANON, Standards.INTERFACE_UWS_SYNC));
-        Assert.assertNotNull("cert sync", tap.findInterface(Standards.SECURITY_METHOD_CERT, Standards.INTERFACE_UWS_SYNC));
-        Assert.assertNotNull("cookie sync", tap.findInterface(Standards.SECURITY_METHOD_COOKIE, Standards.INTERFACE_UWS_SYNC));
-        Assert.assertNotNull("password sync", tap.findInterface(Standards.SECURITY_METHOD_HTTP_BASIC, Standards.INTERFACE_UWS_SYNC));
+        Assert.assertTrue("anon base", base.getSecurityMethods().contains(Standards.SECURITY_METHOD_ANON));
+        Assert.assertTrue("cert base", base.getSecurityMethods().contains(Standards.SECURITY_METHOD_CERT));
+        Assert.assertTrue("cookie base", base.getSecurityMethods().contains(Standards.SECURITY_METHOD_COOKIE));
+
+        Capability tables = caps.findCapability(Standards.VOSI_TABLES_11);
+        Assert.assertNotNull("tables", tables);
+        Assert.assertNotNull("anon tables", tables.findInterface(Standards.SECURITY_METHOD_ANON, Standards.INTERFACE_PARAM_HTTP));
     }
-    
-    
+
 }

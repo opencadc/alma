@@ -84,7 +84,7 @@ services:
       - "traefik.http.routers.reg.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   datalink:
-    image: opencadc/alma-datalink:1.1.0
+    image: opencadc/alma-datalink:1.2.0
     networks:
       - "alma"
     env_file:

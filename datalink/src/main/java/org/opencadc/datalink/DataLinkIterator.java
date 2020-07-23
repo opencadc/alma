@@ -193,7 +193,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     private DataLink createNotFoundDataLink(final HierarchyItem hierarchyItem) {
-        final DataLink errorDataLink = new DataLink(hierarchyItem.getNullSafeId(), DataLink.Term.ERROR);
+        final DataLink errorDataLink = new DataLink(hierarchyItem.getUidString(), DataLink.Term.ERROR);
         errorDataLink.errorMessage = String.format("NotFoundFault: %s", hierarchyItem.getNullSafeId());
 
         return errorDataLink;
@@ -220,7 +220,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
             if (!hierarchyItem.fileExists()) {
                 dataLink = createNotFoundDataLink(hierarchyItem);
             } else {
-                dataLink = new DataLink(hierarchyItem.getNullSafeId(), primarySemantic);
+                dataLink = new DataLink(hierarchyItem.getUidString(), primarySemantic);
                 try {
                     dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(hierarchyItem);
                 } catch (MalformedURLException e) {
@@ -241,7 +241,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     private DataLink createRecursiveDataLink(final HierarchyItem hierarchyItem, final DataLink.Term dataLinkTerm) {
-        final DataLink dataLink = new DataLink(hierarchyItem.getNullSafeId(), DataLink.Term.DATALINK);
+        final DataLink dataLink = new DataLink(hierarchyItem.getUidString(), DataLink.Term.DATALINK);
 
         if (dataLinkTerm != null) {
             dataLink.addSemantics(dataLinkTerm);
@@ -261,14 +261,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     private DataLink createCutoutDataLink(final HierarchyItem hierarchyItem) {
-        final DataLink dataLink = new DataLink(hierarchyItem.getNullSafeId(), DataLink.Term.CUTOUT);
+        final DataLink dataLink = new DataLink(hierarchyItem.getUidString(), DataLink.Term.CUTOUT);
 
         try {
             dataLink.accessURL = createCutoutURL(hierarchyItem);
         } catch (MalformedURLException e) {
             LOGGER.warn("Cutout URL creation failed.", e);
             dataLink.errorMessage = String.format("Unable to create Cutout URL for %s.",
-                                                  hierarchyItem.getNullSafeId());
+                                                  hierarchyItem.getUidString());
         }
 
         dataLink.contentType = FITS_CONTENT_TYPE;

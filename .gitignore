@@ -1,3 +1,10 @@
 *.war
 **/alma-tap.properties
 .devcontainer
+.gradle
+.project
+.settings
+.vscode
+**/.classpath
+**/bin
+**/build

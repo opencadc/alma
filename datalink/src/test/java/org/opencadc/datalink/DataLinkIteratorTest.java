@@ -160,9 +160,10 @@ public class DataLinkIteratorTest {
                                        new URL("https://myhost.com/mysoda/sync"));
         final Iterator<String> dataSetIDIterator =
                 Collections.singletonList("uid://A001/X879/X8f1").iterator();
-        final HierarchyItem hierarchy = fromJSONFile(DataLinkIteratorTest.class.getSimpleName() + ".json");
+                final AlmaUID uid = new AlmaUID("uid://A001/X879/X8f1");
+        final HierarchyItem hierarchy = fromJSONFile(uid, DataLinkIteratorTest.class.getSimpleName() + ".json");
 
-        when(mockRequestHandlerQuery.query(new AlmaUID("uid://A001/X879/X8f1"))).thenReturn(hierarchy);
+        when(mockRequestHandlerQuery.query(uid)).thenReturn(hierarchy);
 
         final List<DataLink> expectedDataLinks = new ArrayList<>();
         final List<DataLink> resultDataLinks = new ArrayList<>();
@@ -172,14 +173,16 @@ public class DataLinkIteratorTest {
 
         int index = 1;
         final HierarchyItem hierarchyItemOne =
-                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), 
+                                                index++));
         expectedDataLinks.add(createDataLink(hierarchyItemOne, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
                                                                    hierarchyItemOne.getId())),
                                              DataLink.Term.THIS,
                                              Collections.singletonList(DataLink.Term.DATALINK)));
         final HierarchyItem hierarchyItemTwo =
-                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), 
+                                                index++));
         expectedDataLinks.add(createDataLink(hierarchyItemTwo, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
                                                                    hierarchyItemTwo.getId())),
@@ -187,7 +190,8 @@ public class DataLinkIteratorTest {
                                              Collections.singletonList(DataLink.Term.PKG)));
 
         final HierarchyItem hierarchyItemThree =
-                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), 
+                             index++));
         expectedDataLinks.add(createDataLink(hierarchyItemThree, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
                                                                    hierarchyItemThree.getId())),
@@ -195,7 +199,8 @@ public class DataLinkIteratorTest {
                                              Collections.singletonList(DataLink.Term.PKG)));
 
         final HierarchyItem hierarchyItemFour =
-                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), 
+                             index++));
         expectedDataLinks.add(createDataLink(hierarchyItemFour, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
                                                                    hierarchyItemFour.getId())),
@@ -203,7 +208,8 @@ public class DataLinkIteratorTest {
                                              Collections.singletonList(DataLink.Term.PKG)));
 
         final HierarchyItem hierarchyItemFive =
-                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), 
+                             index++));
         expectedDataLinks.add(createDataLink(hierarchyItemFive, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
                                                                    hierarchyItemFive.getId())),
@@ -211,7 +217,8 @@ public class DataLinkIteratorTest {
                                              Collections.singletonList(DataLink.Term.PKG)));
 
         final HierarchyItem hierarchyItemSix =
-                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), 
+                             index++));
         expectedDataLinks.add(createDataLink(hierarchyItemSix, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
                                                                    hierarchyItemSix.getId())),
@@ -219,7 +226,7 @@ public class DataLinkIteratorTest {
                                              Collections.singletonList(DataLink.Term.PKG)));
 
         final HierarchyItem hierarchyItemSeven =
-                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
+                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index++));
         expectedDataLinks.add(createDataLink(hierarchyItemSeven, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
                                                                    hierarchyItemSeven.getId())),
@@ -227,7 +234,7 @@ public class DataLinkIteratorTest {
                                              Collections.singletonList(DataLink.Term.PKG)));
 
         final HierarchyItem hierarchyItemEight =
-                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index));
+                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(), index));
         expectedDataLinks.add(createDataLink(hierarchyItemEight, "application/x-tar",
                                              new URL(String.format("https://myhost.com/mydatalink/sync?ID=%s",
                                                                    hierarchyItemEight.getId())),
@@ -249,17 +256,17 @@ public class DataLinkIteratorTest {
         }
     }
 
-    private HierarchyItem fromJSONFile(final String filename) throws Throwable {
+    private HierarchyItem fromJSONFile(final AlmaUID uid, final String filename) throws Throwable {
         final File jsonFile = FileUtil.getFileFromResource(filename, DataLinkIteratorTest.class);
         final FileInputStream fileInputStream = new FileInputStream(jsonFile);
         final JSONObject jsonObject = new JSONObject(new JSONTokener(fileInputStream));
-        return HierarchyItem.fromJSONObject(jsonObject);
+        return HierarchyItem.fromJSONObject(uid, jsonObject);
     }
 
     private DataLink createDataLink(final HierarchyItem hierarchyItem, final String contentType,
                                     final URL accessURL, final DataLink.Term semantic,
                                     final List<DataLink.Term> otherSemantics) {
-        final DataLink dataLink = new DataLink(hierarchyItem.getId(), semantic);
+        final DataLink dataLink = new DataLink(hierarchyItem.getUidString(), semantic);
 
         otherSemantics.forEach(dataLink::addSemantics);
 

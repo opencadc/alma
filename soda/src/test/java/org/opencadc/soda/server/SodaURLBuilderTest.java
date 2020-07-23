@@ -81,6 +81,8 @@ import ca.nrc.cadc.dali.Shape;
 import java.net.URL;
 
 import org.junit.Test;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
 import org.opencadc.alma.deliverable.HierarchyItem;
 
@@ -88,6 +90,10 @@ import static org.mockito.Mockito.*;
 
 
 public class SodaURLBuilderTest {
+
+    public SodaURLBuilderTest() {
+        Configurator.setLevel("org.opencadc.soda", Level.DEBUG);
+    }
 
     @Test
     public void createCircleCutoutURL() throws Exception {
@@ -97,7 +103,7 @@ public class SodaURLBuilderTest {
         final Cutout<Shape> shapeCutout = new Cutout<>("CIRCLE", "12.4 56.7 0.6", circle);
         final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
 
-        when(mockHierarchyItem.getId()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        when(mockHierarchyItem.getNullSafeId(true)).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
 
         when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
         when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
@@ -109,7 +115,7 @@ public class SodaURLBuilderTest {
 
         verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
         verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
-        verify(mockHierarchyItem, times(1)).getId();
+        verify(mockHierarchyItem, times(1)).getNullSafeId(true);
     }
 
     @Test
@@ -125,7 +131,8 @@ public class SodaURLBuilderTest {
         final Cutout<Shape> shapeCutout = new Cutout<>("POLYGON", "12.4 56.7 5.6 44.5 18.3 33.5", polygon);
         final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
 
-        when(mockHierarchyItem.getId()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        when(mockHierarchyItem.getType()).thenReturn(HierarchyItem.Type.MOUS);
+        when(mockHierarchyItem.getNullSafeId(true)).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
 
         when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
         when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
@@ -138,7 +145,8 @@ public class SodaURLBuilderTest {
 
         verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
         verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
-        verify(mockHierarchyItem, times(1)).getId();
+        verify(mockHierarchyItem, times(1)).getNullSafeId(true);
+        verify(mockHierarchyItem, times(1)).getType();
     }
 
     @Test
@@ -149,7 +157,8 @@ public class SodaURLBuilderTest {
         final Cutout<Interval> bandCutout = new Cutout<>("BAND", "9.8 76.4", bandInterval);
         final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
 
-        when(mockHierarchyItem.getId()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        when(mockHierarchyItem.getName()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        when(mockHierarchyItem.getType()).thenReturn(HierarchyItem.Type.ASDM);
 
         when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
         when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
@@ -161,6 +170,7 @@ public class SodaURLBuilderTest {
 
         verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
         verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
-        verify(mockHierarchyItem, times(1)).getId();
+        verify(mockHierarchyItem, times(1)).getName();
+        verify(mockHierarchyItem, times(1)).getType();
     }
 }
