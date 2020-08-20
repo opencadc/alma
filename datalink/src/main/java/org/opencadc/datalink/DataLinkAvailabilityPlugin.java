@@ -111,9 +111,21 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
      */
     @Override
     public AvailabilityStatus getStatus() {
-        return new AvailabilityStatus(true, null, null, null,
-                                      String.format("%s state: %s", applicationName, StringUtil.hasText(state) ?
-                                                                                     state : "ACTIVE"));
+        boolean available = true;
+        final StringBuilder message = new StringBuilder(String.format("%s state:", applicationName));
+        final AlmaProperties almaProperties = new AlmaProperties();
+        try {
+            final URL baseURL = getDataLinkBaseURL(almaProperties);
+            final URL sodaURL = getSodaBaseURL(almaProperties);
+            message.append(StringUtil.hasText(state)
+                           ? state
+                           : String.format("ACTIVE\nBase URL: %s\nSODA URL:%s\n", baseURL.toExternalForm(),
+                                           sodaURL.toExternalForm()));
+        } catch (Exception e) {
+            available = false;
+            message.append(String.format("INACTIVE: %s", e.getMessage()));
+        }
+        return new AvailabilityStatus(available, null, null, null, message.toString());
     }
 
     public static URL getDataLinkBaseURL(final AlmaProperties almaProperties) throws MalformedURLException {

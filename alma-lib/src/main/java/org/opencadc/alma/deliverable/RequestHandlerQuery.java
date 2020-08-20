@@ -69,6 +69,7 @@
 package org.opencadc.alma.deliverable;
 
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.opencadc.alma.AlmaUID;
@@ -82,6 +83,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Iterator;
 
 
 public class RequestHandlerQuery {
@@ -105,7 +107,13 @@ public class RequestHandlerQuery {
     public HierarchyItem query(final AlmaUID almaUID) {
         try {
             final JSONObject document = new JSONObject(new JSONTokener(jsonStream(almaUID)));
-            return HierarchyItem.fromJSONObject(almaUID, document);
+            final JSONObject baseDocument = getBaseDocument(almaUID, document);
+
+            if (baseDocument == null) {
+                throw new IOException("No entry found for " + almaUID);
+            }
+
+            return HierarchyItem.fromJSONObject(almaUID, baseDocument);
         } catch (IOException ioException) {
             LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.\n\n%s",
                                        almaUID.getUID(), ioException));
@@ -115,6 +123,33 @@ public class RequestHandlerQuery {
         } catch (ResourceNotFoundException resourceNotFoundException) {
             LOGGER.fatal("Unable to find Registry lookup.");
             throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
+        }
+    }
+
+    private JSONObject getBaseDocument(final AlmaUID almaUID, final JSONObject rootDocument) {
+        final JSONArray childrenJSONArray = rootDocument.getJSONArray("children");
+        if (almaUID.getArchiveUID() == null) {
+            return rootDocument;
+        } else {
+            final String sanitisedUid = almaUID.getSanitisedUid();
+            for (final Object o : childrenJSONArray) {
+                final JSONObject jsonObject = (JSONObject) o;
+                final String childID = jsonObject.get("id").toString();
+                final String childName = jsonObject.get("name").toString();
+
+                // The name and id values in the JSON document are sanitised.
+                if (sanitisedUid.equals(childID) || sanitisedUid.equals(childName)) {
+                    return jsonObject;
+                } else {
+                    final JSONObject rootChildDocument = getBaseDocument(almaUID, jsonObject);
+
+                    if (rootChildDocument != null) {
+                        return rootChildDocument;
+                    }
+                }
+            }
+
+            return null;
         }
     }
 
@@ -145,7 +180,9 @@ public class RequestHandlerQuery {
         final URL baseAccessURL = registryClient.getAccessURL(requestHandlerResourceID);
         LOGGER.debug(String.format("Using Request Handler URL %s", baseAccessURL));
         return new URL(String.format("%s/ous/expand/%s/downwards", baseAccessURL.toExternalForm(),
-                                     almaUID.getSanitisedUid()));
+                                     almaUID.getArchiveUID() == null
+                                     ? almaUID.getSanitisedUid()
+                                     : almaUID.getArchiveUID().getSanitisedUid()));
     }
 
     HttpGet createHttpGet(final URL requestHandlerEndpointURL) {
