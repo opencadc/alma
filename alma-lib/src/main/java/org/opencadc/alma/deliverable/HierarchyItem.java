@@ -115,9 +115,9 @@ public class HierarchyItem {
 
         mousIDJSONArray.forEach(mousID -> mousIDList.add(new AlmaUID(mousID.toString())));
 
-        return new HierarchyItem(almaUID, 
-                                 (StringUtil.hasText(itemID) && !itemID.trim().equalsIgnoreCase("null")) 
-                                    ? itemID : null,
+        return new HierarchyItem(almaUID,
+                                 (StringUtil.hasText(itemID) && !itemID.trim().equalsIgnoreCase("null"))
+                                 ? itemID : null,
                                  document.get("name").toString(),
                                  Type.valueOf(document.get("type").toString()),
                                  document.getLong("sizeInBytes"),
@@ -207,17 +207,53 @@ public class HierarchyItem {
         if (this == o) {
             return true;
         }
+
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+
         HierarchyItem that = (HierarchyItem) o;
         return sizeInBytes == that.sizeInBytes &&
                readable == that.readable &&
-               id.equals(that.id) &&
-               name.equals(that.name) &&
+               Objects.equals(this.id, that.id) &&
+               Objects.equals(this.name, that.name) &&
                type == that.type &&
                Arrays.equals(childrenArray, that.childrenArray) &&
                Arrays.equals(mousIDArray, that.mousIDArray);
+    }
+
+    /**
+     * Returns a string representation of the object. In general, the
+     * {@code toString} method returns a string that
+     * "textually represents" this object. The result should
+     * be a concise but informative representation that is easy for a
+     * person to read.
+     * It is recommended that all subclasses override this method.
+     * <p>
+     * The {@code toString} method for class {@code Object}
+     * returns a string consisting of the name of the class of which the
+     * object is an instance, the at-sign character `{@code @}', and
+     * the unsigned hexadecimal representation of the hash code of the
+     * object. In other words, this method returns a string equal to the
+     * value of:
+     * <blockquote>
+     * <pre>
+     * getClass().getName() + '@' + Integer.toHexString(hashCode())
+     * </pre></blockquote>
+     *
+     * @return a string representation of the object.
+     */
+    @Override
+    public String toString() {
+        return "{"
+               + "\"CLASS\": \"" + getClass().getSimpleName() + "\","
+               + "\"id\": \"" + this.id + "\","
+               + "\"uid\": \"" + this.uid + "\","
+               + "\"name\": \"" + this.name + "\","
+               + "\"type\": \"" + this.type.name() + "\","
+               + "\"sizeInBytes\": \"" + this.sizeInBytes + "\","
+               + "\"readable\": " + this.readable
+               + "}";
     }
 
     @Override
@@ -234,20 +270,24 @@ public class HierarchyItem {
         SGOUS("Science Goal OUS"),
         GOUS("Group OUS"),
         MOUS("Member OUS"),
-        // following two are not _actually_ things which we deliver, abnd hence not a deliverable in that sense. They are used for displaying information
+        // following two are not _actually_ things which we deliver, abnd hence not a deliverable in that sense. They
+        // are used for displaying information
         // in the RequestHandler regarding the SB and SOURCE names for each MOUS.
         SCHEDBLOCK("SchedBlock"),
         SOURCE("Source"),
-        // the order of the enums here determines the order of children in the DeliverableInfo class. README should come before PIIPELINE files
+        // the order of the enums here determines the order of children in the DeliverableInfo class. README should
+        // come before PIIPELINE files
         PIPELINE_AUXILIARY_README("Auxiliary/Readme"),
-        // An on-the-fly tarfile which is created from actual, individual files contained in NGAS. This entity doesn't physically
+        // An on-the-fly tarfile which is created from actual, individual files contained in NGAS. This entity
+        // doesn't physically
         // exist anywhere, rather it consists of lots of (real, actually existing)....
         PIPELINE_PRODUCT_TARFILE("Product"),
         // ... physical file which exists in NGAS
         PIPELINE_PRODUCT("Product"),
         PIPELINE_AUXILIARY_TARFILE("Auxiliary"),
         PIPELINE_AUXILIARY_CYCLE1TO4_TARFILE("Auxiliary"),
-        // TODO remove this after 2018DEC - it is only needed with legacy data during the deployment of 2018DEC. After the RH schema is
+        // TODO remove this after 2018DEC - it is only needed with legacy data during the deployment of 2018DEC.
+        //  After the RH schema is
         // updated it is replaced by the 5 AUXILIARY enums below.
         PIPELINE_AUXILIARY("Auxiliary"),
         // ICT-13550 the RH should display the subdir of the auxiliary files as well. So I simply expanded the
@@ -261,21 +301,26 @@ public class HierarchyItem {
         // a pipeline calibration node. This is only used so we can specify to the DataPacker that we want to export
         // a calibration tar. We then create a filter to extract some of the product files.
         PIPELINE_CALIBRATION("Calibration"),
-        // can be either an individual product file or an individual auxiliary file. The individual file is stored in NGAS. But the
+        // can be either an individual product file or an individual auxiliary file. The individual file is stored in
+        // NGAS. But the
         // individual file is tarred up in the project structure before being downloaded
         PIPELINE_TARRED_INDIVIDUAL_FILE("TarredIndividualFile"),
         // when expanded and delivered via the request handler. The ASDM was Pass status.
         ASDM("Asdm"),
         // when the ASDM is Qa0 semipass
         ASDM_SEMIPASS("SemipassAsdm"),
-        // an ASDM when we want direct access to an ASDM just by supplying the UID to the download manager. Normally just used by developers.
-        // ASDM will be an ASDM which has been used by the pipeline, and we already have the size cached. A Direct ASDM may not yet have had
+        // an ASDM when we want direct access to an ASDM just by supplying the UID to the download manager. Normally
+        // just used by developers.
+        // ASDM will be an ASDM which has been used by the pipeline, and we already have the size cached. A Direct
+        // ASDM may not yet have had
         // the size cached
         DIRECT_ACCESS_ASDM("DirectAccessAsdm"),
-        // a file which is stored in NGAS and we're not sure about the type. In fact, we don't care. We just want to stream it straight out
+        // a file which is stored in NGAS and we're not sure about the type. In fact, we don't care. We just want to
+        // stream it straight out
         // of NGAS to the user.
         GENERIC_NGAS_FILE("NgasFile"),
-        // An on-the-fly tarfile which is created from actual, individual files contained in NGAS. This entity doesn't physically
+        // An on-the-fly tarfile which is created from actual, individual files contained in NGAS. This entity
+        // doesn't physically
         // exist anywhere, rather it consists of lots of (real, actually existing)....
         EXTERNAL_TARFILE("External"),
         // ICT-10907, ICT-7441
@@ -309,7 +354,8 @@ public class HierarchyItem {
         public boolean isAuxiliary() {
             return this == PIPELINE_AUXILIARY_TARFILE
                    || this == PIPELINE_AUXILIARY_CYCLE1TO4_TARFILE
-                   // we keep this so that we can work with the data which was expanded with the previous version and has been
+                   // we keep this so that we can work with the data which was expanded with the previous version and
+                   // has been
                    // cached in RH_FILES. The type will still be PIPELINE_AUXILIARY
                    || this == PIPELINE_AUXILIARY
                    || this == PIPELINE_AUXILIARY_SCRIPT
@@ -321,6 +367,7 @@ public class HierarchyItem {
 
         /**
          * Used by the RequestHandler for expanding an OUS.
+         *
          * @return true when this is a leaf node in the expanded tree.
          */
         public boolean isLeaf() {

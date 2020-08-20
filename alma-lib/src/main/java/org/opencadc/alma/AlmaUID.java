@@ -83,6 +83,7 @@ import java.util.regex.Pattern;
  * in the form of 2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar.
  */
 public class AlmaUID {
+
     private static final Logger LOGGER = LogManager.getLogger(AlmaUID.class);
     private static final Pattern UID_PATTERN =
             Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
@@ -98,8 +99,8 @@ public class AlmaUID {
             throw new IllegalArgumentException("Passed ID cannot be null or empty.");
         }
 
-        this.uid = desanitize(uid);
-        archiveUID = parseArchiveID();
+        this.uid = uid;
+        this.archiveUID = parseArchiveID();
     }
 
     private AlmaUID parseArchiveID() {
@@ -110,26 +111,38 @@ public class AlmaUID {
 
             LOGGER.debug(String.format("Found match (%s)", uidMatch));
             // If the parent matches this current one then don't set it.
-            return desanitize(uidMatch).equals(this.uid) ? null : new AlmaUID(uidMatch);
+            return desanitize(uidMatch).equals(desanitize(this.uid)) ? null : new AlmaUID(uidMatch);
         } else {
             throw new IllegalArgumentException(String.format("No UID found in %s", this.uid));
         }
     }
 
     public String getUID() {
-        return uid;
+        return this.uid;
     }
 
     public AlmaUID getArchiveUID() {
-        return this.archiveUID == null ? new AlmaUID(this.uid) : this.archiveUID;
+        return this.archiveUID;
     }
 
     public String getSanitisedUid() {
-        return this.uid.replace(':', '_').replaceAll("/", "_");
+        return this.sanitize(this.uid);
+    }
+
+    public String getSanitizedArchiveUID() {
+        return this.sanitize(this.archiveUID.getUID());
+    }
+
+    public String getDesanitisedUid() {
+        return desanitize(this.uid);
     }
 
     String desanitize(final String uid) {
         return uid.replace("uid___", "uid://").replaceAll("_", "/");
+    }
+
+    String sanitize(final String uid) {
+        return uid.replace(':', '_').replaceAll("/", "_");
     }
 
     @Override
@@ -141,13 +154,13 @@ public class AlmaUID {
             return false;
         }
         AlmaUID almaUID = (AlmaUID) o;
-        return uid.equals(almaUID.uid) &&
-               Objects.equals(archiveUID, almaUID.archiveUID);
+        return this.uid.equals(almaUID.uid) &&
+               Objects.equals(this.archiveUID, almaUID.archiveUID);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(uid, archiveUID);
+        return Objects.hash(this.uid, this.archiveUID);
     }
 
     /**

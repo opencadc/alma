@@ -135,12 +135,10 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     private void visitSubDeliverables(final HierarchyItem hierarchyItem) {
-        Arrays.stream(hierarchyItem.getChildrenArray()).forEach(h -> {
+        Arrays.stream(hierarchyItem.getChildrenArray()).filter(h -> {
             final HierarchyItem.Type type = h.getType();
-            if (type.isLeaf() || type.isAuxiliary() || type.isOus() || type.isTarfile()) {
-                dataLinkQueue.addAll(createDataLinks(h));
-            }
-        });
+            return type.isLeaf() || type.isOus() || type.isTarfile() || type.isAuxiliary();
+        }).forEach(h -> dataLinkQueue.addAll(createDataLinks(h)));
     }
 
     /**
@@ -168,12 +166,12 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
         switch (deliverableType) {
             case PIPELINE_AUXILIARY_TARFILE:
-                if (deliverableType.isOus()) {
+                if (hierarchyItem.hasChildren()) {
                     dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.AUXILIARY));
                 }
                 break;
             case PIPELINE_PRODUCT_TARFILE:
-                if (deliverableType.isOus()) {
+                if (hierarchyItem.hasChildren()) {
                     dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.THIS));
                 }
                 break;
@@ -321,12 +319,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLinkTermCollection.add(DataLink.Term.AUXILIARY);
         }
 
+        if (deliverableType.isOus() || deliverableType.isTarfile()) {
+            dataLinkTermCollection.add(DataLink.Term.DATALINK);
+        }
+
         if (deliverableType == HierarchyItem.Type.PIPELINE_AUXILIARY_CALIBRATION) {
             dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
         } else if (deliverableType == HierarchyItem.Type.ASDM) {
             dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
-        } else if (deliverableType.isOus()) {
-            dataLinkTermCollection.add(DataLink.Term.DATALINK);
         } else if (!deliverableType.isAuxiliary()) {
             dataLinkTermCollection.add(DataLink.Term.THIS);
         }
