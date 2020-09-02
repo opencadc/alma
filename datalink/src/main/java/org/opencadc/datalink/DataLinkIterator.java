@@ -319,10 +319,6 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLinkTermCollection.add(DataLink.Term.AUXILIARY);
         }
 
-        if (deliverableType.isOus() || deliverableType.isTarfile()) {
-            dataLinkTermCollection.add(DataLink.Term.DATALINK);
-        }
-
         if (deliverableType == HierarchyItem.Type.PIPELINE_AUXILIARY_CALIBRATION) {
             dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
         } else if (deliverableType == HierarchyItem.Type.ASDM) {
