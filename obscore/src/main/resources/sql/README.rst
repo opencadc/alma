@@ -4,10 +4,11 @@ ALMA TAP SQL
 SQL files to initialize the ALMA Oracle database.
 
  * Tested with Oracle 11 and 12
+ 
 
 .. table:: Files in order
   :widths: auto
-
+  
 ====================================== ======================================
 File                                   Purpose                              
 ====================================== ======================================
