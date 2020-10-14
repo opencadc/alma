@@ -6,10 +6,9 @@
         "version": "1.0.0"
     },
     "schemes": [
-        "https",
-        "http"
+        "https"
     ],
-    "basePath": "/@app_name",
+    "basePath": "/@app_name@",
     "paths": {
         "/": {
             "get": {

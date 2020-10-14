@@ -14,7 +14,6 @@
                     "Simple Image Access 2.0"
                 ],
                 "schemes": [
-                    "http",
                     "https"
                 ],
                 "produces": [
@@ -181,7 +180,6 @@
                     "Simple Image Access 2.0"
                 ],
                 "schemes": [
-                    "http",
                     "https"
                 ],
                 "produces": [
