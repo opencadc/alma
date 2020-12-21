@@ -17,15 +17,15 @@ GET/POST Query parameters:
 +------------+--------------------------------------+
 | Name       | Purpose                              |
 +============+======================================+
-| `file`     | Absolute path to file                |
+| ``file``   | Absolute path to file                |
 +------------+--------------------------------------+
-| `cutout`   | Pixel cutout spec.  Cannot be used   |
-|            | with `headers` parameter.            |
+| ``cutout`` | Pixel cutout spec.  Cannot be used   |
+|            | with ``headers`` parameter.          |
 |            |                                      |
-|            | `...?cutout=[0][300:400]`            |
+|            | ``...?cutout=[0][300:400]``          |
 +------------+--------------------------------------+
-| `headers`  | Set to true to see header listing.   |
-|            | Cannot be used with `cutout`         | 
+| ``headers``| Set to true to see header listing.   |
+|            | Cannot be used with ``cutout``       |
 |            | parameter.                           | 
 +------------+--------------------------------------+
 
