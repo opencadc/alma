@@ -1,6 +1,11 @@
 ALMA IVOA Service Stack
 =======================
 
+2020.12.21
+----------
+
+- Added data service to access underlying files.
+
 2019.07.29
 ----------
 

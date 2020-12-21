@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vosi:capabilities
+    xmlns:vosi="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1">
+
+  <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="full">https://example.net/@app_name@/capabilities</accessURL>
+    </interface>
+  </capability>
+
+  <capability standardID="ivo://ivoa.net/std/VOSI#availability">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="full">https://example.net/@app_name@/availability</accessURL>
+    </interface>
+  </capability>
+  
+  <capability standardID="vos://cadc.nrc.ca~vospace/CADC/std/LOGGING#logControl-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std" version="1.0">
+      <accessURL use="full">http://example.net/@app_name@/logControl</accessURL>     
+      <securityMethod standardID="http://ivoa.net/sso#BasicAA"/>
+    </interface> 
+  </capability> 
+
+  <!-- SODA-1.0 sync -->
+  <capability standardID="ivo://ivoa.net/std/SODA#sync-1.0">
+    <interface xsi:type="vs:ParamHTTP" role="std">
+      <accessURL use="base">https://example.net/@app_name@</accessURL>
+    </interface>
+  </capability>
+  
+</vosi:capabilities>
+
