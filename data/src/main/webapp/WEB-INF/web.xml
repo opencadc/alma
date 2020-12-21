@@ -45,22 +45,22 @@
         </init-param>
         <init-param>
             <param-name>get</param-name>
-            <param-value>org.opencadc.alma.fits.FITSAction</param-value>
+            <param-value>org.opencadc.alma.data.fits.FITSAction</param-value>
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <param-value>org.opencadc.alma.fits.FITSAction</param-value>
+            <param-value>org.opencadc.alma.data.fits.FITSAction</param-value>
         </init-param>
         <load-on-startup>2</load-on-startup>
     </servlet>
 
     <!-- VOSI availability -->
     <servlet>
-        <servlet-name>FITSAvailabilityServlet</servlet-name>
+        <servlet-name>DataAvailabilityServlet</servlet-name>
         <servlet-class>ca.nrc.cadc.vosi.AvailabilityServlet</servlet-class>
         <init-param>
             <param-name>ca.nrc.cadc.vosi.AvailabilityPlugin</param-name>
-            <param-value>org.opencadc.alma.fits.ServiceAvailability</param-value>
+            <param-value>org.opencadc.alma.data.fits.ServiceAvailability</param-value>
         </init-param>
         <load-on-startup>5</load-on-startup>
     </servlet>
@@ -91,12 +91,12 @@
 
     <servlet-mapping>
         <servlet-name>FITSServlet</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/fits</url-pattern>
     </servlet-mapping>
 
     <!-- Availability servlet endpoint -->
     <servlet-mapping>
-        <servlet-name>FITSAvailabilityServlet</servlet-name>
+        <servlet-name>DataAvailabilityServlet</servlet-name>
         <url-pattern>/availability</url-pattern>
     </servlet-mapping>
 

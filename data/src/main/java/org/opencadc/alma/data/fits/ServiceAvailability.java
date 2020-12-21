@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2020.                            (c) 2020.
+ *  (c) 2019.                            (c) 2019.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,70 +62,87 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *
  ************************************************************************
  */
 
-package org.opencadc.alma.fits;
+package org.opencadc.alma.data.fits;
 
-import ca.nrc.cadc.rest.InlineContentHandler;
-import ca.nrc.cadc.rest.RestAction;
-import ca.nrc.cadc.util.StringUtil;
-import nom.tam.util.RandomAccessDataObject;
-import nom.tam.util.RandomAccessFileExt;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.opencadc.fits.FitsOperations;
+import ca.nrc.cadc.vosi.Availability;
+import ca.nrc.cadc.vosi.AvailabilityPlugin;
+import ca.nrc.cadc.vosi.AvailabilityStatus;
 
-import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.text.DecimalFormat;
+import java.util.Date;
 
-public class FITSAction extends RestAction {
-    private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
+/**
+ * This class performs the work of determining if the executing artifact
+ * service is operating as expected.
+ *
+ * @author majorb
+ */
+public class ServiceAvailability implements AvailabilityPlugin {
+    private String applicationName;
+    private static final Date UP_SINCE = new Date();
 
+    /**
+     * Default, no-arg constructor.
+     */
+    public ServiceAvailability() {
+    }
+
+    /**
+     * Sets the name of the application.
+     */
     @Override
-    protected InlineContentHandler getInlineContentHandler() {
-        return null;
+    public void setAppName(final String string) {
+        this.applicationName = string;
     }
 
-    final void throwUsageError() {
-        throw new IllegalArgumentException("\nUsage: \n" + syncInput.getRequestURI()
-                                           + "?cutout=[CUTOUT_SPEC]&file=[ABSOLUTE_FILE_PATH]\n");
-    }
-
-    final void verifyArguments() {
-        final String requestedFilePath = syncInput.getParameter("file");
-        final List<String> cutoutSpec = syncInput.getParameters("cutout");
-
-        if (!StringUtil.hasText(requestedFilePath) || cutoutSpec == null || cutoutSpec.isEmpty()) {
-            throwUsageError();
-        }
-    }
-
-    final File getFile() {
-        final String requestedFilePath = syncInput.getParameter("file");
-        LOGGER.debug("Slicing out of file " + requestedFilePath);
-
-        final File file = new File(requestedFilePath);
-        if (file.canRead()) {
-            return file;
-        } else {
-            throw new IllegalArgumentException("File " + file.getAbsolutePath()
-                                               + " cannot be read or does not exist.");
-        }
-    }
-
+    /**
+     * Performs a simple check for the availability of the object.
+     *
+     * @return true always
+     */
     @Override
-    public void doAction() throws Exception {
-        verifyArguments();
+    public boolean heartbeat() {
+        return true;
+    }
 
-        final List<String> cutoutSpecs = syncInput.getParameters("cutout");
-        try (final RandomAccessDataObject randomAccessDataObject = new RandomAccessFileExt(getFile(), "r")) {
-            final FitsOperations fitsOperations = new FitsOperations(randomAccessDataObject);
-            final String cutout = cutoutSpecs.stream().filter(StringUtil::hasText).collect(Collectors.joining());
+    /**
+     * Do a comprehensive check of the service and it's dependencies.
+     * <p>
+     * TODO - Check access to NGAS service?
+     *
+     * @return Information of the availability check.
+     * @deprecated Use getAvailability() instead.
+     */
+    @Override
+    public AvailabilityStatus getStatus() {
+        final Availability availability = getAvailability();
+        return new AvailabilityStatus(availability.isAvailable(), UP_SINCE, null, null, availability.note);
+    }
 
-            fitsOperations.slice(cutout, syncOutput.getOutputStream());
-        }
+    /**
+     * Do a comprehensive check of the service and it's dependencies.
+     * <p>
+     * TODO - Check access to NGAS service?
+     *
+     * @return Information of the availability check.
+     */
+    public Availability getAvailability() {
+        final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+        return new Availability(true, (this.applicationName == null
+                                       ? "Service" : this.applicationName) + " is accepting requests.  Up for "
+                                      + decimalFormat.format(((new Date()).getTime() - UP_SINCE.getTime())
+                                                             / 1000.0 / 60.0 / 60.0)
+                                      + " hours.");
+    }
+
+    /**
+     * Sets the state of the service.
+     */
+    @Override
+    public void setState(String state) {
+        // ignore
     }
 }

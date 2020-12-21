@@ -7,9 +7,9 @@ services:
         - "--api.insecure=true"
         - "--providers.docker=true"
         - "--providers.docker.exposedbydefault=false"
+        - "--entrypoints.web.address=:80"
         - "--providers.file.directory=/configuration/"
         - "--providers.file.watch=true"
-        - "--entrypoints.web.address=:80"
         - "--entrypoints.websecure.address=:443"
         - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
         - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
@@ -20,22 +20,21 @@ services:
     networks:
       - "alma"
     volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "server_certs:/server_certs"
       - "./docker/proxy:/configuration:ro"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-  fits:
-    image: opencadc/alma-fits:1.0.0
+  data:
+    image: opencadc/alma-data:1.0.0
     networks:
       - "alma"
     ports:
       - "15555:5555"
     volumes:
-      - "ca_certs:/usr/local/share/ca-certificates"
-      - "/Users/jenkinsd/Data/cutouts:/data:ro"
+      - "data_volume:/data:ro"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.fits.loadbalancer.server.port=8080"
-      - "traefik.http.routers.fits.rule=PathPrefix(`/fits`)"
+      - "traefik.http.routers.fits.rule=PathPrefix(`/data`)"
       - "traefik.http.routers.fits.entrypoints=websecure"
       - "traefik.http.routers.fits.tls=true"
       - "traefik.http.routers.fits.tls.domains[0].main=cadc.dao.nrc.ca"
@@ -45,7 +44,7 @@ networks:
   alma:
 
 volumes:
-  server_certs:
+  data_volume:
     external: true
-  ca_certs:
+  server_certs:
     external: true

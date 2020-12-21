@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2020.                            (c) 2020.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,87 +62,45 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
+ *
  ************************************************************************
  */
 
-package org.opencadc.alma.fits;
+package org.opencadc.alma.data.fits;
 
-import ca.nrc.cadc.vosi.Availability;
-import ca.nrc.cadc.vosi.AvailabilityPlugin;
-import ca.nrc.cadc.vosi.AvailabilityStatus;
+import ca.nrc.cadc.rest.SyncInput;
 
-import java.text.DecimalFormat;
-import java.util.Date;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-/**
- * This class performs the work of determining if the executing artifact
- * service is operating as expected.
- *
- * @author majorb
- */
-public class ServiceAvailability implements AvailabilityPlugin {
-    private String applicationName;
-    private static final Date UP_SINCE = new Date();
+public class TestSyncInput extends SyncInput {
+    private final Map<String, List<String>> inputParameters = new HashMap<>();
+    private final String requestURI;
 
-    /**
-     * Default, no-arg constructor.
-     */
-    public ServiceAvailability() {
+    public TestSyncInput(final String reqURI, final Map<String, List<String>> inputParams) throws IOException {
+        super(null, null);
+        if (inputParams != null) {
+            inputParameters.putAll(inputParams);
+        }
+
+        requestURI = reqURI;
     }
 
-    /**
-     * Sets the name of the application.
-     */
     @Override
-    public void setAppName(final String string) {
-        this.applicationName = string;
+    public String getRequestURI() {
+        return this.requestURI;
     }
 
-    /**
-     * Performs a simple check for the availability of the object.
-     *
-     * @return true always
-     */
     @Override
-    public boolean heartbeat() {
-        return true;
+    public String getParameter(String name) {
+        final List<String> values = inputParameters.get(name);
+        return (values == null || values.isEmpty()) ? null : values.get(0);
     }
 
-    /**
-     * Do a comprehensive check of the service and it's dependencies.
-     * <p>
-     * TODO - Check access to NGAS service?
-     *
-     * @return Information of the availability check.
-     * @deprecated Use getAvailability() instead.
-     */
     @Override
-    public AvailabilityStatus getStatus() {
-        final Availability availability = getAvailability();
-        return new AvailabilityStatus(availability.isAvailable(), UP_SINCE, null, null, availability.note);
-    }
-
-    /**
-     * Do a comprehensive check of the service and it's dependencies.
-     * <p>
-     * TODO - Check access to NGAS service?
-     *
-     * @return Information of the availability check.
-     */
-    public Availability getAvailability() {
-        final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
-        return new Availability(true, (this.applicationName == null
-                                       ? "Service" : this.applicationName) + " is accepting requests.  Up for "
-                                      + decimalFormat.format(((new Date()).getTime() - UP_SINCE.getTime())
-                                                             / 1000.0 / 60.0 / 60.0)
-                                      + " hours.");
-    }
-
-    /**
-     * Sets the state of the service.
-     */
-    @Override
-    public void setState(String state) {
-        // ignore
+    public List<String> getParameters(String name) {
+        return inputParameters.get(name);
     }
 }

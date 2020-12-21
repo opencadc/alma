@@ -1,0 +1,37 @@
+version: "3.2"
+services:
+  traefik:
+    image: traefik:v2.3
+    command:
+        - "--log.level=DEBUG"
+        - "--api.insecure=true"
+        - "--providers.docker=true"
+        - "--providers.docker.exposedbydefault=false"
+        - "--entrypoints.web.address=:80"
+    ports:
+        - "80:80"
+        - "8080:8080"
+    networks:
+      - "alma"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  fits:
+    image: opencadc/alma-fits:1.0.0
+    networks:
+      - "alma"
+    ports:
+      - "15555:5555"
+    volumes:
+      - "data_volume:/data:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.fits.loadbalancer.server.port=8080"
+      - "traefik.http.routers.fits.rule=PathPrefix(`/fits`)"
+      - "traefik.http.routers.fits.entrypoints=web"
+
+networks:
+  alma:
+
+volumes:
+  data_volume:
+    external: true
