@@ -22,8 +22,8 @@ jobs:
     - name: local build of cadc-data-ops-fits
       run: |
         cd ..
-        git clone --single-branch --branch master https://github.com/opencadc/dal
-        cd cadc-data-ops-fits
+        git clone --single-branch --branch master https://github.com/opencadc/dal.git
+        cd dal/cadc-data-ops-fits
         gradle -i assemble install
 
     - name: build, test, and install alma-lib
