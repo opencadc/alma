@@ -2,7 +2,9 @@ name: Java+Docker CI
 
 on: 
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ master ]
+  push:
+    branches: [ master ]
 
 jobs:
   build:
