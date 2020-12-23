@@ -17,7 +17,7 @@ group = 'ca.nrc.cadc'
 version = '1.0.4'
 
 ext {
-    default_app_name = 'sia'
+    default_app_name = 'sia2'
 }
 
 war {

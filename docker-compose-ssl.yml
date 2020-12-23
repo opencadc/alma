@@ -40,7 +40,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.sia.loadbalancer.server.port=8080"
-      - "traefik.http.routers.sia.rule=PathPrefix(`/sia`)"
+      - "traefik.http.routers.sia.rule=PathPrefix(`/sia2`)"
       - "traefik.http.routers.sia.entrypoints=websecure"
       - "traefik.http.routers.sia.tls=true"
       - "traefik.http.routers.sia.tls.domains[0].main=cadc.dao.nrc.ca"

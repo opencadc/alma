@@ -34,7 +34,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.sia.loadbalancer.server.port=8080"
-      - "traefik.http.routers.sia.rule=PathPrefix(`/sia`)"
+      - "traefik.http.routers.sia.rule=PathPrefix(`/sia2`)"
       - "traefik.http.routers.sia.entrypoints=web"
   obscore:
     image: opencadc/alma-tap:1.1.15
