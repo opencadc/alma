@@ -1,8 +1,7 @@
 version: "3.2"
 services:
   traefik:
-    hostname: proxy.cadc.dao.nrc.ca
-    image: traefik:v2.2
+    image: traefik:v2.3
     command:
         - "--log.level=DEBUG"
         - "--api.insecure=true"
@@ -29,7 +28,7 @@ services:
     networks:
       - "alma"
     ports:
-      - "15555:5555"
+      - "10001:5555"
     depends_on:
       - "obscore"
       - "reg"
@@ -47,9 +46,9 @@ services:
       - "traefik.http.routers.sia.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.sia.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   obscore:
-    image: opencadc/alma-tap:1.1.15
+    image: opencadc/alma-tap:1.1.16
     ports:
-      - "35555:5555"
+      - "10002:5555"
     networks:
       - "alma"
     env_file:
@@ -69,7 +68,7 @@ services:
     networks:
       - "alma"
     ports:
-      - "25555:5555"
+      - "10003:5555"
     volumes:
       - "./reg/docker/reg-resource-caps.properties:/root/config/reg-resource-caps.properties"
       - "./reg/docker/reg-applications.properties:/root/config/reg-applications.properties"
@@ -79,19 +78,35 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.reg.loadbalancer.server.port=8080"
-      - "traefik.http.routers.reg.rule=(Host(`proxy.cadc.dao.nrc.ca`) && PathPrefix(`/reg`))"
+      - "traefik.http.routers.reg.rule=PathPrefix(`/reg`)"
       - "traefik.http.routers.reg.entrypoints=websecure"
       - "traefik.http.routers.reg.tls=true"
       - "traefik.http.routers.reg.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+  data:
+    image: opencadc/alma-data:1.0.0
+    networks:
+      - "alma"
+    ports:
+      - "10004:5555"
+    volumes:
+      - "data_volume:/data:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.data.loadbalancer.server.port=8080"
+      - "traefik.http.routers.data.rule=PathPrefix(`/data`)"
+      - "traefik.http.routers.data.entrypoints=websecure"
+      - "traefik.http.routers.data.tls=true"
+      - "traefik.http.routers.data.tls.domains[0].main=cadc.dao.nrc.ca"
+      - "traefik.http.routers.data.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   datalink:
-    image: opencadc/alma-datalink:1.3.1
+    image: opencadc/alma-datalink:1.3.3
     networks:
       - "alma"
     env_file:
       - "./datalink/docker/config/alma-datalink.properties"
     ports:
-      - "45555:5555"
+      - "10005:5555"
     volumes:
       - "ca_certs:/usr/local/share/ca-certificates"
       - "./org.opencadc.alma.properties:/root/config/org.opencadc.alma.properties"
@@ -106,7 +121,7 @@ services:
   soda:
     image: opencadc/alma-soda:1.1.1
     ports:
-      - "55555:5555"
+      - "10006:5555"
     networks:
       - "alma"
     env_file:
@@ -130,4 +145,6 @@ volumes:
   server_certs:
     external: true
   ca_certs:
+    external: true
+  data_volume:
     external: true
