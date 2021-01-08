@@ -133,14 +133,7 @@ public class LinksTest {
     @BeforeClass
     public static void before() throws Exception {
         URI serviceID = TestUtil.DATALINK_SERVICE_ID;
-        final String configuredRegistryURL = System.getenv("DATALINK_REGISTRY_URL");
-        final RegistryClient registryClient;
-
-        if (StringUtil.hasText(configuredRegistryURL)) {
-            registryClient = new RegistryClient(new URL(configuredRegistryURL));
-        } else {
-            registryClient = new RegistryClient();
-        }
+        final RegistryClient registryClient = new RegistryClient();
 
         anonURL = registryClient.getServiceURL(serviceID, Standards.DATALINK_LINKS_10, AuthMethod.ANON);
         certURL = registryClient.getServiceURL(serviceID, Standards.DATALINK_LINKS_10, AuthMethod.CERT);
