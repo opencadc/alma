@@ -62,7 +62,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     bib_reference,
     science_keyword,
     scientific_category,
-    external_products,
+    collections,
     lastModified
  ) AS SELECT
     CASE WHEN energy.channel_num > 128 THEN 'cube'
