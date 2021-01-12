@@ -24,13 +24,13 @@ services:
       - "server_certs:/server_certs"
       - "./docker/proxy:/configuration:ro"
   data:
-    image: opencadc/alma-data:1.0.0
+    image: opencadc/alma-data:1.0.1
     networks:
       - "alma"
     ports:
       - "15555:5555"
     volumes:
-      - "data_volume:/data:ro"
+      - "data_volume:/data"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.fits.loadbalancer.server.port=8080"
@@ -39,6 +39,8 @@ services:
       - "traefik.http.routers.fits.tls=true"
       - "traefik.http.routers.fits.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.fits.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+    environment:
+      CATALINA_OPTS: -Dtomcat.relaxedQueryChars="[]|"
 
 networks:
   alma:

@@ -62,6 +62,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     bib_reference,
     science_keyword,
     scientific_category,
+    collections,
     lastModified
  ) AS SELECT
     CASE WHEN energy.channel_num > 128 THEN 'cube'
@@ -133,6 +134,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     (SELECT LISTAGG(bibcode, ' ') WITHIN GROUP (ORDER BY bibcode) AS bibcode FROM (SELECT DISTINCT bibcode FROM asa_project_bibliography WHERE project_code = science.project_code)),
     asap.science_keyword,
     asap.scientific_category,
+    (SELECT LISTAGG(collection, ' ') WITHIN GROUP (ORDER BY collection) AS collection FROM (SELECT DISTINCT collection FROM ALMA.asa_product_files WHERE asa_ous_id = science.member_ouss_id)),
     science.last_updated
 FROM asa_science science
 INNER JOIN asa_energy energy ON energy.asa_dataset_id = science.dataset_id
