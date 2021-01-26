@@ -70,8 +70,10 @@ package org.opencadc.alma.data;
 
 import ca.nrc.cadc.rest.InlineContentHandler;
 import ca.nrc.cadc.rest.RestAction;
+import ca.nrc.cadc.util.StringUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencadc.soda.SodaParamValidator;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,6 +83,10 @@ import java.util.List;
 
 public abstract class BaseAction extends RestAction {
     private static final Logger LOGGER = LogManager.getLogger(BaseAction.class);
+
+    // Allow implementor to set the name of the query parameter expected.  Default is left to SODA.
+    private static final String SUB_PARAMETER_NAME_KEY = "sub-parameter";
+
 
     @Override
     protected InlineContentHandler getInlineContentHandler() {
@@ -102,5 +108,10 @@ public abstract class BaseAction extends RestAction {
     protected List<String> getParametersNullSafe(final String key) {
         final List<String> params = syncInput.getParameters(key);
         return (params == null) ? Collections.emptyList() : params;
+    }
+
+    protected String getCutoutParameterKey() {
+        final String configuredSubKey = initParams == null ? null : initParams.get(SUB_PARAMETER_NAME_KEY);
+        return StringUtil.hasText(configuredSubKey) ? configuredSubKey : SodaParamValidator.SUB;
     }
 }

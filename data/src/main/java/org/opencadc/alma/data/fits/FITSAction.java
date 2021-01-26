@@ -78,17 +78,25 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.opencadc.alma.data.BaseAction;
 import org.opencadc.fits.FitsOperations;
+import org.opencadc.soda.ExtensionSlice;
+import org.opencadc.soda.SodaParamValidator;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 public class FITSAction extends BaseAction {
     private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
+    private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
+
 
     void throwUsageError() {
         final String requestURI = syncInput.getRequestURI();
@@ -101,7 +109,7 @@ public class FITSAction extends BaseAction {
     final void verifyArguments() {
         // Put them into a Set in case the same file was provided more than once, and can be reduced here.
         final Set<String> requestedFilePaths = new HashSet<>(getParametersNullSafe("file"));
-        final List<String> cutoutSpec = getParametersNullSafe("cutout");
+        final List<String> cutoutSpec = getParametersNullSafe(getCutoutParameterKey());
 
         final boolean hasCutout = !cutoutSpec.isEmpty();
         final boolean hasFile = !requestedFilePaths.isEmpty();
@@ -123,6 +131,7 @@ public class FITSAction extends BaseAction {
     public void doAction() throws Exception {
         verifyArguments();
         final String headerRequest = syncInput.getParameter("headers");
+        final List<String> requestedSubs = syncInput.getParameters(getCutoutParameterKey());
 
         if (StringUtil.hasText(headerRequest) && Boolean.parseBoolean(headerRequest)) {
             LOGGER.debug("FitsOperations.headers: START");
@@ -136,16 +145,31 @@ public class FITSAction extends BaseAction {
                 output.flush();
                 LOGGER.debug("FitsOperations.headers: OK");
             }
-        } else {
+        } else if (requestedSubs != null && !requestedSubs.isEmpty()) {
             LOGGER.debug("FitsOperations.cutout: START");
-            final List<String> cutoutSpecs = syncInput.getParameters("cutout");
+
+            // If any cutouts were requested
+            final Map<String, List<String>> subMap = new HashMap<>();
+            subMap.put(getCutoutParameterKey(), requestedSubs);
+            final List<ExtensionSlice> slices = SODA_PARAM_VALIDATOR.validateSUB(subMap);
+
             try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
                 final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
-                final String cutout = cutoutSpecs.stream().filter(StringUtil::hasText).collect(Collectors.joining());
-
-                fitsOperations.slice(cutout, syncOutput.getOutputStream());
+                fitsOperations.cutoutToStream(slices, syncOutput.getOutputStream());
             }
             LOGGER.debug("FitsOperations.cutout: OK");
+        } else {
+            // If nothing is provided, then simply write the entire file out.
+            try (final InputStream inputStream = new FileInputStream(getFile())) {
+                final OutputStream outputStream = syncOutput.getOutputStream();
+                final byte[] buffer = new byte[64 * 1024]; // 64KB buffer has proven a good performance size.
+                int byteCount;
+                while ((byteCount = inputStream.read(buffer)) >= 0) {
+                    outputStream.write(buffer, 0, byteCount);
+                }
+
+                outputStream.flush();
+            }
         }
     }
 

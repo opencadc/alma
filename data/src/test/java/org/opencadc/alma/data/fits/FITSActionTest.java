@@ -183,7 +183,7 @@ public class FITSActionTest {
         final FITSAction testSubject = new FITSAction();
         final Map<String, String[]> inputParameters = new HashMap<>();
 
-        inputParameters.put("cutout", new String[]{"[SCI,10]"});
+        inputParameters.put("SUB", new String[]{"[SCI,10]"});
         inputParameters.put("file", new String[]{"/my/file/1", "/my/file/2"});
 
         when(mockRequest.getMethod()).thenReturn("GET");
@@ -223,7 +223,7 @@ public class FITSActionTest {
         final FITSAction testSubject = new FITSAction();
         final Map<String, String[]> inputParameters = new HashMap<>();
 
-        inputParameters.put("cutout", new String[]{"[SCI,10]"});
+        inputParameters.put("SUB", new String[]{"[SCI,10]"});
 
         // Same file twice should be reduced to the same file.
         inputParameters.put("file", new String[]{"/my/file/1", "/my/file/1"});
