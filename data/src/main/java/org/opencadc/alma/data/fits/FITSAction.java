@@ -96,26 +96,30 @@ import java.util.Set;
 public class FITSAction extends BaseAction {
     private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
     private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
+    private static final String CUTOUT_PARAMETER_KEY = SodaParamValidator.SUB;
 
 
     void throwUsageError() {
         final String requestURI = syncInput.getRequestURI();
-        throw new IllegalArgumentException("\nUsage: \n" + requestURI
-                                           + "?file=[ABSOLUTE_FILE_PATH]&cutout=[CUTOUT_SPEC]\n"
-                                           + "OR for headers only:\n" + requestURI
-                                           + "?file=[ABSOLUTE_FILE_PATH]&headers=true");
+        throw new IllegalArgumentException(String.format("\nUsage: \n%s"
+                                                         + "?file=[ABSOLUTE_FILE_PATH]\n"
+                                                         + "OR for a sub-region:\n%s"
+                                                         + "?file=[ABSOLUTE_FILE_PATH]&%s=[CUTOUT_SPEC]\n"
+                                                         + "OR for headers only:\n%s"
+                                                         + "?file=[ABSOLUTE_FILE_PATH]&headers=true", requestURI,
+                                                         requestURI, SodaParamValidator.SUB, requestURI));
     }
 
     final void verifyArguments() {
         // Put them into a Set in case the same file was provided more than once, and can be reduced here.
         final Set<String> requestedFilePaths = new HashSet<>(getParametersNullSafe("file"));
-        final List<String> cutoutSpec = getParametersNullSafe(getCutoutParameterKey());
+        final List<String> cutoutSpec = getParametersNullSafe(CUTOUT_PARAMETER_KEY);
 
         final boolean hasCutout = !cutoutSpec.isEmpty();
         final boolean hasFile = !requestedFilePaths.isEmpty();
         final String headerRequest = syncInput.getParameter("headers");
 
-        if (!hasFile || (!hasCutout && !StringUtil.hasText(headerRequest))) {
+        if (!hasFile) {
             throwUsageError();
         } else if (requestedFilePaths.size() > 1) {
             throw new IllegalArgumentException("Only one file parameter can be provided.");
@@ -131,7 +135,7 @@ public class FITSAction extends BaseAction {
     public void doAction() throws Exception {
         verifyArguments();
         final String headerRequest = syncInput.getParameter("headers");
-        final List<String> requestedSubs = syncInput.getParameters(getCutoutParameterKey());
+        final List<String> requestedSubs = syncInput.getParameters(CUTOUT_PARAMETER_KEY);
 
         if (StringUtil.hasText(headerRequest) && Boolean.parseBoolean(headerRequest)) {
             LOGGER.debug("FitsOperations.headers: START");
@@ -150,7 +154,7 @@ public class FITSAction extends BaseAction {
 
             // If any cutouts were requested
             final Map<String, List<String>> subMap = new HashMap<>();
-            subMap.put(getCutoutParameterKey(), requestedSubs);
+            subMap.put(CUTOUT_PARAMETER_KEY, requestedSubs);
             final List<ExtensionSlice> slices = SODA_PARAM_VALIDATOR.validateSUB(subMap);
 
             try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
@@ -175,7 +179,8 @@ public class FITSAction extends BaseAction {
 
     /**
      * Allow tests to override.
-     * @return  FitsOperations instance.  Never null.
+     *
+     * @return FitsOperations instance.  Never null.
      */
     FitsOperations getOperator(final RandomAccessDataObject randomAccessDataObject) {
         return new FitsOperations(randomAccessDataObject);

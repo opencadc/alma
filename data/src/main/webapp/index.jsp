@@ -67,7 +67,7 @@
   <script type="text/javascript">
     $(function ()
       {
-        var url = "service.json";
+        var url = "service.yaml";
 
         hljs.configure({
                          highlightSizeThreshold: 5000

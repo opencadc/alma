@@ -1,0 +1,93 @@
+swagger: '2.0'
+info:
+  version: '0.2.0'
+  title: File operations in ALMA
+  description: 'A programmatic interface for storing, retrieving and managing artifacts at a storage site.<br/><br/>Clients may authenticate to this service in one of three ways:<br/>1.  By supplying an authentication token and using it as the auth-token parameter in the path.  URLs containing auth-tokens can be retrieved from the global locate service.<br/>2.  By providing a cookie in the Cookie header<br/>3.  By using a client certificate over SSL.'
+basePath: '/@app_name@'
+
+paths:
+  '/files':
+    get:
+      description: |
+        Download the file identified by query parameter file, optionally cutting a specific sub-region of an image (if applicable).
+      tags:
+        - File download
+      summary: Download a file
+      schemes:
+        - https
+      produces:
+        - application/octet-stream
+      responses:
+        '200':
+          description: Successful response.
+          headers:
+            Content-Disposition:
+              description: 'The content-disposition of the file in the form<br/><br/>Content-Disposition\: inline; filename=\"\<name\>\"<br/><br/>where \<name\> is the last path segment of the URI of the artifact.'
+              type: string
+            Content-Type:
+              description: The content type of the file
+              type: string
+            Content-MD5:
+              description: The content MD5 of the file
+              type: string
+            Content-Length:
+              description: The content length of the file
+              type: string
+        '401':
+          description: If the client does not provide credentials and anonymous access is disallowed.
+        '403':
+          description: If the client does not have permission.
+        '404':
+          description: If the file could not be found.
+        '500':
+          description: Internal error
+        '503':
+          description: Service busy
+      parameters:
+        - name: file
+          in: query
+          description: absolute path to a file on disk
+          required: true
+          type: string
+        - name: SUB
+          in: query
+          description: sub-region of a FITS file image (e.g. "?SUB=[0][100:300]&SUB=[SCI,3][300:500,*]")
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+  /availability:
+    get:
+      tags:
+        - Support Interfaces
+      summary: VOSI Availability
+      description: 'Indicates whether the service is operable and shows the reliability of the service for extended and scheduled requests. If the query parameter ''detail=min'' is used, a light weight heart beat test will be performed. The heart beat test returns status 200 if the service is available.'
+      parameters:
+        - name: detail
+          in: query
+          description: 'Specifies heart beat to be used to check for availability of this service, the value ''min'' must be used, otherwise the full availability test will be performed'
+          required: false
+          type: string
+      responses:
+        '200':
+          description: A VOSI availability document in XML.
+  /capabilities:
+    get:
+      summary: VOSI Capabilities
+      tags:
+        - Support Interfaces
+      description: |
+        Provides the service metadata in the form of a list of Capability descriptions.  Each of these descriptions is an XML element that:
+        <ul>
+        <li>states that the service provides a particular, IVOA-standard function;</li>
+        <li>lists the interfaces for invoking that function;</li>
+        <li>records any details of the implementation of the function that are not defined as default or constant in the standard for that function.</li>
+        </ul>
+      responses:
+        '200':
+          description: A VOSI Capabilities document in XML.
+        '500':
+          description: Internal server error
+        '503':
+          description: Service too busy
