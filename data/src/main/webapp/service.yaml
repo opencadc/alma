@@ -57,6 +57,11 @@ paths:
           items:
             type: string
           collectionFormat: multi
+        - name: headers
+          in: query
+          description: sub-region of a FITS file image (e.g. "?SUB=[0][100:300]&SUB=[SCI,3][300:500,*]")
+          required: false
+          type: boolean
   /availability:
     get:
       tags:
