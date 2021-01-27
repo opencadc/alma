@@ -20,14 +20,14 @@ ext {
 war {
     if (project.hasProperty('alma_fits_app_name')) {
         eachFile {
-            if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
+            if (it.name.equals('capabilities.xml') || it.name.equals('service.yaml')) {
                 filter(ReplaceTokens, tokens: [app_name: project.alma_fits_app_name])
             }
         }
         archiveName = project.alma_fits_app_name + '##' + project.version + '.war'
     } else {
         eachFile {
-            if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
+            if (it.name.equals('capabilities.xml') || it.name.equals('service.yaml')) {
                 filter(ReplaceTokens, tokens: [app_name: project.default_app_name])
             }
         }
