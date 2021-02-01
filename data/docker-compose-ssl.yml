@@ -23,30 +23,47 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "server_certs:/server_certs"
       - "./docker/proxy:/configuration:ro"
-  data:
-    image: opencadc/alma-data:1.0.1
+  reg:
+    image: opencadc/alma-reg:1.0.2
     networks:
       - "alma"
-    ports:
-      - "15555:5555"
     volumes:
-      - "data_volume:/data"
+      - "./docker/reg:/root/config"
+      - "ca_certs:/usr/local/share/ca-certificates"
+    environment:
+      CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=nrc-023054.cadc.dao.nrc.ca"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.fits.loadbalancer.server.port=8080"
-      - "traefik.http.routers.fits.rule=PathPrefix(`/data`)"
-      - "traefik.http.routers.fits.entrypoints=websecure"
-      - "traefik.http.routers.fits.tls=true"
-      - "traefik.http.routers.fits.tls.domains[0].main=cadc.dao.nrc.ca"
-      - "traefik.http.routers.fits.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.services.reg.loadbalancer.server.port=8080"
+      - "traefik.http.routers.reg.rule=PathPrefix(`/reg`)"
+      - "traefik.http.routers.reg.entrypoints=websecure"
+      - "traefik.http.routers.reg.tls=true"
+      - "traefik.http.routers.reg.tls.domains[0].main=cadc.dao.nrc.ca"
+      - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+  data:
+    image: opencadc/alma-data:1.1.0
+    networks:
+      - "alma"
+    volumes:
+      - "ca_certs:/usr/local/share/ca-certificates"
+    ports:
+      - "15555:5555"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.data.loadbalancer.server.port=8080"
+      - "traefik.http.routers.data.rule=PathPrefix(`/data`)"
+      - "traefik.http.routers.data.entrypoints=websecure"
+      - "traefik.http.routers.data.tls=true"
+      - "traefik.http.routers.data.tls.domains[0].main=cadc.dao.nrc.ca"
+      - "traefik.http.routers.data.tls.domains[0].sans=*.cadc.dao.nrc.ca"
     environment:
-      CATALINA_OPTS: -Dtomcat.relaxedQueryChars="[]|"
+      CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=nrc-023054.cadc.dao.nrc.ca -Dtomcat.relaxedQueryChars="[]|"'
 
 networks:
   alma:
 
 volumes:
-  data_volume:
-    external: true
   server_certs:
+    external: true
+  ca_certs:
     external: true

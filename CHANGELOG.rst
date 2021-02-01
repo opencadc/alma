@@ -1,6 +1,12 @@
 ALMA IVOA Service Stack
 =======================
 
+2020.01.27
+----------
+
+- Data service now streams output to avoid memory consumption issues.
+- Data service now complies with experimental SODA APIs.
+
 2020.12.21
 ----------
 
