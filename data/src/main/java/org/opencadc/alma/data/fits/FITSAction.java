@@ -68,6 +68,7 @@
 
 package org.opencadc.alma.data.fits;
 
+import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.util.StringUtil;
 import nom.tam.fits.Header;
 import nom.tam.util.ArrayDataOutput;
@@ -78,36 +79,46 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.opencadc.alma.data.BaseAction;
 import org.opencadc.fits.FitsOperations;
+import org.opencadc.soda.ExtensionSlice;
+import org.opencadc.soda.SodaParamValidator;
 
 import java.io.FileNotFoundException;
+import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 public class FITSAction extends BaseAction {
     private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
+    private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
+    private static final String CUTOUT_PARAMETER_KEY = SodaParamValidator.SUB;
+
 
     void throwUsageError() {
         final String requestURI = syncInput.getRequestURI();
-        throw new IllegalArgumentException("\nUsage: \n" + requestURI
-                                           + "?file=[ABSOLUTE_FILE_PATH]&cutout=[CUTOUT_SPEC]\n"
-                                           + "OR for headers only:\n" + requestURI
-                                           + "?file=[ABSOLUTE_FILE_PATH]&headers=true");
+        throw new IllegalArgumentException(String.format("\nUsage: \n%s"
+                                                         + "?file=[ABSOLUTE_FILE_PATH]\n"
+                                                         + "OR for a sub-region:\n%s"
+                                                         + "?file=[ABSOLUTE_FILE_PATH]&%s=[CUTOUT_SPEC]\n"
+                                                         + "OR for headers only:\n%s"
+                                                         + "?file=[ABSOLUTE_FILE_PATH]&headers=true", requestURI,
+                                                         requestURI, SodaParamValidator.SUB, requestURI));
     }
 
     final void verifyArguments() {
         // Put them into a Set in case the same file was provided more than once, and can be reduced here.
         final Set<String> requestedFilePaths = new HashSet<>(getParametersNullSafe("file"));
-        final List<String> cutoutSpec = getParametersNullSafe("cutout");
+        final List<String> cutoutSpec = getParametersNullSafe(CUTOUT_PARAMETER_KEY);
 
         final boolean hasCutout = !cutoutSpec.isEmpty();
         final boolean hasFile = !requestedFilePaths.isEmpty();
         final String headerRequest = syncInput.getParameter("headers");
 
-        if (!hasFile || (!hasCutout && !StringUtil.hasText(headerRequest))) {
+        if (!hasFile) {
             throwUsageError();
         } else if (requestedFilePaths.size() > 1) {
             throw new IllegalArgumentException("Only one file parameter can be provided.");
@@ -123,6 +134,7 @@ public class FITSAction extends BaseAction {
     public void doAction() throws Exception {
         verifyArguments();
         final String headerRequest = syncInput.getParameter("headers");
+        final List<String> requestedSubs = syncInput.getParameters(CUTOUT_PARAMETER_KEY);
 
         if (StringUtil.hasText(headerRequest) && Boolean.parseBoolean(headerRequest)) {
             LOGGER.debug("FitsOperations.headers: START");
@@ -136,28 +148,49 @@ public class FITSAction extends BaseAction {
                 output.flush();
                 LOGGER.debug("FitsOperations.headers: OK");
             }
-        } else {
+        } else if (requestedSubs != null && !requestedSubs.isEmpty()) {
             LOGGER.debug("FitsOperations.cutout: START");
-            final List<String> cutoutSpecs = syncInput.getParameters("cutout");
+
+            // If any cutouts were requested
+            final Map<String, List<String>> subMap = new HashMap<>();
+            subMap.put(CUTOUT_PARAMETER_KEY, requestedSubs);
+            final List<ExtensionSlice> slices = SODA_PARAM_VALIDATOR.validateSUB(subMap);
+
             try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
                 final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
-                final String cutout = cutoutSpecs.stream().filter(StringUtil::hasText).collect(Collectors.joining());
-
-                fitsOperations.slice(cutout, syncOutput.getOutputStream());
+                fitsOperations.cutoutToStream(slices, syncOutput.getOutputStream());
             }
             LOGGER.debug("FitsOperations.cutout: OK");
+        } else {
+            // If nothing is provided, then simply write the entire file out.
+            try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
+                final OutputStream outputStream = syncOutput.getOutputStream();
+                final int bufferSize = 64 * 1024; // 64KB buffer has proven a good performance size.
+                final byte[] buffer = new byte[bufferSize];
+                int byteCount;
+                while ((byteCount = randomAccessDataObject.read(buffer)) >= 0) {
+                    outputStream.write(buffer, 0, byteCount);
+                }
+
+                outputStream.flush();
+            }
         }
     }
 
     /**
      * Allow tests to override.
-     * @return  FitsOperations instance.  Never null.
+     *
+     * @return FitsOperations instance.  Never null.
      */
     FitsOperations getOperator(final RandomAccessDataObject randomAccessDataObject) {
         return new FitsOperations(randomAccessDataObject);
     }
 
-    RandomAccessDataObject getRandomAccessDataObject() throws FileNotFoundException {
-        return new RandomAccessFileExt(getFile(), "r");
+    RandomAccessDataObject getRandomAccessDataObject() throws ResourceNotFoundException {
+        try {
+            return new RandomAccessFileExt(getFile(), "r");
+        } catch (FileNotFoundException fileNotFoundException) {
+            throw new ResourceNotFoundException(fileNotFoundException.getMessage());
+        }
     }
 }

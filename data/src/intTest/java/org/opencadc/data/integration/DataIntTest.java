@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2020.                            (c) 2020.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,36 +66,31 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.data;
+package org.opencadc.data.integration;
 
-import ca.nrc.cadc.rest.InlineContentHandler;
-import ca.nrc.cadc.rest.RestAction;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.reg.Standards;
+import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.util.Log4jInit;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
+import java.net.URI;
+import java.net.URL;
 
+public class DataIntTest {
+    private static final Logger log = Logger.getLogger(DataIntTest.class);
+    public static final URI SERVICE_ID = URI.create("ivo://almascience.org/data");
 
-public abstract class BaseAction extends RestAction {
-    private static final Logger LOGGER = LogManager.getLogger(BaseAction.class);
+    protected URL filesURL;
 
-
-    @Override
-    protected InlineContentHandler getInlineContentHandler() {
-        return null;
+    static {
+        Log4jInit.setLevel("org.opencadc.data", Level.INFO);
     }
 
-    protected File getFile() {
-        final String requestedFilePath = syncInput.getParameter("file");
-        LOGGER.debug("Searching for file " + requestedFilePath);
-
-        return new File(requestedFilePath);
-    }
-
-    protected List<String> getParametersNullSafe(final String key) {
-        final List<String> params = syncInput.getParameters(key);
-        return (params == null) ? Collections.emptyList() : params;
+    public DataIntTest() {
+        RegistryClient regClient = new RegistryClient();
+        filesURL = regClient.getServiceURL(SERVICE_ID, Standards.SI_FILES, AuthMethod.ANON);
+        log.info(Standards.SI_FILES + ": " + filesURL);
     }
 }

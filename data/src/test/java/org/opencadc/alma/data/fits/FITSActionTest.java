@@ -97,51 +97,10 @@ public class FITSActionTest {
     final HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 
     @Test
-    public void testVerifyArgumentsMissingCutout() throws Exception {
-        final FITSAction testSubject = new FITSAction();
-        final Map<String, String[]> inputParameters = new HashMap<>();
-
-        inputParameters.put("file", new String[]{"/myfile/path"});
-
-        when(mockRequest.getMethod()).thenReturn("GET");
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            when(mockRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-        }
-        when(mockRequest.getRequestURL()).thenReturn(new StringBuffer("https://almascience.org/data/fits"));
-        when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(inputParameters.keySet()));
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            when(mockRequest.getParameterValues(entry.getKey())).thenReturn(entry.getValue());
-        }
-
-        final SyncInput syncInput = new SyncInput(mockRequest, null);
-        syncInput.init();
-        testSubject.setSyncInput(syncInput);
-        try {
-            testSubject.verifyArguments();
-            Assert.fail("Should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            final String message = e.getMessage();
-            Assert.assertTrue("Wrong message: " + message, message.contains("Usage"));
-        }
-
-        verify(mockRequest).getMethod();
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            verify(mockRequest).getHeaderNames();
-        }
-        verify(mockRequest).getRequestURL();
-        verify(mockRequest).getParameterNames();
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            verify(mockRequest).getParameterValues(entry.getKey());
-        }
-    }
-
-    @Test
     public void testVerifyArgumentsMissingFile() throws Exception {
         final FITSAction testSubject = new FITSAction();
-        final Map<String, String[]> inputParameters = new HashMap<>();
 
+        final Map<String, String[]> inputParameters = new HashMap<>();
         inputParameters.put("cutout", new String[]{"[0][80:500]", "[10]"});
 
         when(mockRequest.getMethod()).thenReturn("GET");
@@ -183,7 +142,7 @@ public class FITSActionTest {
         final FITSAction testSubject = new FITSAction();
         final Map<String, String[]> inputParameters = new HashMap<>();
 
-        inputParameters.put("cutout", new String[]{"[SCI,10]"});
+        inputParameters.put("SUB", new String[]{"[SCI,10]"});
         inputParameters.put("file", new String[]{"/my/file/1", "/my/file/2"});
 
         when(mockRequest.getMethod()).thenReturn("GET");
@@ -223,7 +182,7 @@ public class FITSActionTest {
         final FITSAction testSubject = new FITSAction();
         final Map<String, String[]> inputParameters = new HashMap<>();
 
-        inputParameters.put("cutout", new String[]{"[SCI,10]"});
+        inputParameters.put("SUB", new String[]{"[SCI,10]"});
 
         // Same file twice should be reduced to the same file.
         inputParameters.put("file", new String[]{"/my/file/1", "/my/file/1"});

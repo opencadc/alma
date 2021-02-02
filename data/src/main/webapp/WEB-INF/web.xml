@@ -37,7 +37,7 @@
     </servlet>
 
     <servlet>
-        <servlet-name>FITSServlet</servlet-name>
+        <servlet-name>DataServlet</servlet-name>
         <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
         <init-param>
             <param-name>augmentSubject</param-name>
@@ -90,8 +90,13 @@
     <!-- Endpoints -->
 
     <servlet-mapping>
-        <servlet-name>FITSServlet</servlet-name>
-        <url-pattern>/fits</url-pattern>
+        <servlet-name>DataServlet</servlet-name>
+        <url-pattern>/files</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>DataServlet</servlet-name>
+        <url-pattern>/files/</url-pattern>
     </servlet-mapping>
 
     <!-- Availability servlet endpoint -->
@@ -113,7 +118,7 @@
     </servlet-mapping>
 
     <welcome-file-list>
-        <welcome-file>index.html</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
 
