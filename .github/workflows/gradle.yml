@@ -18,14 +18,6 @@ jobs:
       with:
         java-version: 1.11
 
-    # Temporary local build for cadc data ops fits library.
-    - name: local build of cadc-data-ops-fits
-      run: |
-        cd ..
-        git clone --single-branch --branch master https://github.com/opencadc/dal.git
-        cd dal/cadc-data-ops-fits
-        gradle -i assemble install
-
     - name: build, test, and install alma-lib
       run: cd alma-lib && gradle --info clean build test install
       
