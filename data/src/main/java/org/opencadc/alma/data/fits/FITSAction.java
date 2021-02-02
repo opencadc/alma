@@ -68,6 +68,7 @@
 
 package org.opencadc.alma.data.fits;
 
+import ca.nrc.cadc.net.HttpTransfer;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.util.StringUtil;
 import nom.tam.fits.Header;
@@ -78,6 +79,7 @@ import nom.tam.util.RandomAccessFileExt;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.opencadc.alma.data.BaseAction;
+import org.opencadc.alma.data.CutoutFileNameFormat;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.soda.ExtensionSlice;
 import org.opencadc.soda.SodaParamValidator;
@@ -96,6 +98,7 @@ public class FITSAction extends BaseAction {
     private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
     private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
     private static final String CUTOUT_PARAMETER_KEY = SodaParamValidator.SUB;
+    private static final String CONTENT_DISPOSITION = "Content-Disposition";
 
 
     void throwUsageError() {
@@ -155,9 +158,13 @@ public class FITSAction extends BaseAction {
             final Map<String, List<String>> subMap = new HashMap<>();
             subMap.put(CUTOUT_PARAMETER_KEY, requestedSubs);
             final List<ExtensionSlice> slices = SODA_PARAM_VALIDATOR.validateSUB(subMap);
+            final CutoutFileNameFormat cutoutFileNameFormat = new CutoutFileNameFormat(getFile().getName());
 
             try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
                 final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
+                syncOutput.setHeader(CONTENT_DISPOSITION, "inline; filename=\""
+                                                          + cutoutFileNameFormat.format(slices) + "\"");
+                syncOutput.setHeader(HttpTransfer.CONTENT_TYPE, "application/fits");
                 fitsOperations.cutoutToStream(slices, syncOutput.getOutputStream());
             }
             LOGGER.debug("FitsOperations.cutout: OK");

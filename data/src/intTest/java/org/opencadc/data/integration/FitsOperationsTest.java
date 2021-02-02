@@ -70,6 +70,7 @@ package org.opencadc.data.integration;
 
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.net.HttpGet;
+import ca.nrc.cadc.net.HttpTransfer;
 import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.Standards;
@@ -82,6 +83,9 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
+import org.opencadc.alma.data.CutoutFileNameFormat;
+import org.opencadc.soda.ExtensionSlice;
+import org.opencadc.soda.ExtensionSliceFormat;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -90,7 +94,9 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Integration test to pull existing test FITS files from CADC VOSpace (Vault) into a local directory, then PUT them
@@ -134,7 +140,7 @@ public class FitsOperationsTest extends DataIntTest {
                 "[30:45,50:75,10:105,*]"
         };
 
-        downloadAndCompare(fileURI, cutoutSpecs, testFilePrefix, testFileExtension);
+        downloadAndCompare(fileURI, cutoutSpecs, testFilePrefix, testFileExtension, HttpServletResponse.SC_OK);
     }
 
     /**
@@ -178,16 +184,16 @@ public class FitsOperationsTest extends DataIntTest {
     }
 
     private void downloadAndCompare(final URI fileURI, final String[] cutoutSpecs, final String testFilePrefix,
-                                    final String testFileExtension) throws Throwable {
-        downloadAndCompare(fileURI, cutoutSpecs, testFilePrefix, testFileExtension, HttpServletResponse.SC_OK);
-    }
-
-    private void downloadAndCompare(final URI fileURI, final String[] cutoutSpecs, final String testFilePrefix,
                                     final String testFileExtension, final int expectedResponseCode) throws Throwable {
         ensureFile(fileURI);
         final StringBuilder queryStringBuilder = new StringBuilder("?");
+        final List<ExtensionSlice> slices = new ArrayList<>(cutoutSpecs.length);
+        final ExtensionSliceFormat extensionSliceFormat = new ExtensionSliceFormat();
         Arrays.stream(cutoutSpecs).
-                forEach(cut -> queryStringBuilder.append("SUB=").append(NetUtil.encode(cut)).append("&"));
+                forEach(cut -> {
+                    queryStringBuilder.append("SUB=").append(NetUtil.encode(cut)).append("&");
+                    slices.add(extensionSliceFormat.parse(cut));
+                });
 
         // Ensure there is an ampersand ready for the file parameter
         queryStringBuilder.deleteCharAt(queryStringBuilder.lastIndexOf("&")).append("&");
@@ -208,6 +214,19 @@ public class FitsOperationsTest extends DataIntTest {
             if (cutoutClient.getThrowable() != null) {
                 throw cutoutClient.getThrowable();
             }
+
+            if (!slices.isEmpty()) {
+                final CutoutFileNameFormat cutoutFileNameFormat =
+                        new CutoutFileNameFormat(testFilePrefix + "." + testFileExtension);
+
+                Assert.assertEquals("Wrong Content-Disposition",
+                                    "inline; filename=\"" + cutoutFileNameFormat.format(slices) + "\"",
+                                    cutoutClient.getResponseHeader("Content-Disposition"));
+            }
+
+            Assert.assertEquals("Wrong Content-Type", "application/fits",
+                                cutoutClient.getResponseHeader(HttpTransfer.CONTENT_TYPE));
+
             fileOutputStream.flush();
         }
         LOGGER.debug("Cutout complete -> " + fileURI);
