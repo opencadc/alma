@@ -71,6 +71,7 @@ package org.opencadc.data.integration;
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.net.NetUtil;
+import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.Log4jInit;
@@ -82,6 +83,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URI;
@@ -124,7 +126,7 @@ public class FitsOperationsTest extends DataIntTest {
     }
 
     @Test
-    public void test4DCube() throws Exception {
+    public void test4DCube() throws Throwable {
         final String testFilePrefix = "test-4d-cube";
         final String testFileExtension = "fits";
         final URI fileURI = URI.create(testFilePrefix + "." + testFileExtension);
@@ -135,9 +137,54 @@ public class FitsOperationsTest extends DataIntTest {
         downloadAndCompare(fileURI, cutoutSpecs, testFilePrefix, testFileExtension);
     }
 
-    private void downloadAndCompare(final URI artifactURI, final String[] cutoutSpecs, final String testFilePrefix,
-                                    final String testFileExtension) throws Exception {
-        ensureFile(artifactURI);
+    /**
+     * Test proper error.  No overlap is a 400 error.
+     */
+    @Test
+    public void testNoOverlap() throws Throwable {
+        final String testFilePrefix = "test-4d-cube";
+        final String testFileExtension = "fits";
+        final URI fileURI = URI.create(testFilePrefix + "." + testFileExtension);
+        final String[] cutoutSpecs = new String[] {
+                "[2][60:700]"
+        };
+
+        try {
+            downloadAndCompare(fileURI, cutoutSpecs, testFilePrefix, testFileExtension,
+                               HttpServletResponse.SC_BAD_REQUEST);
+            Assert.fail("Should throw IllegalArgumentException");
+        } catch (IllegalArgumentException illegalArgumentException) {
+            Assert.assertTrue("Wrong message.", illegalArgumentException.getMessage().contains(
+                    "One or more requested slices could not be found"));
+        }
+    }
+
+    /**
+     * Test proper error.  Although the Server will throw a FileNotFoundException, the resulting 404 code will be
+     * interpreted by the client as a ResourceNotFoundException.
+     */
+    @Test
+    public void testNoSuchFile() throws Throwable {
+        final URL fileSUBURL = new URL(filesURL + "?" + "file=" + SERVICE_DATA_FILE_DIR + "/NOSUCHFILE.bogus");
+
+        try {
+            final HttpGet cutoutClient = new HttpGet(fileSUBURL, true);
+            cutoutClient.prepare();
+            Assert.fail("Should throw ResourceNotFoundException");
+        } catch (ResourceNotFoundException resourceNotFoundException) {
+            Assert.assertTrue("Wrong message.", resourceNotFoundException.getMessage().contains(
+                    "No such file or directory"));
+        }
+    }
+
+    private void downloadAndCompare(final URI fileURI, final String[] cutoutSpecs, final String testFilePrefix,
+                                    final String testFileExtension) throws Throwable {
+        downloadAndCompare(fileURI, cutoutSpecs, testFilePrefix, testFileExtension, HttpServletResponse.SC_OK);
+    }
+
+    private void downloadAndCompare(final URI fileURI, final String[] cutoutSpecs, final String testFilePrefix,
+                                    final String testFileExtension, final int expectedResponseCode) throws Throwable {
+        ensureFile(fileURI);
         final StringBuilder queryStringBuilder = new StringBuilder("?");
         Arrays.stream(cutoutSpecs).
                 forEach(cut -> queryStringBuilder.append("SUB=").append(NetUtil.encode(cut)).append("&"));
@@ -157,9 +204,13 @@ public class FitsOperationsTest extends DataIntTest {
             final HttpGet cutoutClient = new HttpGet(fileSUBURL, fileOutputStream);
             cutoutClient.setFollowRedirects(true);
             cutoutClient.run();
+            Assert.assertEquals("Wrong response code.", expectedResponseCode, cutoutClient.getResponseCode());
+            if (cutoutClient.getThrowable() != null) {
+                throw cutoutClient.getThrowable();
+            }
             fileOutputStream.flush();
         }
-        LOGGER.debug("Cutout complete -> " + artifactURI);
+        LOGGER.debug("Cutout complete -> " + fileURI);
 
         // setup
         final File expectedFile = new File(LOCAL_DATA_PATH.toFile(), testFilePrefix + "-cutout.fits");

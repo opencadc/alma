@@ -68,6 +68,7 @@
 
 package org.opencadc.alma.data.fits;
 
+import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.util.StringUtil;
 import nom.tam.fits.Header;
 import nom.tam.util.ArrayDataOutput;
@@ -81,9 +82,7 @@ import org.opencadc.fits.FitsOperations;
 import org.opencadc.soda.ExtensionSlice;
 import org.opencadc.soda.SodaParamValidator;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -164,11 +163,12 @@ public class FITSAction extends BaseAction {
             LOGGER.debug("FitsOperations.cutout: OK");
         } else {
             // If nothing is provided, then simply write the entire file out.
-            try (final InputStream inputStream = new FileInputStream(getFile())) {
+            try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
                 final OutputStream outputStream = syncOutput.getOutputStream();
-                final byte[] buffer = new byte[64 * 1024]; // 64KB buffer has proven a good performance size.
+                final int bufferSize = 64 * 1024; // 64KB buffer has proven a good performance size.
+                final byte[] buffer = new byte[bufferSize];
                 int byteCount;
-                while ((byteCount = inputStream.read(buffer)) >= 0) {
+                while ((byteCount = randomAccessDataObject.read(buffer)) >= 0) {
                     outputStream.write(buffer, 0, byteCount);
                 }
 
@@ -186,7 +186,11 @@ public class FITSAction extends BaseAction {
         return new FitsOperations(randomAccessDataObject);
     }
 
-    RandomAccessDataObject getRandomAccessDataObject() throws FileNotFoundException {
-        return new RandomAccessFileExt(getFile(), "r");
+    RandomAccessDataObject getRandomAccessDataObject() throws ResourceNotFoundException {
+        try {
+            return new RandomAccessFileExt(getFile(), "r");
+        } catch (FileNotFoundException fileNotFoundException) {
+            throw new ResourceNotFoundException(fileNotFoundException.getMessage());
+        }
     }
 }

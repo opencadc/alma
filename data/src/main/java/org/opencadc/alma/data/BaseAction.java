@@ -91,12 +91,7 @@ public abstract class BaseAction extends RestAction {
         final String requestedFilePath = syncInput.getParameter("file");
         LOGGER.debug("Searching for file " + requestedFilePath);
 
-        final File file = new File(requestedFilePath);
-        if (file.canRead()) {
-            return file;
-        } else {
-            throw new IllegalArgumentException("File " + file.getAbsolutePath() + " cannot be read or does not exist.");
-        }
+        return new File(requestedFilePath);
     }
 
     protected List<String> getParametersNullSafe(final String key) {
