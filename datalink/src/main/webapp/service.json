@@ -10,7 +10,7 @@
     ],
     "basePath": "/@app_name@",
     "paths": {
-        "/": {
+        "/sync": {
             "get": {
                 "summary": "IVOA DataLink v1.0",
                 "tags": [
