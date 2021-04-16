@@ -14,6 +14,24 @@ repositories {
     mavenLocal()
 }
 
+// Minimal publishing required to run publishToMavenLocal
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+        }
+    }
+}
+
 sourceCompatibility = 1.8
 group = 'org.opencadc'
 version = '1.3.1'
