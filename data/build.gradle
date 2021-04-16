@@ -53,7 +53,7 @@ dependencies {
     implementation 'org.opencadc:cadc-rest:[1.2.19,)'
     implementation 'org.opencadc:cadc-soda-server:[1.2.0,2.0.0)'
     implementation 'org.opencadc:cadc-vosi:[1.0,)'
-    implementation 'org.opencadc:nom-tam-fits:1.16.1'
+    implementation 'org.opencadc:nom-tam-fits:[1.16.2, 2.0.0)'
 
     testImplementation 'junit:junit:[4.12,5.0)'
     testImplementation 'org.mockito:mockito-core:[3.6.0,4)'
