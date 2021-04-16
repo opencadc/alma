@@ -1,4 +1,4 @@
-FROM opencadc/tomcat:9-jdk11-slim
+FROM tomcat:9-jdk11-openjdk-slim
 
 RUN rm -rf webapps/* \
     && mkdir -p /root/config
