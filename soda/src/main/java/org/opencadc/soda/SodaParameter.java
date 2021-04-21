@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,85 +66,8 @@
  ************************************************************************
  */
 
-package org.opencadc.tap.parser.converter;
+package org.opencadc.soda;
 
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
-import org.junit.Test;
-import ca.nrc.cadc.tap.parser.navigator.ExpressionNavigator;
-import ca.nrc.cadc.tap.parser.navigator.FromItemNavigator;
-import ca.nrc.cadc.tap.parser.navigator.ReferenceNavigator;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-
-
-public class OracleObsCoreSelectListConverterTest {
-
-    @Test
-    public void visit() {
-        final OracleObsCoreSelectListConverter testSubject =
-                new OracleObsCoreSelectListConverter(new ExpressionNavigator(), new ReferenceNavigator(),
-                                                     new FromItemNavigator());
-
-        final Table table = new Table("schema", "table");
-        final Column columnA = new Column(table, "A");
-        final Column columnB = new Column(table, "s_region");
-        final Column columnC = new Column(table, "C");
-
-        final List<SelectExpressionItem> selectItems = new ArrayList<>();
-        final SelectExpressionItem selectExpressionItemA = new SelectExpressionItem();
-        selectExpressionItemA.setExpression(columnA);
-        selectItems.add(selectExpressionItemA);
-
-        final SelectExpressionItem selectExpressionItemB = new SelectExpressionItem();
-        selectExpressionItemB.setExpression(columnB);
-        selectItems.add(selectExpressionItemB);
-
-        final SelectExpressionItem selectExpressionItemC = new SelectExpressionItem();
-        selectExpressionItemC.setExpression(columnC);
-        selectItems.add(selectExpressionItemC);
-
-        final PlainSelect plainSelect = new PlainSelect();
-        plainSelect.setSelectItems(selectItems);
-
-        // RUN THE TEST
-
-        testSubject.visit(plainSelect);
-
-        // END TEST RUN
-
-        final Column expectedColumnB = new Column(table, "FOOTPRINT");
-
-        final List<SelectExpressionItem> expectedSelectItems = new ArrayList<>();
-        final SelectExpressionItem expectedSelectExpressionItemA = new SelectExpressionItem();
-        expectedSelectExpressionItemA.setExpression(columnA);
-        expectedSelectItems.add(expectedSelectExpressionItemA);
-
-        final SelectExpressionItem expectedSelectExpressionItemB = new SelectExpressionItem();
-        expectedSelectExpressionItemB.setExpression(expectedColumnB);
-        expectedSelectItems.add(expectedSelectExpressionItemB);
-
-        final SelectExpressionItem expectedSelectExpressionItemC = new SelectExpressionItem();
-        expectedSelectExpressionItemC.setExpression(columnC);
-        expectedSelectItems.add(expectedSelectExpressionItemC);
-
-        final SelectExpressionItem[] expecteds = expectedSelectItems.toArray(new SelectExpressionItem[0]);
-        final SelectExpressionItem[] actuals = (SelectExpressionItem[])
-                plainSelect.getSelectItems().toArray(new SelectExpressionItem[0]);
-
-        assertEquals("Should be three.", 3, actuals.length);
-        assertEquals("Wrong length.", expecteds.length, actuals.length);
-
-        for (int i = 0, el = expecteds.length; i < el; i++) {
-            final SelectExpressionItem selectExpressionItem = expecteds[i];
-            final SelectExpressionItem actualExpressionItem = actuals[i];
-
-            assertEquals("Wrong item.", selectExpressionItem.toString(), actualExpressionItem.toString());
-        }
-    }
+public enum SodaParameter {
+    POS, CIRCLE, POLYGON, BAND, TIME, POL, SUB
 }

@@ -8,6 +8,9 @@ repositories {
     mavenCentral()
     mavenLocal()
 
+    // Remove jcenter when the uk.ac.starlink package is on Maven Central.
+    jcenter()
+
     maven {
         url = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
     }
@@ -61,14 +64,10 @@ dependencies {
 
     runtimeOnly 'org.opencadc:cadc-registry:[1.5.9,2.0)'
 
-    testImplementation 'junit:junit:[4.12,5.0)'
-    testImplementation 'org.opencadc:cadc-test-uws:[1.1.1,)'
+    testImplementation 'junit:junit:[4.13,5.0)'
+    testImplementation 'org.opencadc:cadc-test-uws:[1.2.2,)'
     testImplementation 'org.opencadc:cadc-test-vosi:[1.0.2,)'
     testImplementation 'org.opencadc:cadc-test-tap:[1.1,)'
-
-    intTestImplementation 'org.opencadc:cadc-test-uws:[1.1.1,)'
-    intTestImplementation 'org.opencadc:cadc-test-vosi:[1.0.2,)'
-    intTestImplementation 'org.opencadc:cadc-test-tap:[1.1,)'
 }
 
 sourceSets {
