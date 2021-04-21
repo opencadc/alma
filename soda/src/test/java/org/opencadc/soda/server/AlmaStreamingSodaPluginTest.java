@@ -71,11 +71,9 @@ package org.opencadc.soda.server;
 
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Point;
-import ca.nrc.cadc.dali.Shape;
 
 import java.net.URI;
 import java.net.URL;
-import java.util.Collections;
 
 import static org.mockito.Mockito.*;
 
@@ -98,18 +96,19 @@ public class AlmaStreamingSodaPluginTest {
         final URI targetURI = URI.create("1977.11.25_uid___C1_C2_C3.myfile.fits");
         final AlmaUID targetAlmaUID = new AlmaUID(targetURI.toString());
         final Circle circle = new Circle(new Point(18.0D, 78.5D), 0.5D);
-        final Cutout<Shape> testCutout = new Cutout<>("TESTCIRC", "TESTCIRC1", circle);
+        final Cutout testCutout = new Cutout();
+        testCutout.pos = circle;
+
         final HierarchyItem hierarchyItem = new HierarchyItem(new AlmaUID(targetParentUid), targetAlmaUID.toString(), "myfile.fits",
                                                               HierarchyItem.Type.ASDM, 88L, true,
                                                               new HierarchyItem[0], new AlmaUID[0]);
 
         when(mockRequestHandlerQuery.query(targetAlmaUID)).thenReturn(hierarchyItem);
-        when(mockSodaURLBuilder.createCutoutURL(hierarchyItem, testCutout, null, null, null)).thenReturn(
+        when(mockSodaURLBuilder.createCutoutURL(hierarchyItem, testCutout)).thenReturn(
                 new URL("https://almaserver.com/sodacutout/downloads/1977.11.25_uid___C1_C2_C3.myfile.fits?CIRCLE=18" +
                         ".0+78.5+0.5"));
 
-        final URL cutoutURL = testSubject.toURL(88, targetURI, testCutout, null, null, null,
-                                                Collections.emptyList(), Collections.emptyMap());
+        final URL cutoutURL = testSubject.toURL(88, targetURI, testCutout, null);
 
         Assert.assertEquals("Wrong result URL.",
                             "https://almaserver.com/sodacutout/downloads/1977.11.25_uid___C1_C2_C3.myfile" +

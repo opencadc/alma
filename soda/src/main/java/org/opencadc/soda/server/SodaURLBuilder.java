@@ -69,58 +69,99 @@
 
 package org.opencadc.soda.server;
 
+import ca.nrc.cadc.dali.Circle;
+import ca.nrc.cadc.dali.Polygon;
+import ca.nrc.cadc.dali.util.CircleFormat;
+import ca.nrc.cadc.dali.util.IntervalFormat;
+import ca.nrc.cadc.dali.util.PolygonFormat;
+import ca.nrc.cadc.dali.util.ShapeFormat;
+import ca.nrc.cadc.dali.util.StringListFormat;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.deliverable.DeliverableURLBuilder;
 import org.opencadc.alma.deliverable.HierarchyItem;
 
-import ca.nrc.cadc.dali.Interval;
-import ca.nrc.cadc.dali.Shape;
 import ca.nrc.cadc.net.NetUtil;
-import ca.nrc.cadc.util.StringUtil;
+import org.opencadc.soda.ExtensionSliceFormat;
+import org.opencadc.soda.SodaParameter;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 
 
 public class SodaURLBuilder extends DeliverableURLBuilder {
-
     private static final Logger LOGGER = LogManager.getLogger(SodaURLBuilder.class);
 
     public SodaURLBuilder(final AlmaProperties almaProperties) {
         super(almaProperties);
     }
 
-    public URL createCutoutURL(final HierarchyItem hierarchyItem, Cutout<Shape> pos, Cutout<Interval> band,
-                               Cutout<Interval> time, Cutout<List<String>> pol) throws MalformedURLException {
+    public URL createCutoutURL(final HierarchyItem hierarchyItem, final Cutout cutout) throws MalformedURLException {
         final URL downloadURL = createDownloadURL(hierarchyItem);
-
-        URL cutoutURL = toCutoutURL(downloadURL, pos);
-        cutoutURL = toCutoutURL(cutoutURL, band);
-        cutoutURL = toCutoutURL(cutoutURL, time);
-        cutoutURL = toCutoutURL(cutoutURL, pol);
-        return cutoutURL;
+        return toCutoutURL(downloadURL, cutout);
     }
 
-    private URL toCutoutURL(final URL downloadURL, Cutout<?> cutout) throws MalformedURLException {
-        if ((cutout == null) || (cutout.value == null)) {
+    private URL toCutoutURL(final URL downloadURL, Cutout cutout) throws MalformedURLException {
+        if ((cutout == null) || isEmpty(cutout)) {
             return downloadURL;
         } else {
-            final String queryParam = NetUtil.encode(String.format("%s=%s", cutout.name, cutout.value));
             final StringBuilder cutoutURLString = new StringBuilder(downloadURL.toExternalForm());
-            if (StringUtil.hasText(downloadURL.getQuery())) {
-                cutoutURLString.append("&");
-            } else {
-                cutoutURLString.append("?");
+
+            if (cutout.pos != null) {
+                if (cutout.pos instanceof Circle) {
+                    final CircleFormat f = new CircleFormat();
+                    appendQuery(cutoutURLString, SodaParameter.CIRCLE, f.format((Circle) cutout.pos));
+                } else if (cutout.pos instanceof Polygon) {
+                    final PolygonFormat f = new PolygonFormat();
+                    appendQuery(cutoutURLString, SodaParameter.POLYGON, f.format((Polygon) cutout.pos));
+                } else {
+                    final ShapeFormat f = new ShapeFormat();
+                    appendQuery(cutoutURLString, SodaParameter.POS, f.format(cutout.pos));
+                }
             }
 
-            cutoutURLString.append(queryParam);
+            if (cutout.band != null) {
+                final IntervalFormat f = new IntervalFormat();
+                appendQuery(cutoutURLString, SodaParameter.BAND, f.format(cutout.band));
+            }
+
+            if (cutout.time != null) {
+                IntervalFormat f = new IntervalFormat();
+                appendQuery(cutoutURLString, SodaParameter.TIME, f.format(cutout.time));
+            }
+
+            if (cutout.pol != null && !cutout.pol.isEmpty()) {
+                final StringListFormat f = new StringListFormat();
+                appendQuery(cutoutURLString, SodaParameter.POL, f.format(cutout.pol));
+            }
+
+            if (cutout.pixelCutouts != null && !cutout.pixelCutouts.isEmpty()) {
+                final ExtensionSliceFormat f = new ExtensionSliceFormat();
+                cutout.pixelCutouts.forEach(pixelCutout -> appendQuery(cutoutURLString, SodaParameter.SUB,
+                                                                       f.format(pixelCutout)));
+            }
 
             LOGGER.debug(String.format("CutoutURL from %s is %s.", cutout, cutoutURLString));
 
             return new URL(cutoutURLString.toString());
         }
+    }
+
+    private boolean isEmpty(final Cutout cutout) {
+        return cutout.pos == null && cutout.band == null && cutout.time == null
+               && (cutout.pol == null || cutout.pol.isEmpty())
+               && cutout.custom == null && cutout.customAxis == null
+               && (cutout.pixelCutouts == null || cutout.pixelCutouts.isEmpty());
+    }
+
+    private void appendQuery(final StringBuilder cutoutURLStringBuilder, final SodaParameter key, final String value) {
+        if (cutoutURLStringBuilder.indexOf("?") > 0) {
+            cutoutURLStringBuilder.append("&");
+        } else {
+            cutoutURLStringBuilder.append("?");
+        }
+
+        cutoutURLStringBuilder.append(key.name()).append("=").append(NetUtil.encode(value));
     }
 }

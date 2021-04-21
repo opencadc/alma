@@ -5,27 +5,43 @@
  * Learn how to create Gradle builds at https://guides.gradle.org/creating-new-gradle-builds/
  */
 plugins {
-    id 'java'
-    id 'maven'
+    id 'java-library'
     id 'maven-publish'
-    id 'com.jfrog.bintray' version '1.8.4'
 }
 
 repositories {
+    mavenCentral()
     mavenLocal()
-    jcenter()
+}
+
+// Minimal publishing required to run publishToMavenLocal
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+        }
+    }
 }
 
 sourceCompatibility = 1.8
 group = 'org.opencadc'
-version = '1.3.0'
+version = '1.3.1'
 
 dependencies {
     implementation 'org.apache.logging.log4j:log4j-core:[2.13.0,3.0)'
     implementation 'org.apache.logging.log4j:log4j-slf4j-impl:[2.13.0,3.0)'
     implementation 'org.opencadc:cadc-util:[1.3,2.0)'
-    implementation 'org.opencadc:cadc-registry:[1.5.4,2.0)'
+    implementation 'org.opencadc:cadc-registry:[1.5.9,2.0)'
 
     testImplementation 'junit:junit:[4.12,5.0)'
-    testImplementation 'org.mockito:mockito-core:[3.3.3,4)'
+    testImplementation 'org.mockito:mockito-core:[3.9,4.0)'
 }

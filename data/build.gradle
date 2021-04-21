@@ -5,13 +5,13 @@ plugins {
 }
 
 repositories {
+    mavenCentral()
     mavenLocal()
-    jcenter()
 }
 
 group = 'org.opencadc'
 sourceCompatibility = 1.8
-version = '0.2.0'
+version = '1.0.1'
 
 ext {
     default_app_name = 'data'
@@ -53,15 +53,15 @@ dependencies {
     implementation 'org.opencadc:cadc-rest:[1.2.19,)'
     implementation 'org.opencadc:cadc-soda-server:[1.2.0,2.0.0)'
     implementation 'org.opencadc:cadc-vosi:[1.0,)'
-    implementation 'org.opencadc:nom-tam-fits:1.16.1'
+    implementation 'org.opencadc:nom-tam-fits:[1.16.2, 2.0.0)'
 
     testImplementation 'junit:junit:[4.12,5.0)'
     testImplementation 'org.mockito:mockito-core:[3.6.0,4)'
-    testImplementation 'org.opencadc:cadc-test-uws:[1.1.1,)'
-    testImplementation 'org.opencadc:cadc-test-vosi:[1.0.2,)'
+    testImplementation 'org.opencadc:cadc-test-uws:[1.2.2,2.0.0)'
+    testImplementation 'org.opencadc:cadc-test-vosi:[1.0.9,2.0.0)'
 
-    intTestImplementation 'org.opencadc:cadc-test-uws:[1.1.1,)'
-    intTestImplementation 'org.opencadc:cadc-test-vosi:[1.0.2,)'
+    intTestImplementation 'org.opencadc:cadc-test-uws:[1.2.1,2.0.0)'
+    intTestImplementation 'org.opencadc:cadc-test-vosi:[1.0.9,2.0.0)'
 }
 
 sourceSets {
