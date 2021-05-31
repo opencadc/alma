@@ -1,4 +1,4 @@
-version: "3.2"
+version: "3.7"
 services:
   traefik:
     image: traefik:v2.4
@@ -57,7 +57,7 @@ services:
       - "traefik.http.routers.data.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.data.tls.domains[0].sans=*.cadc.dao.nrc.ca"
     environment:
-      CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=nrc-023054.cadc.dao.nrc.ca -Dtomcat.relaxedQueryChars="[]|"'
+      CATALINA_OPTS: '-Dca.nrc.cadc.reg.client.RegistryClient.host=nrc-023054.cadc.dao.nrc.ca'
 
 networks:
   alma:

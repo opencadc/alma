@@ -68,9 +68,14 @@
 
 package org.opencadc.alma.data;
 
+import ca.nrc.cadc.dali.Circle;
+import ca.nrc.cadc.dali.Polygon;
+import ca.nrc.cadc.dali.Range;
+import ca.nrc.cadc.dali.Shape;
 import ca.nrc.cadc.util.StringUtil;
 import org.opencadc.soda.ExtensionSlice;
 import org.opencadc.soda.PixelRange;
+import org.opencadc.soda.server.Cutout;
 
 import java.util.List;
 
@@ -88,12 +93,27 @@ public class CutoutFileNameFormat {
     }
 
     /**
-     * Obtain a new file name based on the provided slices.  This is done by replacing values with underscores, and then
-     * inserting this underscore value into the file name after the last period.
-     * @param slices    The slices to use as format elements.
+     * Obtain a new file name based on the provided cutout.
+     * @param cutout    The cutout to use in naming.
      * @return      New filename String.  Never null.
      */
-    public String format(final List<ExtensionSlice> slices) {
+    public String format(final Cutout cutout) {
+        if (cutout.pixelCutouts != null && !cutout.pixelCutouts.isEmpty()) {
+            return format(cutout.pixelCutouts);
+        } else if (cutout.pos != null) {
+            return format(cutout.pos);
+        } else {
+            return this.originalFileName;
+        }
+    }
+
+    /**
+     * This is done by replacing values with underscores, and then
+     * inserting this underscore value into the file name after the last period.
+     * @param slices    The list of extension slice objects.
+     * @return      New filename String.  Never null.
+     */
+    private String format(final List<ExtensionSlice> slices) {
         final StringBuilder appendage = new StringBuilder();
 
         for (final ExtensionSlice slice : slices) {
@@ -131,8 +151,61 @@ public class CutoutFileNameFormat {
             appendage.deleteCharAt(appendage.lastIndexOf(OUTPUT_DELIMITER));
         }
 
-        final StringBuilder fileBuilder = new StringBuilder(originalFileName);
-        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, appendage.toString() + ".");
+        final StringBuilder fileBuilder = new StringBuilder(this.originalFileName);
+        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, appendage + ".");
+
+        return fileBuilder.toString();
+    }
+
+    private String format(final Shape shape) {
+        if (shape instanceof Circle) {
+            return format((Circle) shape);
+        } else if (shape instanceof Polygon) {
+            return format((Polygon) shape);
+        } else if (shape instanceof Range) {
+            return format((Range) shape);
+        } else {
+            return this.originalFileName;
+        }
+    }
+
+    private String format(final Circle circle) {
+        final StringBuilder fileBuilder = new StringBuilder(this.originalFileName);
+        String appendage = OUTPUT_DELIMITER + OUTPUT_DELIMITER
+                           + circle.getCenter().getLongitude() + OUTPUT_DELIMITER
+                           + circle.getCenter().getLatitude() + OUTPUT_DELIMITER
+                           + circle.getRadius() + OUTPUT_DELIMITER;
+        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, appendage + ".");
+
+        return fileBuilder.toString();
+    }
+
+    private String format(final Polygon polygon) {
+        final StringBuilder fileBuilder = new StringBuilder(this.originalFileName);
+        final StringBuilder appendage = new StringBuilder();
+
+        polygon.getVertices().forEach(v -> appendage.append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER)
+                                                    .append(v.getLongitude()).append(OUTPUT_DELIMITER)
+                                                    .append(v.getLatitude()));
+
+        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, appendage + ".");
+
+        return fileBuilder.toString();
+    }
+
+    private String format(final Range range) {
+        final StringBuilder fileBuilder = new StringBuilder(this.originalFileName);
+
+        fileBuilder.append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER)
+                   .append(range.getLongitude().getLower())
+                   .append(OUTPUT_DELIMITER)
+                   .append(range.getLongitude().getUpper())
+                   .append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER)
+                   .append(range.getLatitude().getLower())
+                   .append(OUTPUT_DELIMITER)
+                   .append(range.getLatitude().getUpper());
+
+        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, ".");
 
         return fileBuilder.toString();
     }

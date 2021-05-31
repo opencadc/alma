@@ -68,9 +68,15 @@
 
 package org.opencadc.alma.data.fits;
 
+import ca.nrc.cadc.dali.Circle;
+import ca.nrc.cadc.dali.Interval;
+import ca.nrc.cadc.dali.Polygon;
+import ca.nrc.cadc.io.ByteCountOutputStream;
+import ca.nrc.cadc.io.WriteException;
 import ca.nrc.cadc.net.HttpTransfer;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.util.StringUtil;
+import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.util.ArrayDataOutput;
 import nom.tam.util.BufferedDataOutputStream;
@@ -83,10 +89,13 @@ import org.opencadc.alma.data.CutoutFileNameFormat;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.soda.ExtensionSlice;
 import org.opencadc.soda.SodaParamValidator;
+import org.opencadc.soda.server.Cutout;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,6 +123,7 @@ public class FITSAction extends BaseAction {
 
     final void verifyArguments() {
         // Put them into a Set in case the same file was provided more than once, and can be reduced here.
+
         final Set<String> requestedFilePaths = new HashSet<>(getParametersNullSafe("file"));
         final List<String> cutoutSpec = getParametersNullSafe(CUTOUT_PARAMETER_KEY);
 
@@ -136,13 +146,34 @@ public class FITSAction extends BaseAction {
     @Override
     public void doAction() throws Exception {
         verifyArguments();
+
+        try {
+            // The caller will close this stream.
+            final ByteCountOutputStream byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
+            write(byteCountOutputStream);
+            super.logInfo.setBytes(byteCountOutputStream.getByteCount());
+
+            byteCountOutputStream.flush();
+        } catch (WriteException e) {
+            // error on client write
+            String msg = "write output error";
+            LOGGER.debug(msg, e);
+            if (e.getMessage() != null) {
+                msg += ": " + e.getMessage();
+            }
+            throw new IllegalArgumentException(msg, e);
+        }
+    }
+
+    void write(final ByteCountOutputStream byteCountOutputStream) throws ResourceNotFoundException, IOException,
+                                                                         FitsException {
         final String headerRequest = syncInput.getParameter("headers");
-        final List<String> requestedSubs = syncInput.getParameters(CUTOUT_PARAMETER_KEY);
+        final Map<String, List<String>> sodaParameterMap = getSodaParameters();
 
         if (StringUtil.hasText(headerRequest) && Boolean.parseBoolean(headerRequest)) {
             LOGGER.debug("FitsOperations.headers: START");
-            try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject();
-                 final ArrayDataOutput output = new BufferedDataOutputStream(syncOutput.getOutputStream())) {
+            try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
+                final ArrayDataOutput output = new BufferedDataOutputStream(byteCountOutputStream);
                 final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
                 for (final Header header : fitsOperations.getHeaders()) {
                     header.write(output);
@@ -151,37 +182,109 @@ public class FITSAction extends BaseAction {
                 output.flush();
                 LOGGER.debug("FitsOperations.headers: OK");
             }
-        } else if (requestedSubs != null && !requestedSubs.isEmpty()) {
-            LOGGER.debug("FitsOperations.cutout: START");
-
-            // If any cutouts were requested
-            final Map<String, List<String>> subMap = new HashMap<>();
-            subMap.put(CUTOUT_PARAMETER_KEY, requestedSubs);
-            final List<ExtensionSlice> slices = SODA_PARAM_VALIDATOR.validateSUB(subMap);
-            final CutoutFileNameFormat cutoutFileNameFormat = new CutoutFileNameFormat(getFile().getName());
-
-            try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
-                final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
-                syncOutput.setHeader(CONTENT_DISPOSITION, "inline; filename=\""
-                                                          + cutoutFileNameFormat.format(slices) + "\"");
-                syncOutput.setHeader(HttpTransfer.CONTENT_TYPE, "application/fits");
-                fitsOperations.cutoutToStream(slices, syncOutput.getOutputStream());
-            }
-            LOGGER.debug("FitsOperations.cutout: OK");
-        } else {
+        } else if (sodaParameterMap.isEmpty()) {
+            LOGGER.debug("FitsOperations.empty: START");
             // If nothing is provided, then simply write the entire file out.
             try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
-                final OutputStream outputStream = syncOutput.getOutputStream();
                 final int bufferSize = 64 * 1024; // 64KB buffer has proven a good performance size.
                 final byte[] buffer = new byte[bufferSize];
                 int byteCount;
                 while ((byteCount = randomAccessDataObject.read(buffer)) >= 0) {
-                    outputStream.write(buffer, 0, byteCount);
+                    byteCountOutputStream.write(buffer, 0, byteCount);
                 }
 
-                outputStream.flush();
+                byteCountOutputStream.flush();
+            }
+            LOGGER.debug("FitsOperations.empty: OK");
+        } else {
+            final CutoutFileNameFormat cutoutFileNameFormat = new CutoutFileNameFormat(getFile().getName());
+            final Cutout cutout = new Cutout();
+
+            final List<ExtensionSlice> slices = SODA_PARAM_VALIDATOR.validateSUB(sodaParameterMap);
+            if (!slices.isEmpty()) {
+                cutout.pixelCutouts = slices;
+            }
+
+            final List<Circle> circles = SODA_PARAM_VALIDATOR.validateCircle(sodaParameterMap);
+            if (!circles.isEmpty()) {
+                cutout.pos = circles.get(0);
+            }
+
+            final List<Polygon> polygons = SODA_PARAM_VALIDATOR.validatePolygon(sodaParameterMap);
+            if (!polygons.isEmpty()) {
+                cutout.pos = polygons.get(0);
+            }
+
+            final List<Interval> bands = SODA_PARAM_VALIDATOR.validateBAND(sodaParameterMap);
+            if (!bands.isEmpty()) {
+                cutout.band = bands.get(0);
+            }
+
+            final List<Interval> times = SODA_PARAM_VALIDATOR.validateTIME(sodaParameterMap);
+            if (!times.isEmpty()) {
+                cutout.time = times.get(0);
+            }
+
+            final List<String> polarizations = SODA_PARAM_VALIDATOR.validatePOL(sodaParameterMap);
+            if (!polarizations.isEmpty()) {
+                cutout.pol = polarizations;
+            }
+
+            if (!isEmpty(cutout)) {
+                syncOutput.setHeader(CONTENT_DISPOSITION,
+                                     "inline; filename=\"" + cutoutFileNameFormat.format(cutout) + "\"");
+                syncOutput.setHeader(HttpTransfer.CONTENT_TYPE, "application/fits");
+
+                try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
+                    final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
+                    fitsOperations.cutoutToStream(cutout, byteCountOutputStream);
+                }
+            } else {
+                throw new IllegalArgumentException("No usabel cutouts supplied.");
             }
         }
+    }
+
+    private boolean isEmpty(final Cutout cutout) {
+        return cutout.pos == null && cutout.band == null && cutout.time == null
+               && (cutout.pol == null || cutout.pol.isEmpty()) && cutout.custom == null
+               && cutout.customAxis == null && (cutout.pixelCutouts == null || cutout.pixelCutouts.isEmpty());
+    }
+
+    private Map<String, List<String>> getSodaParameters() {
+        final Set<String> parameterNames = syncInput.getParameterNames();
+        final Map<String, List<String>> paramMap = new HashMap<>();
+
+        if (parameterNames.contains(SodaParamValidator.SUB)) {
+            paramMap.put(SodaParamValidator.SUB, syncInput.getParameters(SodaParamValidator.SUB));
+        } else if (parameterNames.contains(SodaParamValidator.CIRCLE)) {
+            paramMap.put(SodaParamValidator.CIRCLE, syncInput.getParameters(SodaParamValidator.CIRCLE));
+        } else if (parameterNames.contains(SodaParamValidator.POLYGON)) {
+            paramMap.put(SodaParamValidator.POLYGON, syncInput.getParameters(SodaParamValidator.POLYGON));
+        } else if (parameterNames.contains(SodaParamValidator.POS)) {
+            final List<String> posParamValues = syncInput.getParameters(SodaParamValidator.POS);
+            posParamValues.forEach(s -> {
+                if (s.startsWith(SodaParamValidator.CIRCLE)) {
+                    paramMap.put(SodaParamValidator.CIRCLE,
+                                 Collections.singletonList(s.substring(SodaParamValidator.CIRCLE.length()).trim()));
+                } else if (s.startsWith(SodaParamValidator.POLYGON)) {
+                    paramMap.put(SodaParamValidator.POLYGON,
+                                 Collections.singletonList(s.substring(SodaParamValidator.POLYGON.length()).trim()));
+                } else if (s.startsWith("RANGE")) {
+                    paramMap.put("RANGE", Collections.singletonList(s.substring("RANGE".length()).trim()));
+                } else {
+                    LOGGER.error("Unsupported POS: " + s);
+                }
+            });
+        } else if (parameterNames.contains(SodaParamValidator.BAND)) {
+            paramMap.put(SodaParamValidator.BAND, syncInput.getParameters(SodaParamValidator.BAND));
+        } else if (parameterNames.contains(SodaParamValidator.TIME)) {
+            paramMap.put(SodaParamValidator.TIME, syncInput.getParameters(SodaParamValidator.TIME));
+        } else if (parameterNames.contains(SodaParamValidator.POL)) {
+            paramMap.put(SodaParamValidator.POL, syncInput.getParameters(SodaParamValidator.POL));
+        }
+
+        return paramMap;
     }
 
     /**
