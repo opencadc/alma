@@ -93,7 +93,6 @@ import org.opencadc.soda.server.Cutout;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -112,13 +111,18 @@ public class FITSAction extends BaseAction {
 
     void throwUsageError() {
         final String requestURI = syncInput.getRequestURI();
-        throw new IllegalArgumentException(String.format("\nUsage: \n%s"
-                                                         + "?file=[ABSOLUTE_FILE_PATH]\n"
-                                                         + "OR for a sub-region:\n%s"
-                                                         + "?file=[ABSOLUTE_FILE_PATH]&%s=[CUTOUT_SPEC]\n"
-                                                         + "OR for headers only:\n%s"
-                                                         + "?file=[ABSOLUTE_FILE_PATH]&headers=true", requestURI,
-                                                         requestURI, SodaParamValidator.SUB, requestURI));
+        throw new IllegalArgumentException(
+                String.format("\nUsage: \n"
+                              + "%s?file=[ABSOLUTE_FILE_PATH]\n"
+                              + "OR for a sub-region:\n"
+                              + "%s?file=[ABSOLUTE_FILE_PATH]&[SODA_PARAM]=[CUTOUT_SPEC]\n"
+                              + "OR for headers only:\n%s"
+                              + "?file=[ABSOLUTE_FILE_PATH]&headers=true\n\n"
+                              + "See https://www.ivoa.net/documents/SODA/20170517/REC-SODA-1.0.html#tth_sEc3.3 for "
+                              + "SODA_PARAM values.",
+                              requestURI,
+                              requestURI,
+                              requestURI));
     }
 
     final void verifyArguments() {
