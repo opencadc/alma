@@ -1,4 +1,4 @@
-ALMA Data service (0.2.0)
+ALMA Data service (1.1.0)
 ==============================
 
 Simple data service to perform cutouts (sub-images) of files.  The current implementation only supports FITS files,
