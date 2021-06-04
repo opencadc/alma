@@ -12,7 +12,7 @@ build_install_alma-lib:
     paths:
       - /root/.m2
   script:
-    - cd alma-lib && ../gradlew -i clean build test install
+    - cd alma-lib && ../gradlew -i clean build test publishToMavenLocal
 
 build_data:
   stage: build
