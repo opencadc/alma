@@ -1,4 +1,5 @@
 stages:
+  - build_lib
   - build
   - test
   - deploy
@@ -6,24 +7,12 @@ stages:
 image: gradle:jdk11
 
 build_install_alma-lib:
-  stage: build
+  stage: build_lib
   artifacts:
     paths:
       - /root/.m2
   script:
-    - ./gradlew -i clean build test install
-
-#    - name: build and test obscore
-#      run: cd obscore && gradle --info clean build test
-#
-#    - name: build and test reg
-#      run: cd reg && gradle --info clean build test
-#
-#    - name: build and test sia
-#      run: cd sia && gradle --info clean build test
-#
-#    - name: build and test soda
-#      run: cd soda && gradle --info clean build test
+    - cd alma-lib && ../gradlew -i clean build test install
 
 build_data:
   stage: build
@@ -40,3 +29,35 @@ build_datalink:
     - build_install_alma-lib
   script:
     - cd datalink && ../gradlew -i clean build test
+
+build_obscore:
+  stage: build
+  needs: [build_install_alma-lib]
+  dependencies:
+    - build_install_alma-lib
+  script:
+    - cd obscore && ../gradlew -i clean build test
+
+build_reg:
+  stage: build
+  needs: [build_install_alma-lib]
+  dependencies:
+    - build_install_alma-lib
+  script:
+    - cd reg && ../gradlew -i clean build test
+
+build_sia:
+  stage: build
+  needs: [build_install_alma-lib]
+  dependencies:
+    - build_install_alma-lib
+  script:
+    - cd sia && ../gradlew -i clean build test
+
+build_soda:
+  stage: build
+  needs: [build_install_alma-lib]
+  dependencies:
+    - build_install_alma-lib
+  script:
+    - cd soda && ../gradlew -i clean build test
