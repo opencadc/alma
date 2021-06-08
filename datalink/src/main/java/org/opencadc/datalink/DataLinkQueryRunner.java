@@ -70,7 +70,6 @@
 package org.opencadc.datalink;
 
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import org.opencadc.datalink.server.DataLinkSource;
 import org.opencadc.datalink.server.LinkQueryRunner;
 
@@ -119,8 +118,8 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
         if (dataSetIDList.isEmpty()) {
             throw new IllegalArgumentException("No dataset IDs provided.  Use ID=uid://XXX");
         } else {
-            final RequestHandlerQuery requestHandlerQuery = createRequestHandlerQuery();
-            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), requestHandlerQuery);
+            final DataLinkQuery dataLinkQuery = createDataLinkQuery();
+            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), dataLinkQuery);
         }
     }
 
@@ -129,9 +128,9 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
                                       DataLinkAvailabilityPlugin.getSodaBaseURL(almaProperties));
     }
 
-    private RequestHandlerQuery createRequestHandlerQuery() {
+    private DataLinkQuery createDataLinkQuery() {
         final String configuredResourceID =
                 almaProperties.getFirstPropertyValue(ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY, null);
-        return new RequestHandlerQuery(URI.create(configuredResourceID));
+        return new DataLinkQuery(URI.create(configuredResourceID));
     }
 }

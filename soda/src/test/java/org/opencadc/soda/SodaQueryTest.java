@@ -67,62 +67,71 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.server;
+package org.opencadc.soda;
 
-import org.opencadc.alma.AlmaProperties;
+import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.net.NetUtil;
+import ca.nrc.cadc.reg.Standards;
+import ca.nrc.cadc.reg.client.RegistryClient;
 
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.DoubleInterval;
 import ca.nrc.cadc.dali.Point;
 import ca.nrc.cadc.dali.Polygon;
 
+import java.io.File;
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
 
 import org.junit.Test;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
-import org.opencadc.alma.deliverable.HierarchyItem;
+import org.opencadc.soda.server.Cutout;
 
 import static org.mockito.Mockito.*;
 
 
-public class SodaURLBuilderTest {
+public class SodaQueryTest {
 
-    public SodaURLBuilderTest() {
+    public SodaQueryTest() {
         Configurator.setLevel("org.opencadc.soda", Level.DEBUG);
     }
 
     @Test
     public void createCircleCutoutURL() throws Exception {
-        final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
-        final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
+        final RegistryClient mockServiceRegistryClient = mock(RegistryClient.class);
         final Circle circle = new Circle(new Point(12.0D, 56.0D), 0.6D);
         final Cutout shapeCutout = new Cutout();
         shapeCutout.pos = circle;
 
-        final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
+        final URI serviceID = URI.create("ivo://cadc.nrc.ca/ngas-soda");
 
-        when(mockHierarchyItem.getNullSafeId(true)).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        final SodaQuery testSubject = new SodaQuery(null, serviceID) {
+            @Override
+            protected RegistryClient createRegistryClient() {
+                return mockServiceRegistryClient;
+            }
+        };
 
-        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
-        when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
+        when(mockServiceRegistryClient.getServiceURL(serviceID, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON))
+                .thenReturn(new URL("https://almaservices.com/sodacutout"));
 
-        final URL expectedURL = new URL(
-                "https://almaservices.com/sodacutout/download/1977.11.25_uid___C1_C2_C3.fits?CIRCLE=12.0+56.0+0.6");
-        final URL resultURL = testSubject.createCutoutURL(mockHierarchyItem, shapeCutout);
+        final Path filePath = new File("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits").toPath();
+        final URL expectedURL = new URL("https://almaservices.com/sodacutout/files?file="
+                                        + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
+                                        + "&CIRCLE=12.0+56.0+0.6");
+        final URL resultURL = testSubject.toCutoutURL(filePath, shapeCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
-        verify(mockHierarchyItem, times(1)).getNullSafeId(true);
+        verify(mockServiceRegistryClient, times(1))
+                .getServiceURL(serviceID, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON);
     }
 
     @Test
     public void createPolygonCutoutURL() throws Exception {
-        final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
-        final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
-
+        final RegistryClient mockServiceRegistryClient = mock(RegistryClient.class);
         final Polygon polygon = new Polygon();
         polygon.getVertices().add(new Point(12.4D, 56.7D));
         polygon.getVertices().add(new Point(5.6D, 44.5D));
@@ -130,50 +139,56 @@ public class SodaURLBuilderTest {
 
         final Cutout shapeCutout = new Cutout();
         shapeCutout.pos = polygon;
-        final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
 
-        when(mockHierarchyItem.getType()).thenReturn(HierarchyItem.Type.MOUS);
-        when(mockHierarchyItem.getNullSafeId(true)).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
+        final URI serviceID = URI.create("ivo://cadc.nrc.ca/ngas-soda");
 
-        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
-        when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
+        final SodaQuery testSubject = new SodaQuery(null, serviceID) {
+            @Override
+            protected RegistryClient createRegistryClient() {
+                return mockServiceRegistryClient;
+            }
+        };
 
-        final URL expectedURL = new URL(
-                "https://almaservices.com/sodacutout/download/1977.11.25_uid___C1_C2_C3.fits?POLYGON=12.4+56.7+5" +
-                ".6+44.5+18.3+33.5");
-        final URL resultURL = testSubject.createCutoutURL(mockHierarchyItem, shapeCutout);
+        when(mockServiceRegistryClient.getServiceURL(serviceID, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON))
+                .thenReturn(new URL("https://almaservices.com/sodacutout"));
+
+        final Path filePath = new File("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits").toPath();
+        final URL expectedURL = new URL("https://almaservices.com/sodacutout/files?file="
+                                        + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
+                                        + "&POLYGON=12.4+56.7+5.6+44.5+18.3+33.5");
+        final URL resultURL = testSubject.toCutoutURL(filePath, shapeCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
-        verify(mockHierarchyItem, times(1)).getNullSafeId(true);
-        verify(mockHierarchyItem, times(1)).getType();
+        verify(mockServiceRegistryClient, times(1))
+                .getServiceURL(serviceID, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON);
     }
 
     @Test
     public void createBandCutoutURL() throws Exception {
-        final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
-        final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
+        final RegistryClient mockServiceRegistryClient = mock(RegistryClient.class);
         final DoubleInterval bandInterval = new DoubleInterval(9.8D, 76.4);
         final Cutout bandCutout = new Cutout();
         bandCutout.band = bandInterval;
+        final URI serviceID = URI.create("ivo://cadc.nrc.ca/ngas-soda");
 
-        final SodaURLBuilder testSubject = new SodaURLBuilder(mockAlmaProperties);
+        final SodaQuery testSubject = new SodaQuery(null, serviceID) {
+            @Override
+            protected RegistryClient createRegistryClient() {
+                return mockServiceRegistryClient;
+            }
+        };
 
-        when(mockHierarchyItem.getName()).thenReturn("1977.11.25_uid___C1_C2_C3.fits");
-        when(mockHierarchyItem.getType()).thenReturn(HierarchyItem.Type.ASDM);
+        when(mockServiceRegistryClient.getServiceURL(serviceID, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON))
+                .thenReturn(new URL("https://almaservices.com/sodacutout"));
 
-        when(mockAlmaProperties.getFirstPropertyValue("secureSchemeHost", null)).thenReturn("https://almaservices.com");
-        when(mockAlmaProperties.getFirstPropertyValue("downloadPath", null)).thenReturn("/sodacutout/download");
-
-        final URL expectedURL = new URL(
-                "https://almaservices.com/sodacutout/download/1977.11.25_uid___C1_C2_C3.fits?BAND=9.8+76.4");
-        final URL resultURL = testSubject.createCutoutURL(mockHierarchyItem, bandCutout);
+        final Path filePath = new File("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits").toPath();
+        final URL expectedURL = new URL("https://almaservices.com/sodacutout/files?file="
+                                        + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
+                                        + "&BAND=9.8+76.4");
+        final URL resultURL = testSubject.toCutoutURL(filePath, bandCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("secureSchemeHost", null);
-        verify(mockAlmaProperties, times(1)).getFirstPropertyValue("downloadPath", null);
-        verify(mockHierarchyItem, times(1)).getName();
-        verify(mockHierarchyItem, times(1)).getType();
+        verify(mockServiceRegistryClient, times(1))
+                .getServiceURL(serviceID, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON);
     }
 }

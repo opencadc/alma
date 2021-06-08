@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,54 +66,64 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.server;
+package org.opencadc.datalink;
 
-import ca.nrc.cadc.dali.Circle;
-import ca.nrc.cadc.dali.Point;
-
-import java.net.URI;
-import java.net.URL;
-
-import static org.mockito.Mockito.*;
-
-import org.junit.Test;
+import ca.nrc.cadc.util.FileUtil;
+import ca.nrc.cadc.util.PropertiesReader;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.junit.Assert;
+import org.junit.Test;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.HierarchyItem;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 
-public class AlmaStreamingSodaPluginTest {
-
+public class DataLinkQueryTest {
     @Test
-    public void simpleCutoutURL() throws Throwable {
-        final RequestHandlerQuery mockRequestHandlerQuery = mock(RequestHandlerQuery.class);
-        final SodaURLBuilder mockSodaURLBuilder = mock(SodaURLBuilder.class);
-        final AlmaStreamingSodaPlugin testSubject = new AlmaStreamingSodaPlugin(mockRequestHandlerQuery,
-                                                                                mockSodaURLBuilder);
-        final String targetParentUid = "uid://C1/C2/C3";
-        final URI targetURI = URI.create("1977.11.25_uid___C1_C2_C3.myfile.fits");
-        final AlmaUID targetAlmaUID = new AlmaUID(targetURI.toString());
-        final Circle circle = new Circle(new Point(18.0D, 78.5D), 0.5D);
-        final Cutout testCutout = new Cutout();
-        testCutout.pos = circle;
+    public void query() throws Exception {
+        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
+        final URI resourceURI = URI.create("ivo://alma.org/rh");
+        final File testFile = FileUtil.getFileFromResource(DataLinkQueryTest.class.getSimpleName() + ".json",
+                                                           DataLinkQueryTest.class);
+        final JSONObject testDocument = new JSONObject(new JSONTokener(new FileReader(testFile)));
+        final DataLinkQuery testSubject = new DataLinkQuery(resourceURI) {
+            /**
+             * Obtain an InputStream to JSON data representing the hierarchy of elements.
+             *
+             * @param almaUID The UID to query for.
+             * @return InputStream to feed to a JSON Object.
+             *
+             * @throws IOException Any errors are passed back up the stack.
+             */
+            @Override
+            InputStream downwardsJSONStream(AlmaUID almaUID) throws IOException {
+                return new FileInputStream(testFile);
+            }
+        };
+        final AlmaUID testAlmaUIDOne = new AlmaUID("uid://A001/X74/X29");
 
-        final HierarchyItem hierarchyItem = new HierarchyItem(new AlmaUID(targetParentUid), targetAlmaUID.toString(), "myfile.fits",
-                                                              HierarchyItem.Type.ASDM, 88L, true,
-                                                              new HierarchyItem[0], new AlmaUID[0]);
+        final HierarchyItem resultHierarchyItem = testSubject.query(testAlmaUIDOne);
 
-        when(mockRequestHandlerQuery.query(targetAlmaUID)).thenReturn(hierarchyItem);
-        when(mockSodaURLBuilder.createCutoutURL(hierarchyItem, testCutout)).thenReturn(
-                new URL("https://almaserver.com/sodacutout/downloads/1977.11.25_uid___C1_C2_C3.myfile.fits?CIRCLE=18" +
-                        ".0+78.5+0.5"));
+        Assert.assertEquals("Wrong document.", HierarchyItem.fromJSONObject(testAlmaUIDOne, testDocument),
+                            resultHierarchyItem);
 
-        final URL cutoutURL = testSubject.toURL(88, targetURI, testCutout, null);
+        final AlmaUID testAlmaUIDTwo = new AlmaUID("2011.0.00101.S_uid___A002_X30a93d_X43e.asdm.sdm.tar");
+        final HierarchyItem resultSubHierarchyItem = testSubject.query(testAlmaUIDTwo);
+        HierarchyItem expectedSubHierarchyItem = null;
 
-        Assert.assertEquals("Wrong result URL.",
-                            "https://almaserver.com/sodacutout/downloads/1977.11.25_uid___C1_C2_C3.myfile" +
-                            ".fits?CIRCLE=18.0+78.5+0.5",
-                            cutoutURL.toExternalForm());
+        for (final Object o : testDocument.getJSONArray("children")) {
+            final JSONObject jsonObject = (JSONObject) o;
+            if (testAlmaUIDTwo.getSanitisedUid().equals(jsonObject.get("name").toString())) {
+                expectedSubHierarchyItem = HierarchyItem.fromJSONObject(testAlmaUIDTwo, jsonObject);
+            }
+        }
 
-        verify(mockRequestHandlerQuery, times(1)).query(targetAlmaUID);
+        Assert.assertEquals("Wrong subdocument", expectedSubHierarchyItem, resultSubHierarchyItem);
     }
 }

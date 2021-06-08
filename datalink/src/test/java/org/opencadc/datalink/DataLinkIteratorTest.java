@@ -84,7 +84,6 @@ import org.junit.Test;
 import org.junit.Assert;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.HierarchyItem;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.PropertiesReader;
@@ -154,7 +153,7 @@ public class DataLinkIteratorTest {
     public void runThroughFiltering() throws Throwable {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
-        final RequestHandlerQuery mockRequestHandlerQuery = mock(RequestHandlerQuery.class);
+        final DataLinkQuery mockDataLinkQuery = mock(DataLinkQuery.class);
         final DataLinkURLBuilder dataLinkURLBuilder =
                 new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"),
                                        new URL("https://myhost.com/mysoda/sync"));
@@ -163,11 +162,11 @@ public class DataLinkIteratorTest {
                 final AlmaUID uid = new AlmaUID("uid://A001/X879/X8f1");
         final HierarchyItem hierarchy = fromJSONFile(uid, DataLinkIteratorTest.class.getSimpleName() + ".json");
 
-        when(mockRequestHandlerQuery.query(uid)).thenReturn(hierarchy);
+        when(mockDataLinkQuery.query(uid)).thenReturn(hierarchy);
 
         final List<DataLink> expectedDataLinks = new ArrayList<>();
         final List<DataLink> resultDataLinks = new ArrayList<>();
-        new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator, mockRequestHandlerQuery)
+        new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator, mockDataLinkQuery)
                 .forEachRemaining(resultDataLinks::add);
         final String itemFileNameTemplate = "%s.%d.json";
 

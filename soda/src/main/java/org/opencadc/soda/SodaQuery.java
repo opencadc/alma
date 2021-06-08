@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,7 +66,7 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.server;
+package org.opencadc.soda;
 
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Polygon;
@@ -76,33 +75,88 @@ import ca.nrc.cadc.dali.util.IntervalFormat;
 import ca.nrc.cadc.dali.util.PolygonFormat;
 import ca.nrc.cadc.dali.util.ShapeFormat;
 import ca.nrc.cadc.dali.util.StringListFormat;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.DeliverableURLBuilder;
-import org.opencadc.alma.deliverable.HierarchyItem;
-
+import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.net.NetUtil;
-import org.opencadc.soda.ExtensionSliceFormat;
-import org.opencadc.soda.SodaParameter;
+import ca.nrc.cadc.net.ResourceNotFoundException;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
 
+import org.apache.log4j.Logger;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
+import org.opencadc.soda.server.Cutout;
 
-public class SodaURLBuilder extends DeliverableURLBuilder {
-    private static final Logger LOGGER = LogManager.getLogger(SodaURLBuilder.class);
+public class SodaQuery extends RequestHandlerQuery {
+    private static final Logger LOGGER = Logger.getLogger(SodaQuery.class);
 
-    public SodaURLBuilder(final AlmaProperties almaProperties) {
-        super(almaProperties);
+    private static final String JSON_ERROR_MESSAGE_KEY = "error";
+    private static final String JSON_ERROR_STATUS_KEY = "status";
+    private static final String JSON_PATH_KEY = "path";
+
+    private final URI fileSodaResourceID;
+
+    public SodaQuery(final URI requestHandlerResourceID, final URI fileSodaResourceID) {
+        super(requestHandlerResourceID);
+
+        this.fileSodaResourceID = fileSodaResourceID;
     }
 
-    public URL createCutoutURL(final HierarchyItem hierarchyItem, final Cutout cutout) throws MalformedURLException {
-        final URL downloadURL = createDownloadURL(hierarchyItem);
-        return toCutoutURL(downloadURL, cutout);
+    /**
+     * Request the absolute path on disk of the given ALMA UID.  This will make a request to the Request Handler
+     * service's location endpoint.
+     *
+     * @param almaUID       The UID to look up.
+     * @return              Path object.  Never null.
+     * @throws IOException  For any service URL lookup errors.
+     * @throws ResourceNotFoundException    If no service could be located.
+     */
+    public Path getAbsoluteFilePath(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
+        final URL baseServiceURL = lookupRequestHandlerURL();
+        LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
+        final URL downwardsQueryURL = new URL(String.format("%s/data/%s/location",
+                                                            baseServiceURL.toExternalForm(),
+                                                            almaUID.getArchiveUID() == null
+                                                            ? almaUID.getSanitisedUid()
+                                                            : almaUID.getArchiveUID().getSanitisedUid()));
+
+        final HttpGet httpGet = createHttpGet(downwardsQueryURL);
+        httpGet.run();
+
+        final Throwable throwable = httpGet.getThrowable();
+        if (throwable != null) {
+            throw new IOException(throwable.getMessage(), throwable);
+        } else {
+            final JSONObject jsonObject = new JSONObject(new JSONTokener(httpGet.getInputStream()));
+            if (jsonObject.keySet().contains(JSON_ERROR_MESSAGE_KEY)) {
+                throw new IllegalArgumentException(String.format("Error trying to resolve %s to an absolute path:"
+                                                                 + "\nStatus: %d\nMessage: %s",
+                                                                 almaUID, jsonObject.getInt(JSON_ERROR_STATUS_KEY),
+                                                                 jsonObject.getString(JSON_ERROR_MESSAGE_KEY)));
+            } else {
+                return parsePath(jsonObject);
+            }
+        }
     }
 
-    private URL toCutoutURL(final URL downloadURL, Cutout cutout) throws MalformedURLException {
+    private Path parsePath(final JSONObject jsonObject) {
+        return new File(jsonObject.getString(JSON_PATH_KEY)).toPath();
+    }
+
+    public URL toCutoutURL(final Path filePath, final Cutout cutout) throws IOException, ResourceNotFoundException {
+        final URL serviceURL = lookupServiceURL(this.fileSodaResourceID);
+        final URL cutoutURL = new URL(String.format("%s/files?file=%s", serviceURL.toExternalForm(),
+                                                    NetUtil.encode(filePath.toString())));
+        return toCutoutURL(cutoutURL, cutout);
+    }
+
+    private URL toCutoutURL(final URL downloadURL, final Cutout cutout) throws MalformedURLException {
         if ((cutout == null) || isEmpty(cutout)) {
             return downloadURL;
         } else {
