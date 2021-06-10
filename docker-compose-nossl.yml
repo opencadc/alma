@@ -4,25 +4,19 @@ services:
     hostname: "${PROXY_HOST}"
     image: traefik:v2.4
     command:
-        - "--log.level=DEBUG"
-        - "--api.insecure=true"
-        - "--providers.docker=true"
-        - "--providers.docker.exposedbydefault=false"
-        - "--providers.file.directory=/configuration/"
-        - "--providers.file.watch=true"
-        - "--entrypoints.web.address=:80"
-        - "--entrypoints.websecure.address=:443"
-        - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-        - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
     ports:
-        - "80:80"
-        - "443:443"
-        - "8080:8080"
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
     networks:
       - "alma"
     volumes:
-      - "server_certs:/server_certs:ro"
-      - "proxy_config:/configuration:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
   sia:
     image: opencadc/alma-sia:1.0.4
@@ -34,7 +28,6 @@ services:
       - "obscore"
       - "reg"
     volumes:
-      - "ca_certs:/usr/local/share/ca-certificates"
       - "alma_sia_config:/root/config:ro"
     environment:
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=${PROXY_HOST}"
@@ -42,10 +35,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.sia.loadbalancer.server.port=8080"
       - "traefik.http.routers.sia.rule=PathPrefix(`/sia2`)"
-      - "traefik.http.routers.sia.entrypoints=websecure"
-      - "traefik.http.routers.sia.tls=true"
-      - "traefik.http.routers.sia.tls.domains[0].main=cadc.dao.nrc.ca"
-      - "traefik.http.routers.sia.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.routers.sia.entrypoints=web"
   obscore:
     image: opencadc/alma-tap:1.1.16
     ports:
@@ -54,16 +44,11 @@ services:
       - "alma"
     environment:
       CATALINA_OPTS: "-Dalma.tapuser.username=${DATABASE_USER} -Dalma.tapuser.password=${DATABASE_PASSWORD} -Dalma.tapuser.driverClassName=oracle.jdbc.OracleDriver -Dalma.tapuser.url=jdbc:oracle:thin:@${DATABASE_HOST}:1521/${DATABASE_NAME} -Dca.nrc.cadc.reg.client.RegistryClient.host=${PROXY_HOST}"
-    volumes:
-      - "ca_certs:/usr/local/share/ca-certificates"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.obscore.loadbalancer.server.port=8080"
       - "traefik.http.routers.obscore.rule=PathPrefix(`/tap`)"
-      - "traefik.http.routers.obscore.entrypoints=websecure"
-      - "traefik.http.routers.obscore.tls=true"
-      - "traefik.http.routers.obscore.tls.domains[0].main=cadc.dao.nrc.ca"
-      - "traefik.http.routers.obscore.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.routers.obscore.entrypoints=web"
   reg:
     image: opencadc/alma-reg:1.0.2
     networks:
@@ -72,17 +57,13 @@ services:
       - "10003:5555"
     volumes:
       - "alma_reg_config:/root/config:ro"
-      - "ca_certs:/usr/local/share/ca-certificates"
     environment:
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=${PROXY_HOST}"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.reg.loadbalancer.server.port=8080"
       - "traefik.http.routers.reg.rule=PathPrefix(`/reg`)"
-      - "traefik.http.routers.reg.entrypoints=websecure"
-      - "traefik.http.routers.reg.tls=true"
-      - "traefik.http.routers.reg.tls.domains[0].main=cadc.dao.nrc.ca"
-      - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.routers.reg.entrypoints=web"
   data:
     image: opencadc/alma-data:1.0.0
     networks:
@@ -95,10 +76,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.data.loadbalancer.server.port=8080"
       - "traefik.http.routers.data.rule=PathPrefix(`/data`)"
-      - "traefik.http.routers.data.entrypoints=websecure"
-      - "traefik.http.routers.data.tls=true"
-      - "traefik.http.routers.data.tls.domains[0].main=cadc.dao.nrc.ca"
-      - "traefik.http.routers.data.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.routers.data.entrypoints=web"
   datalink:
     image: opencadc/alma-datalink:1.3.3
     networks:
@@ -108,16 +86,12 @@ services:
     ports:
       - "10005:5555"
     volumes:
-      - "ca_certs:/usr/local/share/ca-certificates"
       - "alma_properties_config:/root/config:ro"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.datalink.loadbalancer.server.port=8080"
       - "traefik.http.routers.datalink.rule=PathPrefix(`/datalink`)"
-      - "traefik.http.routers.datalink.entrypoints=websecure"
-      - "traefik.http.routers.datalink.tls=true"
-      - "traefik.http.routers.datalink.tls.domains[0].main=cadc.dao.nrc.ca"
-      - "traefik.http.routers.datalink.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.routers.datalink.entrypoints=web"
   soda:
     image: opencadc/alma-soda:1.1.1
     ports:
@@ -127,25 +101,17 @@ services:
     environment:
       CATALINA_OPTS: "-Dca.nrc.cadc.reg.client.RegistryClient.host=${PROXY_HOST}"
     volumes:
-      - "ca_certs:/usr/local/share/ca-certificates"
       - "alma_properties_config:/root/config:ro"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.soda.loadbalancer.server.port=8080"
       - "traefik.http.routers.soda.rule=PathPrefix(`/soda`)"
-      - "traefik.http.routers.soda.entrypoints=websecure"
-      - "traefik.http.routers.soda.tls=true"
-      - "traefik.http.routers.soda.tls.domains[0].main=cadc.dao.nrc.ca"
-      - "traefik.http.routers.soda.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.routers.soda.entrypoints=web"
 
 networks:
   alma:
 
 volumes:
-  server_certs:
-    external: true
-  ca_certs:
-    external: true
   proxy_config:
     external: true
   alma_data:
