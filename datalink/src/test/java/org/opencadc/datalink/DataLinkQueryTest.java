@@ -74,6 +74,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Test;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.HierarchyItem;
 
@@ -82,17 +83,16 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
+
 
 public class DataLinkQueryTest {
     @Test
     public void query() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
-        final URI resourceURI = URI.create("ivo://alma.org/rh");
         final File testFile = FileUtil.getFileFromResource(DataLinkQueryTest.class.getSimpleName() + ".json",
                                                            DataLinkQueryTest.class);
         final JSONObject testDocument = new JSONObject(new JSONTokener(new FileReader(testFile)));
-        final DataLinkQuery testSubject = new DataLinkQuery(resourceURI) {
+        final DataLinkQuery testSubject = new DataLinkQuery(null) {
             /**
              * Obtain an InputStream to JSON data representing the hierarchy of elements.
              *
@@ -107,7 +107,6 @@ public class DataLinkQueryTest {
             }
         };
         final AlmaUID testAlmaUIDOne = new AlmaUID("uid://A001/X74/X29");
-
         final HierarchyItem resultHierarchyItem = testSubject.query(testAlmaUIDOne);
 
         Assert.assertEquals("Wrong document.", HierarchyItem.fromJSONObject(testAlmaUIDOne, testDocument),

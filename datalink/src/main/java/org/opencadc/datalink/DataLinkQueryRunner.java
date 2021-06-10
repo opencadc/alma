@@ -69,6 +69,7 @@
 
 package org.opencadc.datalink;
 
+import ca.nrc.cadc.net.ResourceNotFoundException;
 import org.opencadc.alma.AlmaProperties;
 import org.opencadc.datalink.server.DataLinkSource;
 import org.opencadc.datalink.server.LinkQueryRunner;
@@ -76,8 +77,7 @@ import org.opencadc.datalink.server.LinkQueryRunner;
 import ca.nrc.cadc.uws.Parameter;
 import ca.nrc.cadc.uws.ParameterUtil;
 
-import java.net.MalformedURLException;
-import java.net.URI;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -87,7 +87,6 @@ import java.util.List;
  */
 public class DataLinkQueryRunner extends LinkQueryRunner {
 
-    private static final String ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY = "almaRequestHandlerServiceURI";
     private static final String PARAMETER_KEY = "ID";
 
     private final AlmaProperties almaProperties;
@@ -105,13 +104,13 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
     protected DataLinkSource getDataLinkSource() {
         try {
             return new ALMADataLinkSource(createDataLinkIterator());
-        } catch (MalformedURLException e) {
+        } catch (ResourceNotFoundException | IOException e) {
             // Should never happen.
-            throw new RuntimeException("\n\nBUG: Unable to proceed\n\n", e);
+            throw new IllegalStateException("\n\nBUG: Unable to proceed\n\n", e);
         }
     }
 
-    private DataLinkIterator createDataLinkIterator() throws MalformedURLException {
+    private DataLinkIterator createDataLinkIterator() throws IOException, ResourceNotFoundException {
         final List<Parameter> jobParameterList = job.getParameterList();
         final List<String> dataSetIDList = ParameterUtil.findParameterValues(PARAMETER_KEY, jobParameterList);
 
@@ -123,14 +122,11 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
         }
     }
 
-    private DataLinkURLBuilder createDataLinkURLBuilder() throws MalformedURLException {
-        return new DataLinkURLBuilder(DataLinkAvailabilityPlugin.getDataLinkBaseURL(almaProperties),
-                                      DataLinkAvailabilityPlugin.getSodaBaseURL(almaProperties));
+    private DataLinkURLBuilder createDataLinkURLBuilder() throws IOException, ResourceNotFoundException {
+        return new DataLinkURLBuilder(this.almaProperties);
     }
 
     private DataLinkQuery createDataLinkQuery() {
-        final String configuredResourceID =
-                almaProperties.getFirstPropertyValue(ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY, null);
-        return new DataLinkQuery(URI.create(configuredResourceID));
+        return new DataLinkQuery(almaProperties);
     }
 }

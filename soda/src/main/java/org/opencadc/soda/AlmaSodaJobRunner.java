@@ -70,6 +70,7 @@
 package org.opencadc.soda;
 
 
+import ca.nrc.cadc.util.StringUtil;
 import org.opencadc.alma.AlmaProperties;
 import org.opencadc.soda.server.AbstractSodaJobRunner;
 import org.opencadc.soda.server.AlmaStreamingSodaPlugin;
@@ -79,13 +80,10 @@ import java.net.URI;
 
 
 public class AlmaSodaJobRunner extends AbstractSodaJobRunner {
-
-    private static final String ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY = "almaRequestHandlerResourceID";
-    private static final String ALMA_FILE_SODA_RESOURCE_ID_KEY = "almaFileSodaResourceID";
     private final AlmaProperties almaProperties;
 
 
-    public AlmaSodaJobRunner(AlmaProperties sodaProperties) {
+    public AlmaSodaJobRunner(final AlmaProperties sodaProperties) {
         this.almaProperties = sodaProperties;
     }
 
@@ -99,10 +97,6 @@ public class AlmaSodaJobRunner extends AbstractSodaJobRunner {
     }
 
     private SodaQuery createSodaQuery() {
-        final String configuredResourceID =
-                almaProperties.getFirstPropertyValue(ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY, null);
-        final String configuredFileSodaID =
-                almaProperties.getFirstPropertyValue(ALMA_FILE_SODA_RESOURCE_ID_KEY, null);
-        return new SodaQuery(URI.create(configuredResourceID), URI.create(configuredFileSodaID));
+        return new SodaQuery(almaProperties);
     }
 }

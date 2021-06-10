@@ -82,13 +82,13 @@ import ca.nrc.cadc.net.ResourceNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import org.opencadc.soda.server.Cutout;
@@ -100,12 +100,9 @@ public class SodaQuery extends RequestHandlerQuery {
     private static final String JSON_ERROR_STATUS_KEY = "status";
     private static final String JSON_PATH_KEY = "path";
 
-    private final URI fileSodaResourceID;
 
-    public SodaQuery(final URI requestHandlerResourceID, final URI fileSodaResourceID) {
-        super(requestHandlerResourceID);
-
-        this.fileSodaResourceID = fileSodaResourceID;
+    public SodaQuery(final AlmaProperties almaProperties) {
+        super(almaProperties);
     }
 
     /**
@@ -118,20 +115,23 @@ public class SodaQuery extends RequestHandlerQuery {
      * @throws ResourceNotFoundException    If no service could be located.
      */
     public Path getAbsoluteFilePath(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        final URL baseServiceURL = lookupRequestHandlerURL();
+        final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
         LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
         final URL downwardsQueryURL = new URL(String.format("%s/data/%s/location",
                                                             baseServiceURL.toExternalForm(),
-                                                            almaUID.getArchiveUID() == null
-                                                            ? almaUID.getSanitisedUid()
-                                                            : almaUID.getArchiveUID().getSanitisedUid()));
+                                                            almaUID.getSanitisedUid()));
 
         final HttpGet httpGet = createHttpGet(downwardsQueryURL);
+        httpGet.setRequestProperty("X-Forwarded-For", "132.246.0.0");
         httpGet.run();
 
         final Throwable throwable = httpGet.getThrowable();
         if (throwable != null) {
-            throw new IOException(throwable.getMessage(), throwable);
+            if (throwable instanceof ResourceNotFoundException) {
+                throw (ResourceNotFoundException) throwable;
+            } else {
+                throw new IOException(throwable.getMessage(), throwable);
+            }
         } else {
             final JSONObject jsonObject = new JSONObject(new JSONTokener(httpGet.getInputStream()));
             if (jsonObject.keySet().contains(JSON_ERROR_MESSAGE_KEY)) {
@@ -150,7 +150,7 @@ public class SodaQuery extends RequestHandlerQuery {
     }
 
     public URL toCutoutURL(final Path filePath, final Cutout cutout) throws IOException, ResourceNotFoundException {
-        final URL serviceURL = lookupServiceURL(this.fileSodaResourceID);
+        final URL serviceURL = this.almaProperties.lookupFileSodaServiceURL();
         final URL cutoutURL = new URL(String.format("%s/files?file=%s", serviceURL.toExternalForm(),
                                                     NetUtil.encode(filePath.toString())));
         return toCutoutURL(cutoutURL, cutout);

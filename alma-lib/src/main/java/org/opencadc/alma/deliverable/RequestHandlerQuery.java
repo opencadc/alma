@@ -68,63 +68,21 @@
 
 package org.opencadc.alma.deliverable;
 
-import ca.nrc.cadc.auth.AuthMethod;
-import ca.nrc.cadc.reg.Standards;
-import org.apache.log4j.Logger;
-
 import ca.nrc.cadc.net.HttpGet;
-import ca.nrc.cadc.net.ResourceNotFoundException;
-import ca.nrc.cadc.reg.client.RegistryClient;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
+import org.opencadc.alma.AlmaProperties;
+
 import java.net.URL;
 
 
-public class RequestHandlerQuery {
+public abstract class RequestHandlerQuery {
+    protected final AlmaProperties almaProperties;
 
-    private static final Logger LOGGER = Logger.getLogger(RequestHandlerQuery.class);
-    private static final String ALT_REGISTRY_LOOKUP = "https://www.almascience.org/reg/applications";
-    private static final URI DEFAULT_STANDARD_ID = URI.create("");
-    private final URI requestHandlerResourceID;
-
-    public RequestHandlerQuery(final URI requestHandlerResourceID) {
-        this.requestHandlerResourceID = requestHandlerResourceID;
-    }
-
-    protected URL lookupRequestHandlerURL() throws IOException, ResourceNotFoundException {
-        final RegistryClient registryClient = createApplicationsRegistryClient();
-        return registryClient.getAccessURL(requestHandlerResourceID);
-    }
-
-    /**
-     * Quick default lookup for a service URL given its ID.  This will default to anonymous access with the HTTP param.
-     * @param serviceID     The service to look up.
-     * @return  URL.  Never null.
-     * @throws IOException If lookup failed.
-     * @throws ResourceNotFoundException    If that service does not exist.
-     */
-    protected URL lookupServiceURL(final URI serviceID) throws IOException, ResourceNotFoundException {
-        final RegistryClient registryClient = createRegistryClient();
-        final URL serviceURL = registryClient.getServiceURL(serviceID, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON);
-
-        if (serviceURL == null) {
-            throw new ResourceNotFoundException(String.format("No such service with ID %s.", serviceID));
-        } else {
-            return serviceURL;
-        }
+    public RequestHandlerQuery(final AlmaProperties almaProperties) {
+        this.almaProperties = almaProperties;
     }
 
     protected HttpGet createHttpGet(final URL requestHandlerEndpointURL) {
         return new HttpGet(requestHandlerEndpointURL, true);
-    }
-
-    protected RegistryClient createApplicationsRegistryClient() throws MalformedURLException {
-        return new RegistryClient(new URL(ALT_REGISTRY_LOOKUP));
-    }
-
-    protected RegistryClient createRegistryClient() throws MalformedURLException {
-        return new RegistryClient();
     }
 }

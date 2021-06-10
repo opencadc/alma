@@ -73,26 +73,29 @@ import ca.nrc.cadc.net.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.HierarchyItem;
 import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 
+/**
+ * DataLink query to parse and handle the JSON from ALMA's Data Portal service.
+ */
 public class DataLinkQuery extends RequestHandlerQuery {
     private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
             "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
             + "\"children\":[],\"allMousUids\":[]}";
     private static final Logger LOGGER = Logger.getLogger(DataLinkQuery.class);
 
-    public DataLinkQuery(final URI requestHandlerResourceID) {
-        super(requestHandlerResourceID);
+    public DataLinkQuery(final AlmaProperties almaProperties) {
+        super(almaProperties);
     }
 
     /**
@@ -158,7 +161,7 @@ public class DataLinkQuery extends RequestHandlerQuery {
      * @throws IOException Any errors are passed back up the stack.
      */
     InputStream downwardsJSONStream(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        final URL baseServiceURL = lookupRequestHandlerURL();
+        final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
         LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
         final URL downwardsQueryURL = new URL(String.format("%s/ous/expand/%s/downwards",
                                                             baseServiceURL.toExternalForm(),

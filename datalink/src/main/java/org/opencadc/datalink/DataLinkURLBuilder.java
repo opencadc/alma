@@ -69,31 +69,37 @@
 
 package org.opencadc.datalink;
 
+import ca.nrc.cadc.net.ResourceNotFoundException;
+import org.apache.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.DeliverableURLBuilder;
 import org.opencadc.alma.deliverable.HierarchyItem;
 import ca.nrc.cadc.util.StringUtil;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 
-public class DataLinkURLBuilder extends DeliverableURLBuilder {
+/**
+ * Assemble different URLs for a HierarchyItem.
+ */
+public class DataLinkURLBuilder {
+    private static final Logger LOGGER = Logger.getLogger(DataLinkURLBuilder.class);
 
+    // Cache these to prevent repeated lookups.
     private final URL dataLinkServiceEndpoint;
     private final URL cutoutServiceEndpoint;
+    private final URL dataPortalServiceEndpoint;
 
 
-    public DataLinkURLBuilder(final URL dataLinkServiceEndpoint, final URL cutoutServiceEndpoint) {
-        this(new AlmaProperties(), dataLinkServiceEndpoint, cutoutServiceEndpoint);
+    public DataLinkURLBuilder() throws IOException, ResourceNotFoundException {
+        this(new AlmaProperties());
     }
 
-    public DataLinkURLBuilder(final AlmaProperties almaProperties, final URL dataLinkServiceEndpoint,
-                              final URL cutoutServiceEndpoint) {
-
-        super(almaProperties);
-        this.dataLinkServiceEndpoint = dataLinkServiceEndpoint;
-        this.cutoutServiceEndpoint = cutoutServiceEndpoint;
+    public DataLinkURLBuilder(final AlmaProperties almaProperties) throws IOException, ResourceNotFoundException {
+        this.dataLinkServiceEndpoint = almaProperties.lookupDataLinkServiceURL();
+        this.cutoutServiceEndpoint = almaProperties.lookupSodaServiceURL();
+        this.dataPortalServiceEndpoint = almaProperties.lookupDataPortalURL();
     }
 
     URL createRecursiveDataLinkURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
@@ -104,6 +110,23 @@ public class DataLinkURLBuilder extends DeliverableURLBuilder {
         return createServiceLinkURL(hierarchyItem, cutoutServiceEndpoint);
     }
 
+    URL createDownloadURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
+
+        final HierarchyItem.Type type = hierarchyItem.getType();
+
+        final String sanitizedURL = this.dataPortalServiceEndpoint.toExternalForm();
+
+        LOGGER.debug(String.format("Sanitized URL is %s from type %s.", sanitizedURL, type));
+
+        return new URL(String.join("/", new String[] {
+                sanitizePath(new URL(sanitizedURL).toExternalForm()),
+
+                // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
+                sanitizePath(type == HierarchyItem.Type.ASDM ?
+                             hierarchyItem.getName() : hierarchyItem.getNullSafeId(true))
+        }));
+    }
+
     private URL createServiceLinkURL(final HierarchyItem hierarchyItem, final URL serviceURLEndpoint)
             throws MalformedURLException {
         final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
@@ -112,5 +135,26 @@ public class DataLinkURLBuilder extends DeliverableURLBuilder {
 
         return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
                        serviceURLEndpoint.getPort(), urlFile);
+    }
+
+    private String sanitizePath(final String pathItem) {
+        final String sanitizedPath;
+        if (!StringUtil.hasLength(pathItem)) {
+            sanitizedPath = "";
+        } else {
+            final StringBuilder stringBuilder = new StringBuilder(pathItem.trim());
+
+            while (stringBuilder.indexOf("/") == 0) {
+                stringBuilder.deleteCharAt(0);
+            }
+
+            while (stringBuilder.lastIndexOf("/") == (stringBuilder.length() - 1)) {
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            }
+
+            sanitizedPath = stringBuilder.toString();
+        }
+
+        return sanitizedPath;
     }
 }
