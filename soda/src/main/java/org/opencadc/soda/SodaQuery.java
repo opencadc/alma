@@ -79,11 +79,11 @@ import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
+import java.security.AccessControlException;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
@@ -99,6 +99,7 @@ public class SodaQuery extends RequestHandlerQuery {
     private static final String JSON_ERROR_MESSAGE_KEY = "error";
     private static final String JSON_ERROR_STATUS_KEY = "status";
     private static final String JSON_PATH_KEY = "path";
+    private static final String JSON_SERVER_NAME_KEY = "serverName";
 
 
     public SodaQuery(final AlmaProperties almaProperties) {
@@ -110,50 +111,54 @@ public class SodaQuery extends RequestHandlerQuery {
      * service's location endpoint.
      *
      * @param almaUID       The UID to look up.
-     * @return              Path object.  Never null.
+     * @return              URL to the SODA endpoint of the file.
      * @throws IOException  For any service URL lookup errors.
      * @throws ResourceNotFoundException    If no service could be located.
      */
-    public Path getAbsoluteFilePath(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
+    public URL locateFile(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
         final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
         LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
         final URL downwardsQueryURL = new URL(String.format("%s/data/%s/location",
                                                             baseServiceURL.toExternalForm(),
                                                             almaUID.getSanitisedUid()));
 
-        final HttpGet httpGet = createHttpGet(downwardsQueryURL);
-        httpGet.setRequestProperty("X-Forwarded-For", "132.246.0.0");
-        httpGet.run();
-
-        final Throwable throwable = httpGet.getThrowable();
-        if (throwable != null) {
-            if (throwable instanceof ResourceNotFoundException) {
-                throw (ResourceNotFoundException) throwable;
-            } else {
-                throw new IOException(throwable.getMessage(), throwable);
-            }
-        } else {
-            final JSONObject jsonObject = new JSONObject(new JSONTokener(httpGet.getInputStream()));
+        try (final InputStream jsonStream = jsonStream(downwardsQueryURL)) {
+            final JSONObject jsonObject = new JSONObject(new JSONTokener(jsonStream));
             if (jsonObject.keySet().contains(JSON_ERROR_MESSAGE_KEY)) {
                 throw new IllegalArgumentException(String.format("Error trying to resolve %s to an absolute path:"
                                                                  + "\nStatus: %d\nMessage: %s",
                                                                  almaUID, jsonObject.getInt(JSON_ERROR_STATUS_KEY),
                                                                  jsonObject.getString(JSON_ERROR_MESSAGE_KEY)));
             } else {
-                return parsePath(jsonObject);
+                final String serverName = jsonObject.getString(JSON_SERVER_NAME_KEY);
+                final String path = jsonObject.getString(JSON_PATH_KEY);
+
+                return new URL(String.format("http://%s:%s/data/files?file=%s", serverName,
+                                             this.almaProperties.getFileSodaServicePort(), NetUtil.encode(path)));
             }
         }
     }
 
-    private Path parsePath(final JSONObject jsonObject) {
-        return new File(jsonObject.getString(JSON_PATH_KEY)).toPath();
+    InputStream jsonStream(final URL url) throws IOException, ResourceNotFoundException {
+        final HttpGet httpGet = createHttpGet(url);
+        httpGet.run();
+
+        final Throwable throwable = httpGet.getThrowable();
+        if (throwable != null) {
+            if (throwable instanceof ResourceNotFoundException) {
+                throw (ResourceNotFoundException) throwable;
+            } else if (throwable instanceof AccessControlException) {
+                throw (AccessControlException) throwable;
+            } else {
+                throw new IOException("Unable to locate file.\n" + throwable.getMessage(), throwable);
+            }
+        } else {
+            return httpGet.getInputStream();
+        }
     }
 
-    public URL toCutoutURL(final Path filePath, final Cutout cutout) throws IOException, ResourceNotFoundException {
-        final URL serviceURL = this.almaProperties.lookupFileSodaServiceURL();
-        final URL cutoutURL = new URL(String.format("%s/files?file=%s", serviceURL.toExternalForm(),
-                                                    NetUtil.encode(filePath.toString())));
-        return toCutoutURL(cutoutURL, cutout);
+    public URL toCutoutURL(final AlmaUID almaUID, final Cutout cutout) throws IOException, ResourceNotFoundException {
+        return toCutoutURL(locateFile(almaUID), cutout);
     }
 
     private URL toCutoutURL(final URL downloadURL, final Cutout cutout) throws MalformedURLException {

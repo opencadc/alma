@@ -76,14 +76,20 @@ import ca.nrc.cadc.dali.Polygon;
 import ca.nrc.cadc.net.NetUtil;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URL;
 import java.nio.file.Path;
 
+import ca.nrc.cadc.net.ResourceNotFoundException;
+import org.apache.commons.io.input.ReaderInputStream;
 import org.junit.Test;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
 import org.opencadc.alma.AlmaProperties;
+import org.opencadc.alma.AlmaUID;
 import org.opencadc.soda.server.Cutout;
 
 import static org.mockito.Mockito.*;
@@ -102,20 +108,28 @@ public class SodaQueryTest {
         final Cutout shapeCutout = new Cutout();
         shapeCutout.pos = circle;
 
-        final URL serviceURL = new URL("https://almascience.ops.org/ngas-soda");
+        final URL requestHandlerURL = new URL("https://server1.alma.com/rh");
+        final String json = "{\"serverName\":\"srv-ngas-001\",\"path\":\"/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits\"}";
 
-        when(mockAlmaProperties.lookupFileSodaServiceURL()).thenReturn(serviceURL);
+        when(mockAlmaProperties.getFileSodaServicePort()).thenReturn("8080");
+        when(mockAlmaProperties.lookupRequestHandlerURL()).thenReturn(requestHandlerURL);
 
-        final SodaQuery testSubject = new SodaQuery(mockAlmaProperties);
+        final SodaQuery testSubject = new SodaQuery(mockAlmaProperties) {
+            @Override
+            InputStream jsonStream(URL url) {
+                return new ReaderInputStream(new StringReader(json));
+            }
+        };
 
-        final Path filePath = new File("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits").toPath();
-        final URL expectedURL = new URL("https://almascience.ops.org/ngas-soda/files?file="
+        final AlmaUID almaUID = new AlmaUID("1977.11.25_uid___C1_C2_C3.fits");
+        final URL expectedURL = new URL("http://srv-ngas-001:8080/data/files?file="
                                         + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
                                         + "&CIRCLE=12.0+56.0+0.6");
-        final URL resultURL = testSubject.toCutoutURL(filePath, shapeCutout);
+        final URL resultURL = testSubject.toCutoutURL(almaUID, shapeCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, atMostOnce()).lookupFileSodaServiceURL();
+        verify(mockAlmaProperties, atMostOnce()).getFileSodaServicePort();
+        verify(mockAlmaProperties, atMostOnce()).lookupRequestHandlerURL();
     }
 
     @Test
@@ -129,20 +143,28 @@ public class SodaQueryTest {
         final Cutout shapeCutout = new Cutout();
         shapeCutout.pos = polygon;
 
-        final URL serviceURL = new URL("https://almascience.ops.org/ngas-soda");
-        when(mockAlmaProperties.lookupFileSodaServiceURL()).thenReturn(serviceURL);
+        final URL requestHandlerURL = new URL("https://server1.alma.com/rh");
+        final String json = "{\"serverName\":\"srv-ngas-002\",\"path\":\"/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits\"}";
 
-        final SodaQuery testSubject = new SodaQuery(mockAlmaProperties);
+        when(mockAlmaProperties.getFileSodaServicePort()).thenReturn("8081");
+        when(mockAlmaProperties.lookupRequestHandlerURL()).thenReturn(requestHandlerURL);
 
+        final SodaQuery testSubject = new SodaQuery(mockAlmaProperties) {
+            @Override
+            InputStream jsonStream(URL url) {
+                return new ReaderInputStream(new StringReader(json));
+            }
+        };
 
-        final Path filePath = new File("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits").toPath();
-        final URL expectedURL = new URL("https://almascience.ops.org/ngas-soda/files?file="
+        final AlmaUID almaUID = new AlmaUID("1977.11.25_uid___C1_C2_C3.fits");
+        final URL expectedURL = new URL("http://srv-ngas-002:8081/data/files?file="
                                         + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
                                         + "&POLYGON=12.4+56.7+5.6+44.5+18.3+33.5");
-        final URL resultURL = testSubject.toCutoutURL(filePath, shapeCutout);
+        final URL resultURL = testSubject.toCutoutURL(almaUID, shapeCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, atMostOnce()).lookupFileSodaServiceURL();
+        verify(mockAlmaProperties, atMostOnce()).getFileSodaServicePort();
+        verify(mockAlmaProperties, atMostOnce()).lookupRequestHandlerURL();
     }
 
     @Test
@@ -152,17 +174,27 @@ public class SodaQueryTest {
         final Cutout bandCutout = new Cutout();
         bandCutout.band = bandInterval;
 
-        final URL serviceURL = new URL("https://almascience.ops.org/ngas-soda");
-        when(mockAlmaProperties.lookupFileSodaServiceURL()).thenReturn(serviceURL);
+        final URL requestHandlerURL = new URL("https://server1.alma.com/rh");
+        final String json = "{\"serverName\":\"srv-ngas-002\",\"path\":\"/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits\"}";
 
-        final SodaQuery testSubject = new SodaQuery(mockAlmaProperties);
-        final Path filePath = new File("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits").toPath();
-        final URL expectedURL = new URL("https://almascience.ops.org/ngas-soda/files?file="
+        when(mockAlmaProperties.getFileSodaServicePort()).thenReturn("8081");
+        when(mockAlmaProperties.lookupRequestHandlerURL()).thenReturn(requestHandlerURL);
+
+        final SodaQuery testSubject = new SodaQuery(mockAlmaProperties) {
+            @Override
+            InputStream jsonStream(URL url) {
+                return new ReaderInputStream(new StringReader(json));
+            }
+        };
+
+        final AlmaUID almaUID = new AlmaUID("1977.11.25_uid___C1_C2_C3.fits");
+        final URL expectedURL = new URL("http://srv-ngas-002:8081/data/files?file="
                                         + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
                                         + "&BAND=9.8+76.4");
-        final URL resultURL = testSubject.toCutoutURL(filePath, bandCutout);
+        final URL resultURL = testSubject.toCutoutURL(almaUID, bandCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
-        verify(mockAlmaProperties, atMostOnce()).lookupFileSodaServiceURL();
+        verify(mockAlmaProperties, atMostOnce()).getFileSodaServicePort();
+        verify(mockAlmaProperties, atMostOnce()).lookupRequestHandlerURL();
     }
 }

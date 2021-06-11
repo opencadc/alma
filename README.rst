@@ -58,7 +58,7 @@ that will be looked up in the Registry to obtain an acutal URL.
 
   almaDataLinkServiceURI=ivo://almascience.org/datalink
   almaRequestHandlerServiceURI=ivo://almascience.org/requesthandler
-  almaFileSodaServiceURI=ivo://almascience.org/data
+  almaFileSodaServicePort=8080
   almaSODAServiceURI=ivo://almascience.org/soda
   almaDataPortalServiceURI=ivo://almascience.org/dataportal
 
@@ -71,7 +71,7 @@ that will be looked up in the Registry to obtain an acutal URL.
   | almaRequestHandlerServiceURI  | Request Handler service identifier       |
   |                               | for locating files and drill down        |
   +-------------------------------+------------------------------------------+
-  | almaFileSodaServiceURI        | NGAS (Back-end) SODA service             |
+  | almaFileSodaServicePort       | NGAS (Back-end) SODA service port        |
   +-------------------------------+------------------------------------------+
   | almaSODAServiceURI            | User facing (Front-end) SODA service     |
   +-------------------------------+------------------------------------------+
@@ -105,8 +105,9 @@ use it.  The ``reg-applications.properties`` differs in that it provides access 
 
 **reg-resource-caps.properties**
 
-All six IVOA services will need to be listed here, as well as the endpoints to use them.  These URI keys will also match the
-configured ones in the ``org.opencadc.alma.properties``.
+Five IVOA services will need to be listed here, as well as the endpoints to use them.  These URI keys will also match the
+configured ones in the ``org.opencadc.alma.properties``.  The ``data`` service will be located by the Request Handler
+location service due to the complexity of have the service run on multiple nodes.
 
 .. code-block::
 
@@ -126,9 +127,6 @@ configured ones in the ``org.opencadc.alma.properties``.
 
     # The IVOA TAP service
     ivo://almascience.org/tap = https://almascience.org/tap/capabilities
-
-    # The ALMA Data service
-    ivo://almascience.org/data = https://almascience.org/data/capabilities
 
 
 

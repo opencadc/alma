@@ -92,7 +92,7 @@ public class AlmaProperties extends PropertiesReader {
     private static final String DEFAULT_PROPERTIES_FILE_NAME = "org.opencadc.alma.properties";
 
     static final String ALMA_REQUEST_HANDLER_SERVICE_URI = "almaRequestHandlerServiceURI";
-    static final String ALMA_FILE_SODA_SERVICE_URI = "almaFileSodaServiceURI";
+    static final String ALMA_FILE_SODA_SERVICE_PORT = "almaFileSodaServicePort";
     static final String ALMA_DATALINK_SERVICE_URI = "almaDataLinkServiceURI";
     static final String ALMA_SODA_SERVICE_URI = "almaSODAServiceURI";
     static final String ALMA_DATAPROTAL_SERVICE_URI = "almaDataPortalServiceURI";
@@ -117,8 +117,8 @@ public class AlmaProperties extends PropertiesReader {
         return ensureRequiredURI(ALMA_REQUEST_HANDLER_SERVICE_URI);
     }
 
-    public URI getFileSodaServiceURI() {
-        return ensureRequiredURI(ALMA_FILE_SODA_SERVICE_URI);
+    public String getFileSodaServicePort() {
+        return ensureRequiredString(ALMA_FILE_SODA_SERVICE_PORT);
     }
 
     public URI getDataLinkServiceURI() {
@@ -147,10 +147,6 @@ public class AlmaProperties extends PropertiesReader {
         } else {
             return configuredValue;
         }
-    }
-
-    public URL lookupFileSodaServiceURL() {
-        return lookupServiceURL(getFileSodaServiceURI());
     }
 
     public URL lookupDataLinkServiceURL() {

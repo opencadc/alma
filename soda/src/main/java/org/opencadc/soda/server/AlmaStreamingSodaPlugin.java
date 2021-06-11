@@ -77,18 +77,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.soda.SodaQuery;
 
 
 public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin {
-
+    private static final Logger LOGGER = Logger.getLogger(AlmaStreamingSodaPlugin.class);
     private final SodaQuery sodaQuery;
-
 
     public AlmaStreamingSodaPlugin(final SodaQuery sodaQuery) {
         this.sodaQuery = sodaQuery;
@@ -108,6 +107,7 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
     public void write(URI uri, Cutout cutout, Map<String, List<String>> extraParams, SyncOutput out)
             throws IOException {
         final URL cutoutURL = toURL(1, uri, cutout, extraParams);
+        LOGGER.info(String.format("Trying to cutout from %s", cutoutURL));
         final HttpGet httpGet = createDownloader(cutoutURL, out.getOutputStream());
         httpGet.run();
     }
@@ -129,8 +129,7 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
     public URL toURL(int serialNum, URI uri, Cutout cutouts, Map<String, List<String>> extraParams) throws IOException {
         final AlmaUID almaUID = new AlmaUID(uri.toString());
         try {
-            final Path filePath = getAbsoluteFilePath(almaUID);
-            return sodaQuery.toCutoutURL(filePath, cutouts);
+            return sodaQuery.toCutoutURL(almaUID, cutouts);
         } catch (ResourceNotFoundException resourceNotFoundException) {
             throw new IOException(resourceNotFoundException.getMessage(), resourceNotFoundException);
         }
@@ -138,9 +137,5 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
 
     HttpGet createDownloader(final URL url, final OutputStream outputStream) {
         return new HttpGet(url, outputStream);
-    }
-
-    final Path getAbsoluteFilePath(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        return this.sodaQuery.getAbsoluteFilePath(almaUID);
     }
 }
