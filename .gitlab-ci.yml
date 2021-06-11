@@ -1,33 +1,57 @@
-image: gradle:jdk11
+stages:
+  - build
+  - test
+  - deploy
 
 build_data:
   stage: build
+  image: gradle:jdk11
   script:
     - cd data && ../gradlew -i clean build test
 
 build_datalink:
   stage: build
+  image: gradle:jdk11
   script:
     - cd alma-lib && ../gradlew -i clean build test publishToMavenLocal
     - cd ../datalink && ../gradlew -i clean build test
 
 build_obscore:
   stage: build
+  image: gradle:jdk11
   script:
     - cd obscore && ../gradlew -i clean build test
 
 build_reg:
   stage: build
+  image: gradle:jdk11
   script:
     - cd reg && ../gradlew -i clean build test
 
 build_sia:
   stage: build
+  image: gradle:jdk11
   script:
     - cd sia && ../gradlew -i clean build test
 
 build_soda:
   stage: build
+  image: gradle:jdk11
   script:
     - cd alma-lib && ../gradlew -i clean build test publishToMavenLocal
     - cd ../soda && ../gradlew -i clean build test
+
+deploy_soda:
+  stage: deploy
+  image: docker:latest
+  needs:
+    - build_soda
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" ${CI_REGISTRY}
+  script:
+    - cd soda
+    - export VERSION=$(cat VERSION)
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION} .
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION}
