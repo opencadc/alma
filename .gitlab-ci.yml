@@ -32,6 +32,9 @@ build_sia:
 build_soda:
   stage: build
   image: gradle:jdk11
+  artifacts:
+    paths:
+      - soda/build
   script:
     - cd alma-lib && ../gradlew -i clean build test publishToMavenLocal
     - cd ../soda && ../gradlew -i clean build test
@@ -46,6 +49,7 @@ deploy_soda:
   before_script:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
+    - ls -alh
     - cd soda
     - ls -alh
     - export VERSION=$(cat VERSION)
