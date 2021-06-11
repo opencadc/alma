@@ -45,6 +45,9 @@ build_soda:
 deploy_soda:
   stage: deploy
   image: docker:latest
+  variables:
+    name: soda
+    module: soda
   needs:
     - build_soda
   services:
@@ -52,13 +55,16 @@ deploy_soda:
   before_script:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
-    - export VERSION=$(cat VERSION)
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION} -f soda/Dockerfile soda/
-    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION}
+    - export VERSION=`cat ${module}/VERSION`
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
 
 deploy_tap:
   stage: deploy
   image: docker:latest
+  variables:
+    name: tap
+    module: obscore
   needs:
     - build_obscore
   services:
@@ -66,6 +72,6 @@ deploy_tap:
   before_script:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
-    - export VERSION=$(cat VERSION)
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-tap:${VERSION} -f obscore/Dockerfile obscore/
-    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-tap:${VERSION}
+    - export VERSION=`cat ${module}/VERSION`
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
