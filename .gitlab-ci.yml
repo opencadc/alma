@@ -1,12 +1,18 @@
 build_data:
   stage: build
   image: gradle:jdk11
+  artifacts:
+    paths:
+      - data/build
   script:
     - cd data && ../gradlew -i clean build test
 
 build_datalink:
   stage: build
   image: gradle:jdk11
+  artifacts:
+    paths:
+      - datalink/build
   script:
     - cd alma-lib && ../gradlew -i clean build test publishToMavenLocal
     - cd ../datalink && ../gradlew -i clean build test
@@ -23,12 +29,18 @@ build_obscore:
 build_reg:
   stage: build
   image: gradle:jdk11
+  artifacts:
+    paths:
+      - reg/build
   script:
     - cd reg && ../gradlew -i clean build test
 
 build_sia:
   stage: build
   image: gradle:jdk11
+  artifacts:
+    paths:
+      - sia/build
   script:
     - cd sia && ../gradlew -i clean build test
 
@@ -41,6 +53,74 @@ build_soda:
   script:
     - cd alma-lib && ../gradlew -i clean build test publishToMavenLocal
     - cd ../soda && ../gradlew -i clean build test
+
+deploy_data:
+  stage: deploy
+  image: docker:latest
+  variables:
+    name: data
+    module: data
+  needs:
+    - build_data
+  services:
+    - docker:dind
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
+  script:
+    - export VERSION=`cat ${module}/VERSION`
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+
+deploy_datalink:
+  stage: deploy
+  image: docker:latest
+  variables:
+    name: datalink
+    module: datalink
+  needs:
+    - build_datalink
+  services:
+    - docker:dind
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
+  script:
+    - export VERSION=`cat ${module}/VERSION`
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+
+deploy_reg:
+  stage: deploy
+  image: docker:latest
+  variables:
+    name: reg
+    module: reg
+  needs:
+    - build_reg
+  services:
+    - docker:dind
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
+  script:
+    - export VERSION=`cat ${module}/VERSION`
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+
+deploy_sia:
+  stage: deploy
+  image: docker:latest
+  variables:
+    name: sia
+    module: sia
+  needs:
+    - build_sia
+  services:
+    - docker:dind
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
+  script:
+    - export VERSION=`cat ${module}/VERSION`
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
 
 deploy_soda:
   stage: deploy
