@@ -49,7 +49,7 @@ deploy_soda:
   services:
     - docker:dind
   before_script:
-    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" ${CI_REGISTRY}
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     - cd soda
     - export VERSION=$(cat VERSION)
