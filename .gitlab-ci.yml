@@ -37,7 +37,7 @@ build_soda:
     - cd ../soda && ../gradlew -i clean build test
 
 deploy_soda:
-  stage: build
+  stage: staging
   image: docker:latest
   needs:
     - build_soda
