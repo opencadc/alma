@@ -47,6 +47,8 @@ deploy_soda:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     - cd soda
+    - ls -alh
     - export VERSION=$(cat VERSION)
+    - echo "Using Version ${VERSION}"
     - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION} .
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION}
