@@ -14,6 +14,9 @@ build_datalink:
 build_obscore:
   stage: build
   image: gradle:jdk11
+  artifacts:
+    paths:
+      - obscore/build
   script:
     - cd obscore && ../gradlew -i clean build test
 
@@ -49,10 +52,20 @@ deploy_soda:
   before_script:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
-    - ls -alh
-    - cd soda
-    - ls -alh
     - export VERSION=$(cat VERSION)
-    - echo "Using Version ${VERSION}"
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION} .
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION} -f soda/Dockerfile soda/
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-soda:${VERSION}
+
+deploy_tap:
+  stage: deploy
+  image: docker:latest
+  needs:
+    - build_obscore
+  services:
+    - docker:dind
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
+  script:
+    - export VERSION=$(cat VERSION)
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-tap:${VERSION} -f obscore/Dockerfile obscore/
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-tap:${VERSION}
