@@ -7,7 +7,7 @@ return SDO_GEOMETRY is
     radius_val number;
     radius_in_metres number;
     pattern varchar2(32) := '-?[0-9]\d*(\.\d+)?';
-    format varchar2(16) := '999.999999999999999999';
+    format varchar2(22) := '999.999999999999999999';
     metres_multiplier number := 2.0 * 3.14159265358979 * 6371000 / 360.0;
 begin
 		if REGEXP_COUNT(in_coordinate_string, pattern) <> 3
