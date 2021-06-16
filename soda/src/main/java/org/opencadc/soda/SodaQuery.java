@@ -70,9 +70,11 @@ package org.opencadc.soda;
 
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Polygon;
+import ca.nrc.cadc.dali.Range;
 import ca.nrc.cadc.dali.util.CircleFormat;
 import ca.nrc.cadc.dali.util.IntervalFormat;
 import ca.nrc.cadc.dali.util.PolygonFormat;
+import ca.nrc.cadc.dali.util.RangeFormat;
 import ca.nrc.cadc.dali.util.ShapeFormat;
 import ca.nrc.cadc.dali.util.StringListFormat;
 import ca.nrc.cadc.net.HttpGet;
@@ -174,6 +176,9 @@ public class SodaQuery extends RequestHandlerQuery {
                 } else if (cutout.pos instanceof Polygon) {
                     final PolygonFormat f = new PolygonFormat();
                     appendQuery(cutoutURLString, SodaParameter.POLYGON, f.format((Polygon) cutout.pos));
+                } else if (cutout.pos instanceof Range) {
+                    final RangeFormat f = new RangeFormat(true);
+                    appendQuery(cutoutURLString, SodaParameter.POS, "RANGE " + f.format((Range) cutout.pos));
                 } else {
                     final ShapeFormat f = new ShapeFormat();
                     appendQuery(cutoutURLString, SodaParameter.POS, f.format(cutout.pos));
