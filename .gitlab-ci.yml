@@ -68,7 +68,7 @@ deploy_data:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=SNAPSHOT
+    - export VERSION=`git log -1 --pretty=%H`
     - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
 
@@ -86,7 +86,7 @@ deploy_datalink:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=SNAPSHOT
+    - export VERSION=`git log -1 --pretty=%H`
     - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
 
@@ -104,7 +104,7 @@ deploy_reg:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=SNAPSHOT
+    - export VERSION=`git log -1 --pretty=%H`
     - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
 
@@ -122,7 +122,7 @@ deploy_sia:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=SNAPSHOT
+    - export VERSION=`git log -1 --pretty=%H`
     - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
 
@@ -140,7 +140,7 @@ deploy_soda:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=SNAPSHOT
+    - export VERSION=`git log -1 --pretty=%H`
     - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
 
@@ -158,6 +158,6 @@ deploy_tap:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
 #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=SNAPSHOT
+    - export VERSION=`git log -1 --pretty=%H`
     - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
