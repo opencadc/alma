@@ -1,7 +1,17 @@
 # This is NOT a job and will be ignored by GitLab-CI
-.shared_hidden_key: &shared  # This is an anchor
+.shared_hidden_key: &shared_deploy  # This is an anchor
   before_script:
-    - apt-get install -y git-core
+    - apk --no-cache add git
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
+  script:
+    #    - export VERSION=`cat ${module}/VERSION`
+    - export VERSION=`git log -1 --pretty=%H`
+    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
+    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
 
 build_data:
   stage: build
@@ -60,115 +70,49 @@ build_soda:
     - cd ../soda && ../gradlew -i clean build test
 
 deploy_data:
-  <<: *shared  # This is a reference to the anchor above.
-  stage: deploy
-  image: docker:latest
   variables:
     name: data
     module: data
   needs:
     - build_data
-  services:
-    - docker:dind
-  before_script:
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
-  script:
-    #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=`git log -1 --pretty=%H`
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
-    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+  <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_datalink:
-  <<: *shared  # This is a reference to the anchor above.
-  stage: deploy
-  image: docker:latest
   variables:
     name: datalink
     module: datalink
   needs:
     - build_datalink
-  services:
-    - docker:dind
-  before_script:
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
-  script:
-    #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=`git log -1 --pretty=%H`
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
-    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+  <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_reg:
-  <<: *shared  # This is a reference to the anchor above.
-  stage: deploy
-  image: docker:latest
   variables:
     name: reg
     module: reg
   needs:
     - build_reg
-  services:
-    - docker:dind
-  before_script:
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
-  script:
-    #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=`git log -1 --pretty=%H`
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
-    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+  <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_sia:
-  <<: *shared  # This is a reference to the anchor above.
-  stage: deploy
-  image: docker:latest
   variables:
     name: sia
     module: sia
   needs:
     - build_sia
-  services:
-    - docker:dind
-  before_script:
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
-  script:
-    #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=`git log -1 --pretty=%H`
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
-    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+  <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_soda:
-  <<: *shared  # This is a reference to the anchor above.
-  stage: deploy
-  image: docker:latest
   variables:
     name: soda
     module: soda
   needs:
     - build_soda
-  services:
-    - docker:dind
-  before_script:
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
-  script:
-    #    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=`git log -1 --pretty=%H`
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
-    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+  <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_tap:
-  <<: *shared  # This is a reference to the anchor above.
-  stage: deploy
-  image: docker:latest
   variables:
     name: tap
     module: obscore
   needs:
     - build_obscore
-  services:
-    - docker:dind
-  before_script:
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
-  script:
-#    - export VERSION=`cat ${module}/VERSION`
-    - export VERSION=`git log -1 --pretty=%H`
-    - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
-    - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
+  <<: *shared_deploy  # This is a reference to the anchor above.
