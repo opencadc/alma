@@ -9,9 +9,7 @@ repositories {
     mavenLocal()
 }
 
-group = 'org.opencadc'
 sourceCompatibility = 1.8
-version = '1.1.0'
 
 ext {
     default_app_name = 'data'
@@ -24,14 +22,14 @@ war {
                 filter(ReplaceTokens, tokens: [app_name: project.alma_fits_app_name])
             }
         }
-        archiveName = project.alma_fits_app_name + '##' + project.version + '.war'
+        archiveName = project.alma_fits_app_name + '.war'
     } else {
         eachFile {
             if (it.name.equals('capabilities.xml') || it.name.equals('service.yaml')) {
                 filter(ReplaceTokens, tokens: [app_name: project.default_app_name])
             }
         }
-        archiveName = project.default_app_name + '##' + project.version + '.war'
+        archiveName = project.default_app_name + '.war'
     }
 
     // Include the swagger-ui so that /fits provides the fits API documentation
@@ -53,7 +51,7 @@ dependencies {
     implementation 'org.opencadc:cadc-rest:[1.2.19,)'
     implementation 'org.opencadc:cadc-soda-server:[1.2.0,2.0.0)'
     implementation 'org.opencadc:cadc-vosi:[1.0,)'
-    implementation 'org.opencadc:nom-tam-fits:[1.16.2, 2.0.0)'
+    implementation 'org.opencadc:nom-tam-fits:1.16.2'
 
     testImplementation 'junit:junit:[4.12,5.0)'
     testImplementation 'org.mockito:mockito-core:[3.6.0,4)'

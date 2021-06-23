@@ -84,13 +84,13 @@ services:
       - "traefik.http.routers.reg.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   data:
-    image: opencadc/alma-data:1.1.0
+    image: opencadc/alma-data:1.1.1
     networks:
       - "alma"
     ports:
       - "10004:5555"
     volumes:
-      - "data_volume:/data:ro"
+      - "data_volume:/data"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.data.loadbalancer.server.port=8080"
