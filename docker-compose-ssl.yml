@@ -106,6 +106,25 @@ services:
       - "traefik.http.routers.data.tls=true"
       - "traefik.http.routers.data.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.data.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+  rh:
+    image: nginx:alpine
+    command:
+      - 'nginx-debug'
+      - '-g'
+      - 'daemon off;'
+    networks:
+      - "alma"
+    volumes:
+      - "alma_rh_config:/etc/nginx/conf.d"
+      - "alma_rh_root:/usr/share/nginx/html"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.rh.loadbalancer.server.port=80"
+      - "traefik.http.routers.rh.rule=PathPrefix(`/rh`)"
+      - "traefik.http.routers.rh.entrypoints=websecure"
+      - "traefik.http.routers.rh.tls=true"
+      - "traefik.http.routers.rh.tls.domains[0].main=cadc.dao.nrc.ca"
+      - "traefik.http.routers.rh.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   datalink:
     image: opencadc/alma-datalink:1.3.4
     networks:
@@ -129,7 +148,7 @@ services:
       - "traefik.http.routers.datalink.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.datalink.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   soda:
-    image: opencadc/alma-soda:1.2.0
+    image: opencadc/alma-soda:1.2.1
     ports:
       - "10006:5555"
     networks:
@@ -168,6 +187,10 @@ volumes:
   alma_sia_config:
     external: true
   alma_reg_config:
+    external: true
+  alma_rh_config:
+    external: true
+  alma_rh_root:
     external: true
   entrypoint_root:
     external: true
