@@ -1,18 +1,14 @@
 create or replace function TO_CIRCLE(in_coordinate_string in varchar2)
 return SDO_GEOMETRY is
-	circle SDO_GEOMETRY;
+	circle_polygon SDO_GEOMETRY;
     begin_index number;
     x_val number;
     y_val number;
     radius_val number;
-    point_1_x number;
-    point_1_y number;
-    point_2_x number;
-    point_2_y number;
-    point_3_x number;
-    point_3_y number;
+    radius_in_metres number;
     pattern varchar2(32) := '-?[0-9]\d*(\.\d+)?';
-    format varchar2(16) := '999.999999';
+    format varchar2(22) := '999.999999999999999999';
+    metres_multiplier number := 2.0 * 3.14159265358979 * 6371000 / 360.0;
 begin
 		if REGEXP_COUNT(in_coordinate_string, pattern) <> 3
 		then
@@ -22,14 +18,9 @@ begin
         select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 1), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into x_val from DUAL;
         select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 2), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into y_val from DUAL;
         select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 3), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into radius_val from DUAL;
-        select x_val - radius_val into point_1_x from DUAL;
-        select y_val into point_1_y from DUAL;
-        select x_val into point_2_x from DUAL;
-        select y_val + radius_val into point_2_y from DUAL;
-        select x_val + radius_val into point_3_x from DUAL;
-        select y_val into point_3_y from DUAL;
-        select SDO_GEOMETRY(2003, null, null, SDO_ELEM_INFO_ARRAY(1, 1003, 4), SDO_ORDINATE_ARRAY(point_1_x, point_1_y, point_2_x, point_2_y, point_3_x, point_3_y)) into circle from DUAL;
-        return circle;
+        select radius_val * metres_multiplier into radius_in_metres from DUAL;
+        select SDO_UTIL.CIRCLE_POLYGON(x_val, y_val, radius_in_metres, 0.005) into circle_polygon from DUAL;
+        return circle_polygon;
 end;
 /
 
@@ -55,7 +46,7 @@ return SDO_GEOMETRY is
       		vertices.extend;
       		vertices(counter) := next_vert;
       	end loop;
-		select SDO_GEOMETRY(2003, null, null, SDO_ELEM_INFO_ARRAY(1, 1003, 1), vertices) into poly from DUAL;
+		select SDO_GEOMETRY(2003, 8307, null, SDO_ELEM_INFO_ARRAY(1, 1003, 1), vertices) into poly from DUAL;
 		return poly;
 	end;
 /

@@ -69,14 +69,34 @@
 
 package org.opencadc.alma;
 
+import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.net.ResourceNotFoundException;
+import ca.nrc.cadc.reg.Standards;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.MultiValuedProperties;
 import ca.nrc.cadc.util.PropertiesReader;
 import ca.nrc.cadc.util.StringUtil;
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 
 
+/**
+ * Properties configuration for ALMA applications.
+ */
 public class AlmaProperties extends PropertiesReader {
-
+    private static final Logger LOGGER = Logger.getLogger(AlmaProperties.class);
     private static final String DEFAULT_PROPERTIES_FILE_NAME = "org.opencadc.alma.properties";
+
+    static final String ALMA_REQUEST_HANDLER_SERVICE_URI = "almaRequestHandlerServiceURI";
+    static final String ALMA_FILE_SODA_SERVICE_PORT = "almaFileSodaServicePort";
+    static final String ALMA_DATALINK_SERVICE_URI = "almaDataLinkServiceURI";
+    static final String ALMA_SODA_SERVICE_URI = "almaSODAServiceURI";
+    static final String ALMA_DATAPROTAL_SERVICE_URI = "almaDataPortalServiceURI";
+
 
     public AlmaProperties() {
         this(DEFAULT_PROPERTIES_FILE_NAME);
@@ -86,9 +106,81 @@ public class AlmaProperties extends PropertiesReader {
         super(filename);
     }
 
+
     public String getFirstPropertyValue(final String key, final String defaultValue) {
         final MultiValuedProperties allProperties = super.getAllProperties();
         final String s = allProperties.getFirstPropertyValue(key);
         return StringUtil.hasText(s) ? s : defaultValue;
+    }
+
+    public URI getRequestHandlerServiceURI() {
+        return ensureRequiredURI(ALMA_REQUEST_HANDLER_SERVICE_URI);
+    }
+
+    public String getFileSodaServicePort() {
+        return ensureRequiredString(ALMA_FILE_SODA_SERVICE_PORT);
+    }
+
+    public URI getDataLinkServiceURI() {
+        return ensureRequiredURI(ALMA_DATALINK_SERVICE_URI);
+    }
+
+    public URI getSodaServiceURI() {
+        return ensureRequiredURI(ALMA_SODA_SERVICE_URI);
+    }
+
+    public URI getDataPortalServiceURI() {
+        return ensureRequiredURI(ALMA_DATAPROTAL_SERVICE_URI);
+    }
+
+    URI ensureRequiredURI(final String key) {
+        return URI.create(ensureRequiredString(key));
+    }
+
+    String ensureRequiredString(final String key) {
+        final String configuredValue = this.getFirstPropertyValue(key, null);
+
+        if (!StringUtil.hasText(configuredValue)) {
+            throw new IllegalStateException(
+                    String.format("\nRequested property value was not found.  Ensure the %s is set in the "
+                                  + "%s file.\n", key, DEFAULT_PROPERTIES_FILE_NAME));
+        } else {
+            return configuredValue;
+        }
+    }
+
+    public URL lookupDataLinkServiceURL() {
+        return lookupServiceURL(getDataLinkServiceURI());
+    }
+
+    public URL lookupSodaServiceURL() {
+        return lookupServiceURL(getSodaServiceURI());
+    }
+
+    public URL lookupDataPortalURL() throws IOException, ResourceNotFoundException {
+        return lookupApplicationURL(getDataPortalServiceURI());
+    }
+
+    public URL lookupRequestHandlerURL() throws IOException, ResourceNotFoundException {
+        final URI requestHandlerServiceURI = getRequestHandlerServiceURI();
+        LOGGER.debug(String.format("Looking up Request Handler URL from configured URI %s.", requestHandlerServiceURI));
+        return lookupApplicationURL(requestHandlerServiceURI);
+    }
+
+    URL lookupServiceURL(final URI serviceURI) {
+        return createRegistryClient().getServiceURL(serviceURI, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON);
+    }
+
+    URL lookupApplicationURL(final URI serviceURI) throws IOException, ResourceNotFoundException {
+        return createApplicationsRegistryClient().getAccessURL(serviceURI);
+    }
+
+    RegistryClient createApplicationsRegistryClient() throws MalformedURLException {
+        // The hostname here doesn't matter as it gets mangled post construction.
+        return new RegistryClient(new URL("https://www.almascience.org/reg/applications"));
+    }
+
+    RegistryClient createRegistryClient() {
+        return new RegistryClient();
     }
 }

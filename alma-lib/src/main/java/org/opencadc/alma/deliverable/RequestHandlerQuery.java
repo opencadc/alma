@@ -68,128 +68,21 @@
 
 package org.opencadc.alma.deliverable;
 
-import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.opencadc.alma.AlmaUID;
-
 import ca.nrc.cadc.net.HttpGet;
-import ca.nrc.cadc.net.ResourceNotFoundException;
-import ca.nrc.cadc.reg.client.RegistryClient;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
+import org.opencadc.alma.AlmaProperties;
+
 import java.net.URL;
-import java.util.Iterator;
 
 
-public class RequestHandlerQuery {
+public abstract class RequestHandlerQuery {
+    protected final AlmaProperties almaProperties;
 
-    private static final Logger LOGGER = Logger.getLogger(RequestHandlerQuery.class);
-    private static final String ALT_REGISTRY_LOOKUP = "https://www.almascience.org/reg/applications";
-    private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
-            "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
-            + "\"children\":[],\"allMousUids\":[]}";
-    private final URI requestHandlerResourceID;
-
-    public RequestHandlerQuery(final URI requestHandlerResourceID) {
-        this.requestHandlerResourceID = requestHandlerResourceID;
+    public RequestHandlerQuery(final AlmaProperties almaProperties) {
+        this.almaProperties = almaProperties;
     }
 
-    /**
-     * Obtain the HierarchyItem representing the top level downwards from the given UID.
-     * @param almaUID   The UID to start from.
-     * @return  HierarchyItem for the UID, or a NotFound HierarchyItem.
-     */
-    public HierarchyItem query(final AlmaUID almaUID) {
-        try {
-            final JSONObject document = new JSONObject(new JSONTokener(jsonStream(almaUID)));
-            final JSONObject baseDocument = getBaseDocument(almaUID, document);
-
-            if (baseDocument == null) {
-                throw new IOException("No entry found for " + almaUID);
-            }
-
-            return HierarchyItem.fromJSONObject(almaUID, baseDocument);
-        } catch (IOException ioException) {
-            LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.\n\n%s",
-                                       almaUID.getUID(), ioException));
-            return HierarchyItem.fromJSONObject(almaUID, 
-                                                new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
-                                                               almaUID.getUID())));
-        } catch (ResourceNotFoundException resourceNotFoundException) {
-            LOGGER.fatal("Unable to find Registry lookup.");
-            throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
-        }
-    }
-
-    private JSONObject getBaseDocument(final AlmaUID almaUID, final JSONObject rootDocument) {
-        final JSONArray childrenJSONArray = rootDocument.getJSONArray("children");
-        if (almaUID.getArchiveUID() == null) {
-            return rootDocument;
-        } else {
-            final String sanitisedUid = almaUID.getSanitisedUid();
-            for (final Object o : childrenJSONArray) {
-                final JSONObject jsonObject = (JSONObject) o;
-                final String childID = jsonObject.get("id").toString();
-                final String childName = jsonObject.get("name").toString();
-
-                // The name and id values in the JSON document are sanitised.
-                if (sanitisedUid.equals(childID) || sanitisedUid.equals(childName)) {
-                    return jsonObject;
-                } else {
-                    final JSONObject rootChildDocument = getBaseDocument(almaUID, jsonObject);
-
-                    if (rootChildDocument != null) {
-                        return rootChildDocument;
-                    }
-                }
-            }
-
-            return null;
-        }
-    }
-
-    /**
-     * Obtain an InputStream to JSON data representing the hierarchy of elements.
-     *
-     * @param almaUID The UID to query for.
-     * @return InputStream to feed to a JSON Object.
-     *
-     * @throws IOException Any errors are passed back up the stack.
-     */
-    InputStream jsonStream(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        final URL requestHandlerURL = lookupBaseServiceURL(almaUID);
-        LOGGER.debug(String.format("Base URL for Request Handler is %s", requestHandlerURL));
-        final HttpGet httpGet = createHttpGet(requestHandlerURL);
-        httpGet.run();
-
-        final Throwable throwable = httpGet.getThrowable();
-        if (throwable != null) {
-            throw new IOException(throwable.getMessage(), throwable);
-        } else {
-            return httpGet.getInputStream();
-        }
-    }
-
-    URL lookupBaseServiceURL(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        final RegistryClient registryClient = createRegistryClient();
-        final URL baseAccessURL = registryClient.getAccessURL(requestHandlerResourceID);
-        LOGGER.debug(String.format("Using Request Handler URL %s", baseAccessURL));
-        return new URL(String.format("%s/ous/expand/%s/downwards", baseAccessURL.toExternalForm(),
-                                     almaUID.getArchiveUID() == null
-                                     ? almaUID.getSanitisedUid()
-                                     : almaUID.getArchiveUID().getSanitisedUid()));
-    }
-
-    HttpGet createHttpGet(final URL requestHandlerEndpointURL) {
+    protected HttpGet createHttpGet(final URL requestHandlerEndpointURL) {
         return new HttpGet(requestHandlerEndpointURL, true);
-    }
-
-    RegistryClient createRegistryClient() throws MalformedURLException {
-        return new RegistryClient(new URL(ALT_REGISTRY_LOOKUP));
     }
 }

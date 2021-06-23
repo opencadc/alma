@@ -76,7 +76,7 @@
 
     <servlet>
         <servlet-name>AsyncSodaServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.uws.server.AsyncServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
             <param-value>ca.nrc.cadc.uws.web.GetAction</param-value>
@@ -130,8 +130,18 @@
     </servlet-mapping>
 
     <servlet-mapping>
+        <servlet-name>SyncSodaServlet</servlet-name>
+        <url-pattern>/sync/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
         <servlet-name>AsyncSodaServlet</servlet-name>
         <url-pattern>/async</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AsyncSodaServlet</servlet-name>
+        <url-pattern>/async/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

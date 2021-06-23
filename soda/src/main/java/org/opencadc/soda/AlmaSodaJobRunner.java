@@ -70,23 +70,20 @@
 package org.opencadc.soda;
 
 
+import ca.nrc.cadc.util.StringUtil;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import org.opencadc.soda.server.AbstractSodaJobRunner;
 import org.opencadc.soda.server.AlmaStreamingSodaPlugin;
 import org.opencadc.soda.server.SodaPlugin;
-import org.opencadc.soda.server.SodaURLBuilder;
 
 import java.net.URI;
 
 
 public class AlmaSodaJobRunner extends AbstractSodaJobRunner {
-
-    private static final String ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY = "almaRequestHandlerResourceID";
     private final AlmaProperties almaProperties;
 
 
-    public AlmaSodaJobRunner(AlmaProperties sodaProperties) {
+    public AlmaSodaJobRunner(final AlmaProperties sodaProperties) {
         this.almaProperties = sodaProperties;
     }
 
@@ -96,16 +93,10 @@ public class AlmaSodaJobRunner extends AbstractSodaJobRunner {
 
     @Override
     public SodaPlugin getSodaPlugin() {
-        return new AlmaStreamingSodaPlugin(createRequestHandlerQuery(), createDeliverableURLBuilder());
+        return new AlmaStreamingSodaPlugin(createSodaQuery());
     }
 
-    SodaURLBuilder createDeliverableURLBuilder() {
-        return new SodaURLBuilder(almaProperties);
-    }
-
-    private RequestHandlerQuery createRequestHandlerQuery() {
-        final String configuredResourceID =
-                almaProperties.getFirstPropertyValue(ALMA_REQUEST_HANDLER_RESOURCE_ID_KEY, null);
-        return new RequestHandlerQuery(URI.create(configuredResourceID));
+    private SodaQuery createSodaQuery() {
+        return new SodaQuery(almaProperties);
     }
 }

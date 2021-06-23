@@ -83,7 +83,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.HierarchyItem;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 import ca.nrc.cadc.util.StringUtil;
 
@@ -102,14 +101,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
     private final Iterator<String> datasetIDIterator;
-    private final RequestHandlerQuery requestHandlerQuery;
+    private final DataLinkQuery dataLinkQuery;
 
 
     DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
-                     final RequestHandlerQuery requestHandlerQuery) {
+                     final DataLinkQuery dataLinkQuery) {
         this.dataLinkURLBuilder = dataLinkURLBuilder;
         this.datasetIDIterator = datasetIDIterator;
-        this.requestHandlerQuery = requestHandlerQuery;
+        this.dataLinkQuery = dataLinkQuery;
     }
 
     @Override
@@ -117,7 +116,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
         if (dataLinkQueue.isEmpty()) {
             if (datasetIDIterator.hasNext()) {
                 final AlmaUID currentUID = new AlmaUID(datasetIDIterator.next());
-                final HierarchyItem hierarchyItem = requestHandlerQuery.query(currentUID);
+                final HierarchyItem hierarchyItem = dataLinkQuery.query(currentUID);
 
                 if (hierarchyItem.hasChildren()) {
                     visitSubDeliverables(hierarchyItem);
