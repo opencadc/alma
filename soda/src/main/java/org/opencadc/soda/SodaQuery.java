@@ -78,6 +78,7 @@ import ca.nrc.cadc.dali.util.RangeFormat;
 import ca.nrc.cadc.dali.util.ShapeFormat;
 import ca.nrc.cadc.dali.util.StringListFormat;
 import ca.nrc.cadc.net.HttpGet;
+
 import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 
@@ -88,12 +89,13 @@ import java.net.URL;
 import java.security.AccessControlException;
 
 import org.apache.log4j.Logger;
+import org.opencadc.alma.AlmaProperties;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import org.opencadc.soda.server.Cutout;
+
 
 public class SodaQuery extends RequestHandlerQuery {
     private static final Logger LOGGER = Logger.getLogger(SodaQuery.class);
