@@ -92,6 +92,7 @@ services:
       - "traefik.http.routers.reg.tls=true"
       - "traefik.http.routers.reg.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.routers.reg.service=reg"
   data:
     image: opencadc/alma-data:1.1.1
     networks:
