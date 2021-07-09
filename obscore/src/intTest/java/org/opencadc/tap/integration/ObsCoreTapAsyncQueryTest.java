@@ -97,7 +97,7 @@ public class ObsCoreTapAsyncQueryTest extends TapAsyncQueryTest {
     }
 
     public ObsCoreTapAsyncQueryTest() {
-        super(URI.create("ivo://cadc.nrc.ca/tap"));
+        super(URI.create("ivo://almascience.org/tap"));
 
         File testFile = FileUtil.getFileFromResource("AsyncResultTest-ivoa.ObsCore.properties",
                                                      ObsCoreTapAsyncQueryTest.class);

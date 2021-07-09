@@ -39,7 +39,7 @@ public class VosiTablesTest
     public VosiTablesTest()
     {
         RegistryClient rc = new RegistryClient();
-        this.tablesURL = rc.getServiceURL(URI.create("ivo://cadc.nrc.ca/argus"), Standards.VOSI_TABLES_11, AuthMethod.ANON);
+        this.tablesURL = rc.getServiceURL(URI.create("ivo://almascience.org/tap"), Standards.VOSI_TABLES_11, AuthMethod.ANON);
     }
 
     @Test

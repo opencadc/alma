@@ -94,7 +94,7 @@ public class ObsCoreTapAsyncErrorTest extends TapAsyncErrorTest {
     }
 
     public ObsCoreTapAsyncErrorTest() {
-        super(URI.create("ivo://cadc.nrc.ca/tap"));
+        super(URI.create("ivo://almascience.org/tap"));
 
         File testFile = FileUtil.getFileFromResource("AsyncErrorTest-NO-LANG.properties",
                                                      ObsCoreTapAsyncErrorTest.class);

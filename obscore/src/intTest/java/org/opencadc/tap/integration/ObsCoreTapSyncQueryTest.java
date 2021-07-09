@@ -70,6 +70,7 @@
 package org.opencadc.tap.integration;
 
 
+import ca.nrc.cadc.conformance.uws2.JobResultWrapper;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import ca.nrc.cadc.tap.integration.TapSyncQueryTest;
@@ -91,7 +92,7 @@ public class ObsCoreTapSyncQueryTest extends TapSyncQueryTest {
     }
 
     public ObsCoreTapSyncQueryTest() {
-        super(URI.create("ivo://cadc.nrc.ca/tap"));
+        super(URI.create("ivo://almascience.org/tap"));
 
         // re-use SyncResultTest files
         File testFile = FileUtil.getFileFromResource("SyncResultTest-abs.properties", ObsCoreTapSyncQueryTest.class);
@@ -99,5 +100,10 @@ public class ObsCoreTapSyncQueryTest extends TapSyncQueryTest {
             File testDir = testFile.getParentFile();
             super.setPropertiesDir(testDir, "SyncResultTest");
         }
+    }
+
+    @Override
+    protected void validateResponse(JobResultWrapper result) {
+        super.validateResponse(result);
     }
 }

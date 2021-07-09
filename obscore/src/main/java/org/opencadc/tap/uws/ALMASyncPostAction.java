@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2011.                            (c) 2011.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,54 +62,21 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *  $Revision: 5 $
  *
  ************************************************************************
  */
 
-package org.opencadc.tap.integration;
+package org.opencadc.tap.uws;
 
-
-import ca.nrc.cadc.auth.AuthMethod;
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.RunnableAction;
-import ca.nrc.cadc.conformance.uws2.JobResultWrapper;
-import ca.nrc.cadc.net.HttpGet;
-import ca.nrc.cadc.net.HttpPost;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import ca.nrc.cadc.tap.integration.TapSyncErrorTest;
-import ca.nrc.cadc.util.FileUtil;
-import ca.nrc.cadc.util.Log4jInit;
-
-import javax.security.auth.Subject;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.Map;
+import ca.nrc.cadc.uws.web.SyncPostAction;
 
 /**
- * @author pdowler
+ * Override to get properly forwarded URLs.
  */
-public class ObsCoreTapSyncErrorTest extends TapSyncErrorTest {
-    private static final Logger log = Logger.getLogger(ObsCoreTapSyncErrorTest.class);
-
-    static {
-        Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
-        Log4jInit.setLevel("ca.nrc.cadc.conformance.uws2", Level.INFO);
-    }
-
-    public ObsCoreTapSyncErrorTest() {
-        super(URI.create("ivo://almascience.org/tap"));
-
-        // re-use SyncError test files
-        File testFile = FileUtil.getFileFromResource("SyncErrorTest-area.properties", ObsCoreTapSyncErrorTest.class);
-        if (testFile.exists()) {
-            File testDir = testFile.getParentFile();
-            super.setPropertiesDir(testDir, "SyncErrorTest");
-        }
+public class ALMASyncPostAction extends SyncPostAction {
+    @Override
+    protected String getJobListURL() {
+        final ALMAPostURLBuilder almaPostURLBuilder = new ALMAPostURLBuilder(this.syncInput);
+        return almaPostURLBuilder.getJobListURL();
     }
 }

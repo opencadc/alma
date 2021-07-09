@@ -45,6 +45,8 @@
         </init-param>
         <init-param>
             <param-name>post</param-name>
+            <!-- The ALMAASyncPostAction enables the x-forward-xxx headers and redirects appropriately. -->
+<!--            <param-value>org.opencadc.tap.uws.ALMAAsyncPostAction</param-value>-->
             <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
         </init-param>
         <init-param>
@@ -68,6 +70,8 @@
         </init-param>
         <init-param>
             <param-name>post</param-name>
+            <!-- The ALMASyncPostAction enables the x-forward-xxx headers and redirects appropriately. -->
+<!--            <param-value>org.opencadc.tap.uws.ALMASyncPostAction</param-value>-->
             <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
         </init-param>
 

@@ -20,7 +20,7 @@
               url="${alma.tapuser.url}"
               removeAbandoned="false"
               removeAbandonedTimeout="600"
-              initSQL="ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS.FF3&quot;Z&quot;' NLS_DATE_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS&quot;Z&quot;' NLS_SORT=BINARY_CI NLS_COMP=LINGUISTIC"
+              initSQL="ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS.FF3&quot;Z&quot;' NLS_DATE_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS&quot;Z&quot;' NLS_SORT=BINARY NLS_COMP=BINARY"
               logAbandoned="true"
               testOnBorrow="true"
               validationQuery="SELECT 1 FROM DUAL"

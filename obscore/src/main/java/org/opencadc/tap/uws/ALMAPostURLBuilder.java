@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2011.                            (c) 2011.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,54 +62,67 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *  $Revision: 5 $
  *
  ************************************************************************
  */
 
-package org.opencadc.tap.integration;
+package org.opencadc.tap.uws;
 
+import ca.nrc.cadc.rest.SyncInput;
+import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.uws.web.JobAction;
 
-import ca.nrc.cadc.auth.AuthMethod;
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.RunnableAction;
-import ca.nrc.cadc.conformance.uws2.JobResultWrapper;
-import ca.nrc.cadc.net.HttpGet;
-import ca.nrc.cadc.net.HttpPost;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import ca.nrc.cadc.tap.integration.TapSyncErrorTest;
-import ca.nrc.cadc.util.FileUtil;
-import ca.nrc.cadc.util.Log4jInit;
-
-import javax.security.auth.Subject;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
-import java.util.Map;
 
-/**
- * @author pdowler
- */
-public class ObsCoreTapSyncErrorTest extends TapSyncErrorTest {
-    private static final Logger log = Logger.getLogger(ObsCoreTapSyncErrorTest.class);
+public class ALMAPostURLBuilder {
+    static final String FORWARDED_HOST_PARAM_NAME = "x-forwarded-host";
+    static final String FORWARDED_PROTO_PARAM_NAME = "x-forwarded-proto";
+    static final String FORWARDED_PORT_PARAM_NAME = "x-forwarded-port";
 
-    static {
-        Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
-        Log4jInit.setLevel("ca.nrc.cadc.conformance.uws2", Level.INFO);
+    private final SyncInput syncInput;
+
+    public ALMAPostURLBuilder(final SyncInput syncInput) {
+        this.syncInput = syncInput;
     }
 
-    public ObsCoreTapSyncErrorTest() {
-        super(URI.create("ivo://almascience.org/tap"));
+    String getJobListURL() {
+        final StringBuilder ret = new StringBuilder();
 
-        // re-use SyncError test files
-        File testFile = FileUtil.getFileFromResource("SyncErrorTest-area.properties", ObsCoreTapSyncErrorTest.class);
-        if (testFile.exists()) {
-            File testDir = testFile.getParentFile();
-            super.setPropertiesDir(testDir, "SyncErrorTest");
+        final String requestURIString = syncInput.getRequestURI();
+        final String forwardedRequestHost = getForwardedRequestHost();
+
+        if (StringUtil.hasText(forwardedRequestHost)) {
+            final URI requestURI = URI.create(requestURIString);
+            ret.append(forwardedRequestHost).append(requestURI.getPath());
+        } else {
+            ret.append(requestURIString);
         }
+
+        final String path = syncInput.getPath();
+        if (path != null) {
+            return ret.toString().replace("/" + path, ""); // syncInput removes leading /
+        } else {
+            return ret.toString();
+        }
+    }
+
+    private String getForwardedRequestHost() {
+        final StringBuilder urlBuilder = new StringBuilder();
+        final String forwardedHost = this.syncInput.getHeader(FORWARDED_HOST_PARAM_NAME);
+
+        if (StringUtil.hasText(forwardedHost)) {
+            final String forwardedProto = this.syncInput.getHeader(FORWARDED_PROTO_PARAM_NAME);
+            final String forwardedPort = this.syncInput.getHeader(FORWARDED_PORT_PARAM_NAME);
+
+            final String proto = StringUtil.hasText(forwardedProto) ? forwardedProto : "http";
+
+            urlBuilder.append(proto).append("://").append(forwardedHost);
+
+            if (StringUtil.hasText(forwardedPort)) {
+                urlBuilder.append(":").append(forwardedPort);
+            }
+        }
+
+        return urlBuilder.toString();
     }
 }
