@@ -65,7 +65,7 @@ services:
       - "traefik.http.routers.reg.rule=PathPrefix(`/reg`)"
       - "traefik.http.routers.reg.entrypoints=web"
   data:
-    image: opencadc/alma-data:1.0.0
+    image: opencadc/alma-data:1.1.2
     networks:
       - "alma"
     ports:

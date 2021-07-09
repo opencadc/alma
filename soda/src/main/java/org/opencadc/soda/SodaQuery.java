@@ -73,12 +73,12 @@ import ca.nrc.cadc.dali.Polygon;
 import ca.nrc.cadc.dali.Range;
 import ca.nrc.cadc.dali.util.CircleFormat;
 import ca.nrc.cadc.dali.util.IntervalFormat;
+import ca.nrc.cadc.dali.util.PolarizationStateFormat;
 import ca.nrc.cadc.dali.util.PolygonFormat;
 import ca.nrc.cadc.dali.util.RangeFormat;
 import ca.nrc.cadc.dali.util.ShapeFormat;
-import ca.nrc.cadc.dali.util.StringListFormat;
-import ca.nrc.cadc.net.HttpGet;
 
+import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 
@@ -88,17 +88,18 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessControlException;
 
-import org.apache.log4j.Logger;
-import org.opencadc.alma.AlmaProperties;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import org.opencadc.soda.server.Cutout;
 
 
 public class SodaQuery extends RequestHandlerQuery {
-    private static final Logger LOGGER = Logger.getLogger(SodaQuery.class);
+    private static final Logger LOGGER = LogManager.getLogger(SodaQuery.class);
 
     private static final String JSON_ERROR_MESSAGE_KEY = "error";
     private static final String JSON_ERROR_STATUS_KEY = "status";
@@ -198,8 +199,9 @@ public class SodaQuery extends RequestHandlerQuery {
             }
 
             if (cutout.pol != null && !cutout.pol.isEmpty()) {
-                final StringListFormat f = new StringListFormat();
-                appendQuery(cutoutURLString, SodaParameter.POL, f.format(cutout.pol));
+                final PolarizationStateFormat f = new PolarizationStateFormat();
+                cutout.pol.forEach(polarizationState -> appendQuery(cutoutURLString, SodaParameter.POL,
+                                                                    f.format(polarizationState)));
             }
 
             if (cutout.pixelCutouts != null && !cutout.pixelCutouts.isEmpty()) {
