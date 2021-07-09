@@ -73,9 +73,9 @@ import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Polygon;
 import ca.nrc.cadc.dali.util.CircleFormat;
 import ca.nrc.cadc.dali.util.IntervalFormat;
+import ca.nrc.cadc.dali.util.PolarizationStateFormat;
 import ca.nrc.cadc.dali.util.PolygonFormat;
 import ca.nrc.cadc.dali.util.ShapeFormat;
-import ca.nrc.cadc.dali.util.StringListFormat;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
@@ -132,8 +132,9 @@ public class SodaURLBuilder extends DeliverableURLBuilder {
             }
 
             if (cutout.pol != null && !cutout.pol.isEmpty()) {
-                final StringListFormat f = new StringListFormat();
-                appendQuery(cutoutURLString, SodaParameter.POL, f.format(cutout.pol));
+                final PolarizationStateFormat f = new PolarizationStateFormat();
+                cutout.pol.forEach(polarizationState -> appendQuery(cutoutURLString, SodaParameter.POL,
+                                                                    f.format(polarizationState)));
             }
 
             if (cutout.pixelCutouts != null && !cutout.pixelCutouts.isEmpty()) {
