@@ -84,6 +84,6 @@ public class VosiAvailabilityTest extends AvailabilityTest
 
     public VosiAvailabilityTest() 
     { 
-        super(URI.create("ivo://cadc.nrc.ca/argus"));
+        super(URI.create("ivo://almascience.org/tap"));
     }
 }

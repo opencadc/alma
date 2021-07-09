@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2011.                            (c) 2011.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,54 +62,38 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *  $Revision: 5 $
  *
  ************************************************************************
  */
 
-package org.opencadc.tap.integration;
+package org.opencadc.tap.uws;
 
+import ca.nrc.cadc.rest.SyncInput;
+import static org.mockito.Mockito.*;
 
-import ca.nrc.cadc.auth.AuthMethod;
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.RunnableAction;
-import ca.nrc.cadc.conformance.uws2.JobResultWrapper;
-import ca.nrc.cadc.net.HttpGet;
-import ca.nrc.cadc.net.HttpPost;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import ca.nrc.cadc.tap.integration.TapSyncErrorTest;
-import ca.nrc.cadc.util.FileUtil;
-import ca.nrc.cadc.util.Log4jInit;
+import org.junit.Assert;
+import org.junit.Test;
 
-import javax.security.auth.Subject;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.Map;
+public class ALMAPostURLBuilderTest {
+    @Test
+    public void getJobListURL() throws Exception {
+        final SyncInput mockInput = mock(SyncInput.class);
+        final ALMAPostURLBuilder testSubject = new ALMAPostURLBuilder(mockInput);
+        final String requestURIString = "http://example.com/tap/sync";
 
-/**
- * @author pdowler
- */
-public class ObsCoreTapSyncErrorTest extends TapSyncErrorTest {
-    private static final Logger log = Logger.getLogger(ObsCoreTapSyncErrorTest.class);
+        when(mockInput.getRequestURI()).thenReturn(requestURIString);
+        when(mockInput.getPath()).thenReturn(null);
+        when(mockInput.getHeader(ALMAPostURLBuilder.FORWARDED_HOST_PARAM_NAME)).thenReturn("example.com");
+        when(mockInput.getHeader(ALMAPostURLBuilder.FORWARDED_PROTO_PARAM_NAME)).thenReturn("https");
+        when(mockInput.getHeader(ALMAPostURLBuilder.FORWARDED_PORT_PARAM_NAME)).thenReturn("443");
 
-    static {
-        Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
-        Log4jInit.setLevel("ca.nrc.cadc.conformance.uws2", Level.INFO);
-    }
+        Assert.assertEquals("Wrong job list URL.", "https://example.com:443/tap/sync",
+                            testSubject.getJobListURL());
 
-    public ObsCoreTapSyncErrorTest() {
-        super(URI.create("ivo://almascience.org/tap"));
-
-        // re-use SyncError test files
-        File testFile = FileUtil.getFileFromResource("SyncErrorTest-area.properties", ObsCoreTapSyncErrorTest.class);
-        if (testFile.exists()) {
-            File testDir = testFile.getParentFile();
-            super.setPropertiesDir(testDir, "SyncErrorTest");
-        }
+        verify(mockInput, atMostOnce()).getRequestURI();
+        verify(mockInput, atMostOnce()).getPath();
+        verify(mockInput, atMostOnce()).getHeader(ALMAPostURLBuilder.FORWARDED_HOST_PARAM_NAME);
+        verify(mockInput, atMostOnce()).getHeader(ALMAPostURLBuilder.FORWARDED_PROTO_PARAM_NAME);
+        verify(mockInput, atMostOnce()).getHeader(ALMAPostURLBuilder.FORWARDED_PORT_PARAM_NAME);
     }
 }

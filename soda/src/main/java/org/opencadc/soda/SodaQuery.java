@@ -77,7 +77,6 @@ import ca.nrc.cadc.dali.util.PolarizationStateFormat;
 import ca.nrc.cadc.dali.util.PolygonFormat;
 import ca.nrc.cadc.dali.util.RangeFormat;
 import ca.nrc.cadc.dali.util.ShapeFormat;
-
 import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.net.ResourceNotFoundException;

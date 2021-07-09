@@ -2,7 +2,7 @@ version: "3.7"
 services:
   traefik:
     hostname: "${PROXY_HOST}"
-    image: traefik:v2.4
+    image: traefik:v2.5
     command:
       - "--log.level=DEBUG"
       - "--api.insecure=true"
@@ -37,12 +37,13 @@ services:
       - "traefik.http.routers.sia.rule=PathPrefix(`/sia2`)"
       - "traefik.http.routers.sia.entrypoints=web"
   obscore:
-    image: opencadc/alma-tap:1.1.16
+    image: opencadc/alma-tap:1.1.21
     ports:
       - "10002:5555"
     networks:
       - "alma"
     environment:
+      # Add -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5555 for remote debug
       CATALINA_OPTS: "-Dalma.tapuser.username=${DATABASE_USER} -Dalma.tapuser.password=${DATABASE_PASSWORD} -Dalma.tapuser.driverClassName=oracle.jdbc.OracleDriver -Dalma.tapuser.url=jdbc:oracle:thin:@${DATABASE_HOST}:1521/${DATABASE_NAME} -Dca.nrc.cadc.reg.client.RegistryClient.host=${PROXY_HOST}"
     labels:
       - "traefik.enable=true"
@@ -93,7 +94,7 @@ services:
       - "traefik.http.routers.datalink.rule=PathPrefix(`/datalink`)"
       - "traefik.http.routers.datalink.entrypoints=web"
   soda:
-    image: opencadc/alma-soda:1.1.1
+    image: opencadc/alma-soda:1.2.1
     ports:
       - "10006:5555"
     networks:
