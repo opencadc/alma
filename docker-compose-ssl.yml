@@ -21,12 +21,11 @@ services:
     networks:
       - "alma"
     volumes:
-
       - "server_certs:/server_certs:ro"
       - "proxy_config:/configuration:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
   sia:
-    image: opencadc/alma-sia:1.0.4
+    image: opencadc/alma-sia:1.0.5
     networks:
       - "alma"
     command: "catalina.sh run"
@@ -51,7 +50,7 @@ services:
       - "traefik.http.routers.sia.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.sia.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   tap:
-    image: opencadc/alma-tap:1.1.20
+    image: opencadc/alma-tap:1.1.21
     ports:
       - "10002:5555"
     networks:
@@ -59,6 +58,7 @@ services:
     command: "catalina.sh run"
     entrypoint: "/entrypoint/entrypoint.sh"
     environment:
+      # Add -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5555 for remote debug
       CATALINA_OPTS: "-Dalma.tapuser.username=${DATABASE_USER} -Dalma.tapuser.password=${DATABASE_PASSWORD} -Dalma.tapuser.driverClassName=oracle.jdbc.OracleDriver -Dalma.tapuser.url=jdbc:oracle:thin:@${DATABASE_HOST}:1521/${DATABASE_NAME} -Dca.nrc.cadc.reg.client.RegistryClient.host=${PROXY_HOST}"
     volumes:
       - "ca_certs:/usr/local/share/ca-certificates"
