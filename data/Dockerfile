@@ -23,4 +23,5 @@ COPY --from=build /usr/lib/libwcs.so /usr/lib/
 COPY --from=build /usr/lib/libwcs.so.5 /usr/lib/
 COPY --from=build /usr/lib/libwcs.so.5.15 /usr/lib/
 
+COPY LocalAuthority.properties /root/config/
 COPY build/libs/*.war webapps/

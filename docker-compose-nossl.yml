@@ -36,6 +36,16 @@ services:
       - "traefik.http.services.sia.loadbalancer.server.port=8080"
       - "traefik.http.routers.sia.rule=PathPrefix(`/sia2`)"
       - "traefik.http.routers.sia.entrypoints=web"
+  rh:
+    image: opencadc/alma-cadc-rh:0.1
+    command: "mix phx.server"
+    networks:
+      - "alma"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.rh.loadbalancer.server.port=4000"
+      - "traefik.http.routers.rh.rule=PathPrefix(`/rh`)"
+      - "traefik.http.routers.rh.entrypoints=websecure"
   tap:
     image: opencadc/alma-tap:1.1.22
     ports:
