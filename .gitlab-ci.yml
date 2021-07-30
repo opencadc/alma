@@ -1,7 +1,7 @@
 # This is NOT a job and will be ignored by GitLab-CI
 .shared_hidden_key: &shared_deploy  # This is an anchor
   before_script:
-    - apk --no-cache add git
+    - apk --no-cache add curl gcc git make
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     #    - export VERSION=`cat ${module}/VERSION`
@@ -20,7 +20,18 @@ build_data:
     paths:
       - data/build
   script:
-    - cd data && ../gradlew -i clean build test
+    # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
+    - curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2
+    - cd /tmp/ && tar jxvf wcslib.tar.bz2 && cd wcslib-5.15
+    - ./configure --prefix=/usr
+    - make && sudo make install
+    - git clone https://github.com/opencadc/dal.git
+    - cd dal
+    - git fetch origin pull/67/head:github-pr-67
+    - git checkout github-pr-67
+    - cd cadc-data-ops-fits
+    - ../gradlew -i clean build install
+    - cd ../../data && ../gradlew -i clean build test
 
 build_datalink:
   stage: build
