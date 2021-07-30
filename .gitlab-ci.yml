@@ -1,7 +1,7 @@
 # This is NOT a job and will be ignored by GitLab-CI
 .shared_hidden_key: &shared_deploy  # This is an anchor
   before_script:
-    - apk --no-cache add curl gcc git make
+    - apk --no-cache add git
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
     #    - export VERSION=`cat ${module}/VERSION`
@@ -21,6 +21,7 @@ build_data:
       - data/build
   script:
     # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
+    - apk --no-cache add curl gcc git make
     - curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2
     - cd /tmp/ && tar jxvf wcslib.tar.bz2 && cd wcslib-5.15
     - ./configure --prefix=/usr
