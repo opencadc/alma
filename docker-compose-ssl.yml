@@ -50,7 +50,7 @@ services:
       - "traefik.http.routers.sia.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.sia.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   tap:
-    image: opencadc/alma-tap:1.1.21
+    image: opencadc/alma-tap:1.1.22
     ports:
       - "10002:5555"
     networks:

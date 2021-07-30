@@ -25,7 +25,7 @@ services:
     ports:
       - "10001:5555"
     depends_on:
-      - "obscore"
+      - "tap"
       - "reg"
     volumes:
       - "alma_sia_config:/root/config:ro"
@@ -36,8 +36,8 @@ services:
       - "traefik.http.services.sia.loadbalancer.server.port=8080"
       - "traefik.http.routers.sia.rule=PathPrefix(`/sia2`)"
       - "traefik.http.routers.sia.entrypoints=web"
-  obscore:
-    image: opencadc/alma-tap:1.1.21
+  tap:
+    image: opencadc/alma-tap:1.1.22
     ports:
       - "10002:5555"
     networks:
@@ -47,9 +47,9 @@ services:
       CATALINA_OPTS: "-Dalma.tapuser.username=${DATABASE_USER} -Dalma.tapuser.password=${DATABASE_PASSWORD} -Dalma.tapuser.driverClassName=oracle.jdbc.OracleDriver -Dalma.tapuser.url=jdbc:oracle:thin:@${DATABASE_HOST}:1521/${DATABASE_NAME} -Dca.nrc.cadc.reg.client.RegistryClient.host=${PROXY_HOST}"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.obscore.loadbalancer.server.port=8080"
-      - "traefik.http.routers.obscore.rule=PathPrefix(`/tap`)"
-      - "traefik.http.routers.obscore.entrypoints=web"
+      - "traefik.http.services.tap.loadbalancer.server.port=8080"
+      - "traefik.http.routers.tap.rule=PathPrefix(`/tap`)"
+      - "traefik.http.routers.tap.entrypoints=web"
   reg:
     image: opencadc/alma-reg:1.0.2
     networks:
