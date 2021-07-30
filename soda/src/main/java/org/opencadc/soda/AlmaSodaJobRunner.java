@@ -74,6 +74,7 @@ import ca.nrc.cadc.dali.Interval;
 import ca.nrc.cadc.dali.ParamExtractor;
 import ca.nrc.cadc.dali.Shape;
 import ca.nrc.cadc.log.WebServiceLogInfo;
+import ca.nrc.cadc.net.HttpTransfer;
 import ca.nrc.cadc.net.TransientException;
 import ca.nrc.cadc.rest.SyncOutput;
 import ca.nrc.cadc.uws.ErrorSummary;
@@ -99,6 +100,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -108,6 +110,7 @@ import java.util.Map;
  */
 public class AlmaSodaJobRunner implements JobRunner {
     private static final Logger LOGGER = Logger.getLogger(AlmaSodaJobRunner.class);
+    private static final String CONTENT_DISPOSITION = "content-disposition";
 
     static final String RESULT_OK = "ok";
 
@@ -256,6 +259,8 @@ public class AlmaSodaJobRunner implements JobRunner {
             final List<Result> jobResults = new ArrayList<>();
             int serialNum = 1;
             for (final URI id : ids) {
+                final CutoutFileNameFormat cutoutFileNameFormat = new CutoutFileNameFormat(id.toASCIIString());
+
                 // async mode: cartesian product of pos+band+time+custom
                 // sync mode: each list has 1 entry (possibly no-op for that axis)
                 for (final Cutout pos : posCut) {
@@ -269,6 +274,10 @@ public class AlmaSodaJobRunner implements JobRunner {
                                 cut.time = time.time;
                                 cut.pol = polCut.pol;
                                 cut.pixelCutouts = sub.pixelCutouts;
+                                syncOutput.setHeader(CONTENT_DISPOSITION, "inline; filename=\""
+                                                                          + cutoutFileNameFormat.format(cut) + "\"");
+                                syncOutput.setHeader(HttpTransfer.CONTENT_TYPE.toLowerCase(Locale.ROOT),
+                                                     "application/fits");
                                 sodaPlugin.write(id, cut, extraParams, this.syncOutput);
                                 LOGGER.debug("wrote cutout URL");
                                 jobResults.add(new Result(RESULT_OK + "-" + serialNum++, id));

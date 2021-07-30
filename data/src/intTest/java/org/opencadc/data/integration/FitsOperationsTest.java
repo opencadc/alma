@@ -76,7 +76,6 @@ import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.Log4jInit;
-import ca.nrc.cadc.util.StringUtil;
 import nom.tam.fits.Fits;
 import nom.tam.util.RandomAccessDataObject;
 import nom.tam.util.RandomAccessFileExt;
@@ -85,24 +84,16 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.opencadc.alma.data.CutoutFileNameFormat;
-import org.opencadc.soda.ExtensionSlice;
-import org.opencadc.soda.ExtensionSliceFormat;
 import org.opencadc.soda.SodaParamValidator;
-import org.opencadc.soda.server.Cutout;
 
-import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Integration test to pull existing test FITS files from CADC VOSpace (Vault) into a local directory, then PUT them

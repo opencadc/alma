@@ -74,14 +74,12 @@ import ca.nrc.cadc.dali.Polygon;
 import ca.nrc.cadc.dali.Shape;
 import ca.nrc.cadc.io.ByteCountOutputStream;
 import ca.nrc.cadc.io.WriteException;
-import ca.nrc.cadc.net.HttpTransfer;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import nom.tam.util.RandomAccessDataObject;
 import nom.tam.util.RandomAccessFileExt;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.opencadc.alma.data.BaseAction;
-import org.opencadc.alma.data.CutoutFileNameFormat;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.soda.SodaParamValidator;
 import org.opencadc.soda.server.Cutout;
@@ -101,7 +99,7 @@ import java.util.Set;
 public class FITSAction extends BaseAction {
     private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
     private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
-    private static final String CONTENT_DISPOSITION = "Content-Disposition";
+    private static final String CONTENT_DISPOSITION = "content-disposition";
 
 
     void throwUsageError() {
@@ -240,10 +238,6 @@ public class FITSAction extends BaseAction {
                     }
                 }
 
-                final CutoutFileNameFormat cutoutFileNameFormat = new CutoutFileNameFormat(getFile().getName());
-                syncOutput.setHeader(CONTENT_DISPOSITION, "inline; filename=\""
-                                                          + cutoutFileNameFormat.format(cutout) + "\"");
-                syncOutput.setHeader(HttpTransfer.CONTENT_TYPE, "application/fits");
                 fitsOperations.cutoutToStream(cutout, byteCountOutputStream);
             } else if (sodaCutout.isMETA()) {
                 LOGGER.debug("META supplied");

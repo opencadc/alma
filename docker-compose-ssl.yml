@@ -50,7 +50,7 @@ services:
       - "traefik.http.routers.sia.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.sia.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   tap:
-    image: opencadc/alma-tap:2d70bb90f200b3d6f38b008ba9c62da748c0c07e
+    image: opencadc/alma-tap:bc638c3323a42163fbc12d05f68af5c8035ae08b
     ports:
       - "10002:5555"
     networks:
@@ -94,7 +94,7 @@ services:
       - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
       - "traefik.http.routers.reg.service=reg"
   data:
-    image: opencadc/alma-data:5fbd97b1e136a3259773e12c8cf66447b4c99772
+    image: opencadc/alma-data:bc638c3323a42163fbc12d05f68af5c8035ae08b
     networks:
       - "alma"
     ports:
@@ -146,7 +146,7 @@ services:
       - "traefik.http.routers.datalink.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.datalink.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   soda:
-    image: opencadc/alma-soda:5fbd97b1e136a3259773e12c8cf66447b4c99772
+    image: opencadc/alma-soda:bc638c3323a42163fbc12d05f68af5c8035ae08b
     ports:
       - "10006:5555"
     networks:

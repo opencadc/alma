@@ -66,7 +66,7 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.data;
+package org.opencadc.soda;
 
 import ca.nrc.cadc.dali.Interval;
 import ca.nrc.cadc.dali.PolarizationState;
