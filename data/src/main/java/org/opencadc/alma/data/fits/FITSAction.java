@@ -70,6 +70,7 @@ package org.opencadc.alma.data.fits;
 
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Interval;
+import ca.nrc.cadc.dali.PolarizationState;
 import ca.nrc.cadc.dali.Polygon;
 import ca.nrc.cadc.io.ByteCountOutputStream;
 import ca.nrc.cadc.io.WriteException;
@@ -229,7 +230,7 @@ public class FITSAction extends BaseAction {
                 cutout.time = times.get(0);
             }
 
-            final List<String> polarizations = SODA_PARAM_VALIDATOR.validatePOL(sodaParameterMap);
+            final List<PolarizationState> polarizations = SODA_PARAM_VALIDATOR.validatePOL(sodaParameterMap);
             if (!polarizations.isEmpty()) {
                 cutout.pol = polarizations;
             }
