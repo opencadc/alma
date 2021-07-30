@@ -21,7 +21,7 @@ build_data:
       - data/build
   script:
     # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
-    - pwd
+    - export CURR_DIR
     - apt-get update && apt-get install -y curl gcc git make
     - curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2
     - cd /tmp/ && tar jxvf wcslib.tar.bz2 && cd wcslib-5.15
@@ -33,7 +33,7 @@ build_data:
     - git checkout github-pr-67
     - cd cadc-data-ops-fits
     - ../gradlew -i clean build install
-    - cd /data && ../gradlew -i clean build test
+    - cd ${CI_PROJECT_DIR}/data && ../gradlew -i clean build test
 
 build_datalink:
   stage: build
