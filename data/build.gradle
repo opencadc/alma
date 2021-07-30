@@ -71,9 +71,6 @@ sourceSets {
             runtimeClasspath += main.output + test.output
             srcDir file('src/intTest/java')
         }
-
-        // set the intTest resource directory
-        resources.srcDir file('src/intTest/resources')
     }
 }
 
