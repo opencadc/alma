@@ -79,6 +79,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.opencadc.fits.FitsOperations;
+import org.opencadc.soda.SodaParamValidator;
 
 import static org.mockito.Mockito.*;
 
@@ -243,7 +244,7 @@ public class FITSActionTest {
 
         final Map<String, String[]> inputParameters = new HashMap<>();
 
-        inputParameters.put("headers", new String[]{Boolean.toString(true)});
+        inputParameters.put(SodaParamValidator.META, new String[]{Boolean.toString(true)});
 
         // Same file twice should be reduced to the same file.
         inputParameters.put("file", new String[]{"/archive/hst/hst-mef.fits"});
