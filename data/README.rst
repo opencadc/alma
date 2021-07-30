@@ -1,4 +1,4 @@
-ALMA Data service (0.2.0)
+ALMA Data service (1.1.0)
 ==============================
 
 Simple data service to perform cutouts (sub-images) of files.  The current implementation only supports FITS files,
@@ -16,20 +16,21 @@ Access a FITS file.
 
 GET/POST Query parameters:
 
-+------------+--------------------------------------+
-| Name       | Purpose                              |
-+============+======================================+
-| ``file``   | Absolute path to file                |
-+------------+--------------------------------------+
-| ``SUB``    | Pixel cutout spec.  Cannot be used   |
-|            | with ``headers`` parameter.          |
-|            |                                      |
-|            | ``...?SUB=[0][300:400]``             |
-+------------+--------------------------------------+
-| ``headers``| Set to ``true`` to see header list.  |
-|            | Cannot be used with ``SUB``          |
-|            | parameter.                           | 
-+------------+--------------------------------------+
++------------------+--------------------------------------+
+| Name             | Purpose                              |
++==================+======================================+
+| ``file``         | Absolute path to file                |
++------------------+--------------------------------------+
+| ``{SODA-PARAM}`` | Pixel cutout spec.  Cannot be used   |
+|                  | with ``headers`` parameter.          |
+|                  |                                      |
+|                  | ``...?SUB=[0][300:400]``             |
+|                  | ``...?CIRCLE=123.0+89.4+0.02``       |
++------------------+--------------------------------------+
+| ``headers``      | Set to ``true`` to see header list.  |
+|                  | Cannot be used with ``{SODA-PARAM}`` |
+|                  | parameter.                           |
++------------------+--------------------------------------+
 
 Running Integration Tests
 -------------------------

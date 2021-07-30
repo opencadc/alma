@@ -69,11 +69,7 @@
 
 package org.opencadc.soda.server;
 
-import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.HierarchyItem;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
-import ca.nrc.cadc.dali.Interval;
-import ca.nrc.cadc.dali.Shape;
+import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.rest.SyncOutput;
 
@@ -84,16 +80,17 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.opencadc.alma.AlmaUID;
+import org.opencadc.soda.SodaQuery;
+
 
 public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin {
+    private static final Logger LOGGER = Logger.getLogger(AlmaStreamingSodaPlugin.class);
+    private final SodaQuery sodaQuery;
 
-    private final RequestHandlerQuery requestHandlerQuery;
-    private final SodaURLBuilder sodaURLBuilder;
-
-
-    public AlmaStreamingSodaPlugin(final RequestHandlerQuery requestHandlerQuery, final SodaURLBuilder sodaURLBuilder) {
-        this.requestHandlerQuery = requestHandlerQuery;
-        this.sodaURLBuilder = sodaURLBuilder;
+    public AlmaStreamingSodaPlugin(final SodaQuery sodaQuery) {
+        this.sodaQuery = sodaQuery;
     }
 
 
@@ -110,6 +107,7 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
     public void write(URI uri, Cutout cutout, Map<String, List<String>> extraParams, SyncOutput out)
             throws IOException {
         final URL cutoutURL = toURL(1, uri, cutout, extraParams);
+        LOGGER.info(String.format("Trying to cutout from %s", cutoutURL));
         final HttpGet httpGet = createDownloader(cutoutURL, out.getOutputStream());
         httpGet.run();
     }
@@ -130,8 +128,11 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
     @Override
     public URL toURL(int serialNum, URI uri, Cutout cutouts, Map<String, List<String>> extraParams) throws IOException {
         final AlmaUID almaUID = new AlmaUID(uri.toString());
-        final HierarchyItem hierarchyItem = requestHandlerQuery.query(almaUID);
-        return sodaURLBuilder.createCutoutURL(hierarchyItem, cutouts);
+        try {
+            return sodaQuery.toCutoutURL(almaUID, cutouts);
+        } catch (ResourceNotFoundException resourceNotFoundException) {
+            throw new IOException(resourceNotFoundException.getMessage(), resourceNotFoundException);
+        }
     }
 
     HttpGet createDownloader(final URL url, final OutputStream outputStream) {

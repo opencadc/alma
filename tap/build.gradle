@@ -7,9 +7,6 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
-
-    // Remove jcenter when the uk.ac.starlink package is on Maven Central.
-    jcenter()
 }
 
 sourceCompatibility = 1.8
@@ -74,8 +71,8 @@ sourceSets {
             srcDir file('src/intTest/java')
         }
 
-        // set the intTest resource directory
-        resources.srcDir file('src/intTest/resources')
+        // No longer necessary with Gradle 7.1 (causes error).
+//        resources.srcDir file('src/intTest/resources')
     }
 }
 

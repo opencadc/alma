@@ -68,6 +68,7 @@
 
 package org.opencadc.alma.data.fits;
 
+import ca.nrc.cadc.log.WebServiceLogInfo;
 import ca.nrc.cadc.rest.SyncInput;
 import ca.nrc.cadc.rest.SyncOutput;
 import nom.tam.fits.Header;
@@ -218,6 +219,8 @@ public class FITSActionTest {
     public void testDoActionHeaders() throws Exception {
         final FitsOperations mockFitsOperations = mock(FitsOperations.class);
         final RandomAccessDataObject mockRandomAccessDataObject = mock(RandomAccessDataObject.class);
+        final WebServiceLogInfo mockLogInfo = mock(WebServiceLogInfo.class);
+
         final List<Header> headers = new ArrayList<>(3);
 
         headers.add(ImageHDU.manufactureHeader(new ImageData(new int[20][100])));
@@ -235,6 +238,8 @@ public class FITSActionTest {
                 return mockRandomAccessDataObject;
             }
         };
+
+        testSubject.setLogInfo(mockLogInfo);
 
         final Map<String, String[]> inputParameters = new HashMap<>();
 
@@ -272,6 +277,7 @@ public class FITSActionTest {
         }
         verify(mockRequest).getParameterNames();
         verify(mockResponse).getOutputStream();
+        verify(mockLogInfo).setBytes(8640L);
     }
 
     static final class TestServletOutputStream extends ServletOutputStream {

@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2020.                            (c) 2020.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,67 +66,33 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.deliverable;
+package org.opencadc.datalink;
 
-import org.json.JSONArray;
+import ca.nrc.cadc.util.FileUtil;
+import ca.nrc.cadc.util.PropertiesReader;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Test;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
-
-import ca.nrc.cadc.net.HttpGet;
-import ca.nrc.cadc.net.ResourceNotFoundException;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.util.FileUtil;
-import ca.nrc.cadc.util.PropertiesReader;
+import org.opencadc.alma.deliverable.HierarchyItem;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-
-import static org.mockito.Mockito.*;
 
 
-public class RequestHandlerQueryTest {
-
-    @Test
-    public void createURL() throws Exception {
-        final URI resourceURI = URI.create("ivo://alma.org/rh");
-        final HttpGet mockHttpGet = mock(HttpGet.class);
-        final RegistryClient mockRegistryClient = mock(RegistryClient.class);
-        final RequestHandlerQuery testSubject = new RequestHandlerQuery(resourceURI) {
-            @Override
-            HttpGet createHttpGet(URL requestHandlerEndpointURL) {
-                return mockHttpGet;
-            }
-
-            @Override
-            RegistryClient createRegistryClient() {
-                return mockRegistryClient;
-            }
-        };
-
-        when(mockRegistryClient.getAccessURL(resourceURI)).thenReturn(
-                new URL("https://alma.org/requestHandler/tree"));
-        final URL endpointURL = testSubject.lookupBaseServiceURL(new AlmaUID("uid://C0/C1/C313"));
-        Assert.assertEquals("Wrong endpoint",
-                            new URL("https://alma.org/requestHandler/tree/ous/expand/uid___C0_C1_C313/downwards"),
-                            endpointURL);
-    }
-
+public class DataLinkQueryTest {
     @Test
     public void query() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
-        final URI resourceURI = URI.create("ivo://alma.org/rh");
-        final File testFile = FileUtil.getFileFromResource(RequestHandlerQueryTest.class.getSimpleName() + ".json",
-                                                           RequestHandlerQueryTest.class);
+        final File testFile = FileUtil.getFileFromResource(DataLinkQueryTest.class.getSimpleName() + ".json",
+                                                           DataLinkQueryTest.class);
         final JSONObject testDocument = new JSONObject(new JSONTokener(new FileReader(testFile)));
-        final RequestHandlerQuery testSubject = new RequestHandlerQuery(resourceURI) {
+        final DataLinkQuery testSubject = new DataLinkQuery(null) {
             /**
              * Obtain an InputStream to JSON data representing the hierarchy of elements.
              *
@@ -136,18 +102,17 @@ public class RequestHandlerQueryTest {
              * @throws IOException Any errors are passed back up the stack.
              */
             @Override
-            InputStream jsonStream(AlmaUID almaUID) throws IOException, ResourceNotFoundException {
+            InputStream downwardsJSONStream(AlmaUID almaUID) throws IOException {
                 return new FileInputStream(testFile);
             }
         };
-        final AlmaUID testAlmaUIDOne = new AlmaUID("uid://A001/X133d/X1eef");
-
+        final AlmaUID testAlmaUIDOne = new AlmaUID("uid://A001/X74/X29");
         final HierarchyItem resultHierarchyItem = testSubject.query(testAlmaUIDOne);
 
         Assert.assertEquals("Wrong document.", HierarchyItem.fromJSONObject(testAlmaUIDOne, testDocument),
                             resultHierarchyItem);
 
-        final AlmaUID testAlmaUIDTwo = new AlmaUID("2018.1.00526.S_uid___A001_X133d_X1eef_001_of_001.tar");
+        final AlmaUID testAlmaUIDTwo = new AlmaUID("2011.0.00101.S_uid___A002_X30a93d_X43e.asdm.sdm.tar");
         final HierarchyItem resultSubHierarchyItem = testSubject.query(testAlmaUIDTwo);
         HierarchyItem expectedSubHierarchyItem = null;
 

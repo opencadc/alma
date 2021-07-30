@@ -69,7 +69,6 @@
 
 package org.opencadc.datalink;
 
-import org.opencadc.alma.AlmaProperties;
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
@@ -81,17 +80,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
+import org.opencadc.alma.AlmaProperties;
+
 
 public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
-
-    private static final String ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME = "almaDataLinkServiceURI";
-    private static final String ALMA_SODA_SERVICE_ID_PROPERTY_NAME = "almaSODAServiceURI";
-    private static final String DEFAULT_ALMA_DATALINK_SERVICE_ID = "ivo://almascience.org/datalink";
-    private static final String DEFAULT_ALMA_SODA_SERVICE_ID = "ivo://almascience.org/soda";
-
     private String applicationName;
     private String state;
-
 
     /**
      * Set application name. The appName is a string unique to this
@@ -129,27 +123,20 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
     }
 
     public static URL getDataLinkBaseURL(final AlmaProperties almaProperties) throws MalformedURLException {
-        final URI configuredDataLinkURI = URI.create(
-                almaProperties.getFirstPropertyValue(ALMA_DATALINK_SERVICE_ID_PROPERTY_NAME,
-                                                     DEFAULT_ALMA_DATALINK_SERVICE_ID));
-        return lookupBaseURL(configuredDataLinkURI, Standards.DATALINK_LINKS_10, AuthMethod.ANON);
+        return lookupBaseURL(almaProperties.getDataLinkServiceURI(), Standards.DATALINK_LINKS_10);
     }
 
     public static URL getSodaBaseURL(final AlmaProperties almaProperties) throws MalformedURLException {
-        final URI configuredDataLinkURI = URI.create(
-                almaProperties.getFirstPropertyValue(ALMA_SODA_SERVICE_ID_PROPERTY_NAME,
-                                                     DEFAULT_ALMA_SODA_SERVICE_ID));
-        return lookupBaseURL(configuredDataLinkURI, Standards.SODA_SYNC_10, AuthMethod.ANON);
+        return lookupBaseURL(almaProperties.getSodaServiceURI(), Standards.SODA_SYNC_10);
     }
 
-    private static URL lookupBaseURL(final URI configuredURI, final URI standardsID, final AuthMethod authMethod)
+    private static URL lookupBaseURL(final URI configuredURI, final URI standardsID)
             throws MalformedURLException {
         if (configuredURI.getScheme().equals("ivo")) {
             final RegistryClient registryClient = new RegistryClient();
             // Attempt to load the URI as a resource URI from the Registry.
 
-            return registryClient.getServiceURL(configuredURI, standardsID,
-                                                authMethod == null ? AuthMethod.ANON : authMethod);
+            return registryClient.getServiceURL(configuredURI, standardsID, AuthMethod.ANON);
         } else {
             // Fallback and assume the URI is an absolute one.
             return configuredURI.toURL();

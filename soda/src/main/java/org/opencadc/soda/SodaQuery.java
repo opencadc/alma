@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2021.                            (c) 2021.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,42 +66,106 @@
  ************************************************************************
  */
 
-package org.opencadc.soda.server;
+package org.opencadc.soda;
 
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Polygon;
+import ca.nrc.cadc.dali.Range;
 import ca.nrc.cadc.dali.util.CircleFormat;
 import ca.nrc.cadc.dali.util.IntervalFormat;
 import ca.nrc.cadc.dali.util.PolarizationStateFormat;
 import ca.nrc.cadc.dali.util.PolygonFormat;
+import ca.nrc.cadc.dali.util.RangeFormat;
 import ca.nrc.cadc.dali.util.ShapeFormat;
+import ca.nrc.cadc.net.HttpGet;
+import ca.nrc.cadc.net.NetUtil;
+import ca.nrc.cadc.net.ResourceNotFoundException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.AccessControlException;
+
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.DeliverableURLBuilder;
-import org.opencadc.alma.deliverable.HierarchyItem;
-
-import ca.nrc.cadc.net.NetUtil;
-import org.opencadc.soda.ExtensionSliceFormat;
-import org.opencadc.soda.SodaParameter;
-
-import java.net.MalformedURLException;
-import java.net.URL;
+import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.deliverable.RequestHandlerQuery;
+import org.opencadc.soda.server.Cutout;
 
 
-public class SodaURLBuilder extends DeliverableURLBuilder {
-    private static final Logger LOGGER = LogManager.getLogger(SodaURLBuilder.class);
+public class SodaQuery extends RequestHandlerQuery {
+    private static final Logger LOGGER = LogManager.getLogger(SodaQuery.class);
 
-    public SodaURLBuilder(final AlmaProperties almaProperties) {
+    private static final String JSON_ERROR_MESSAGE_KEY = "error";
+    private static final String JSON_ERROR_STATUS_KEY = "status";
+    private static final String JSON_PATH_KEY = "path";
+    private static final String JSON_SERVER_NAME_KEY = "serverName";
+
+
+    public SodaQuery(final AlmaProperties almaProperties) {
         super(almaProperties);
     }
 
-    public URL createCutoutURL(final HierarchyItem hierarchyItem, final Cutout cutout) throws MalformedURLException {
-        final URL downloadURL = createDownloadURL(hierarchyItem);
-        return toCutoutURL(downloadURL, cutout);
+    /**
+     * Request the absolute path on disk of the given ALMA UID.  This will make a request to the Request Handler
+     * service's location endpoint.
+     *
+     * @param almaUID       The UID to look up.
+     * @return              URL to the SODA endpoint of the file.
+     * @throws IOException  For any service URL lookup errors.
+     * @throws ResourceNotFoundException    If no service could be located.
+     */
+    public URL locateFile(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
+        final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
+        LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
+        final URL downwardsQueryURL = new URL(String.format("%s/data/%s/location",
+                                                            baseServiceURL.toExternalForm(),
+                                                            almaUID.getSanitisedUid()));
+
+        try (final InputStream jsonStream = jsonStream(downwardsQueryURL)) {
+            final JSONObject jsonObject = new JSONObject(new JSONTokener(jsonStream));
+            if (jsonObject.keySet().contains(JSON_ERROR_MESSAGE_KEY)) {
+                throw new IllegalArgumentException(String.format("Error trying to resolve %s to an absolute path:"
+                                                                 + "\nStatus: %d\nMessage: %s",
+                                                                 almaUID, jsonObject.getInt(JSON_ERROR_STATUS_KEY),
+                                                                 jsonObject.getString(JSON_ERROR_MESSAGE_KEY)));
+            } else {
+                final String serverName = jsonObject.getString(JSON_SERVER_NAME_KEY);
+                final String path = jsonObject.getString(JSON_PATH_KEY);
+
+                return new URL(String.format("http://%s:%s/data/files?file=%s", serverName,
+                                             this.almaProperties.getFileSodaServicePort(), NetUtil.encode(path)));
+            }
+        }
     }
 
-    private URL toCutoutURL(final URL downloadURL, Cutout cutout) throws MalformedURLException {
+    InputStream jsonStream(final URL url) throws IOException, ResourceNotFoundException {
+        final HttpGet httpGet = createHttpGet(url);
+        httpGet.run();
+
+        final Throwable throwable = httpGet.getThrowable();
+        if (throwable != null) {
+            if (throwable instanceof ResourceNotFoundException) {
+                throw (ResourceNotFoundException) throwable;
+            } else if (throwable instanceof AccessControlException) {
+                throw (AccessControlException) throwable;
+            } else {
+                throw new IOException("Unable to locate file.\n" + throwable.getMessage(), throwable);
+            }
+        } else {
+            return httpGet.getInputStream();
+        }
+    }
+
+    public URL toCutoutURL(final AlmaUID almaUID, final Cutout cutout) throws IOException, ResourceNotFoundException {
+        return toCutoutURL(locateFile(almaUID), cutout);
+    }
+
+    private URL toCutoutURL(final URL downloadURL, final Cutout cutout) throws MalformedURLException {
         if ((cutout == null) || isEmpty(cutout)) {
             return downloadURL;
         } else {
@@ -115,6 +178,9 @@ public class SodaURLBuilder extends DeliverableURLBuilder {
                 } else if (cutout.pos instanceof Polygon) {
                     final PolygonFormat f = new PolygonFormat();
                     appendQuery(cutoutURLString, SodaParameter.POLYGON, f.format((Polygon) cutout.pos));
+                } else if (cutout.pos instanceof Range) {
+                    final RangeFormat f = new RangeFormat(true);
+                    appendQuery(cutoutURLString, SodaParameter.POS, "RANGE " + f.format((Range) cutout.pos));
                 } else {
                     final ShapeFormat f = new ShapeFormat();
                     appendQuery(cutoutURLString, SodaParameter.POS, f.format(cutout.pos));

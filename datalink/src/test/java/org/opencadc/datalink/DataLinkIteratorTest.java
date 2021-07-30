@@ -1,4 +1,3 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
@@ -71,6 +70,7 @@ package org.opencadc.datalink;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,13 +78,16 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.reg.Standards;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
 import org.junit.Assert;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
 import org.opencadc.alma.deliverable.HierarchyItem;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.PropertiesReader;
@@ -153,21 +156,25 @@ public class DataLinkIteratorTest {
     @Test
     public void runThroughFiltering() throws Throwable {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
-
-        final RequestHandlerQuery mockRequestHandlerQuery = mock(RequestHandlerQuery.class);
-        final DataLinkURLBuilder dataLinkURLBuilder =
-                new DataLinkURLBuilder(new URL("https://myhost.com/mydatalink/sync"),
-                                       new URL("https://myhost.com/mysoda/sync"));
+        final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
+        final DataLinkQuery mockDataLinkQuery = mock(DataLinkQuery.class);
         final Iterator<String> dataSetIDIterator =
                 Collections.singletonList("uid://A001/X879/X8f1").iterator();
                 final AlmaUID uid = new AlmaUID("uid://A001/X879/X8f1");
+        final URL datalinkURL = new URL("https://alma.com/datalink");
+        final URL sodaURL = new URL("https://alma.com/soda");
+        final URL dataPortalURL = new URL("https://alma.colm/dataportal");
+
         final HierarchyItem hierarchy = fromJSONFile(uid, DataLinkIteratorTest.class.getSimpleName() + ".json");
+        when(mockDataLinkQuery.query(uid)).thenReturn(hierarchy);
+        when(mockAlmaProperties.lookupDataLinkServiceURL()).thenReturn(datalinkURL);
+        when(mockAlmaProperties.lookupSodaServiceURL()).thenReturn(sodaURL);
+        when(mockAlmaProperties.lookupDataPortalURL()).thenReturn(dataPortalURL);
 
-        when(mockRequestHandlerQuery.query(uid)).thenReturn(hierarchy);
-
+        final DataLinkURLBuilder dataLinkURLBuilder = new DataLinkURLBuilder(mockAlmaProperties);
         final List<DataLink> expectedDataLinks = new ArrayList<>();
         final List<DataLink> resultDataLinks = new ArrayList<>();
-        new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator, mockRequestHandlerQuery)
+        new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator, mockDataLinkQuery)
                 .forEachRemaining(resultDataLinks::add);
         final String itemFileNameTemplate = "%s.%d.json";
 
