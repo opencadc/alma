@@ -20,6 +20,16 @@ jobs:
       run: cd alma-lib && gradle --info clean build test publishToMavenLocal
 
     # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
+    - name: install WCSLIB (libwcs5-15)
+      run: |
+        sudo apt-get update && sudo apt-get install -y curl gcc make \
+        && curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2 \
+        && cd /tmp/ \
+        && tar jxvf wcslib.tar.bz2 \
+        && cd wcslib-5.15 \
+        && ./configure --prefix=/usr \
+        && make && sudo make install
+
     - name: temporarily pull DAL PR 67
       run: |
         git clone https://github.com/opencadc/dal.git \
