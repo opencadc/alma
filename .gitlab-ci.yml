@@ -25,7 +25,7 @@ build_data:
     - curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2
     - cd /tmp/ && tar jxvf wcslib.tar.bz2 && cd wcslib-5.15
     - ./configure --prefix=/usr
-    - make && sudo make install
+    - make && make install
     - git clone https://github.com/opencadc/dal.git
     - cd dal
     - git fetch origin pull/67/head:github-pr-67
