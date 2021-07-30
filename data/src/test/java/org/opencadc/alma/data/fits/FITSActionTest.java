@@ -278,7 +278,9 @@ public class FITSActionTest {
         }
         verify(mockRequest).getParameterNames();
         verify(mockResponse).getOutputStream();
-        verify(mockLogInfo).setBytes(8640L);
+
+        // Nothing actually counted.
+        verify(mockLogInfo).setBytes(0L);
     }
 
     static final class TestServletOutputStream extends ServletOutputStream {

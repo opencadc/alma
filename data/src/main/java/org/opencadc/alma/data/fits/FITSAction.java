@@ -135,9 +135,10 @@ public class FITSAction extends BaseAction {
     public void doAction() throws Exception {
         verifyArguments();
 
+        ByteCountOutputStream byteCountOutputStream = null;
         try {
             // The caller will close this stream.
-            final ByteCountOutputStream byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
+            byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
             write(byteCountOutputStream);
             byteCountOutputStream.flush();
         } catch (WriteException e) {
@@ -148,6 +149,10 @@ public class FITSAction extends BaseAction {
                 msg += ": " + e.getMessage();
             }
             throw new IllegalArgumentException(msg, e);
+        } finally {
+            if (byteCountOutputStream != null) {
+                this.logInfo.setBytes(byteCountOutputStream.getByteCount());
+            }
         }
     }
 
@@ -243,9 +248,9 @@ public class FITSAction extends BaseAction {
             } else if (sodaCutout.isMETA()) {
                 LOGGER.debug("META supplied");
                 fitsOperations.headersToStream(byteCountOutputStream);
+            } else {
+                throw new IllegalArgumentException("BUG: unhandled SODA parameters");
             }
-
-            throw new IllegalArgumentException("BUG: unhandled SODA parameters");
         }
     }
 
