@@ -18,7 +18,17 @@ jobs:
 
     - name: build, test, and install alma-lib
       run: cd alma-lib && gradle --info clean build test publishToMavenLocal
-      
+
+    # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
+    - name: temporarily pull DAL PR 67
+      run: |
+        git clone https://github.com/opencadc/dal.git \
+        && cd dal \
+        && git fetch origin pull/67/head:github-pr-67 \
+        && git checkout github-pr-67 \
+        && cd cadc-data-ops-fits \
+        && ../gradlew -i clean build install
+
     - name: build and test data
       run: cd data && gradle --info clean build test
       
