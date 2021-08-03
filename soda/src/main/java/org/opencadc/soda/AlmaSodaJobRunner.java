@@ -174,7 +174,8 @@ public class AlmaSodaJobRunner implements JobRunner {
     void doit() throws IOException {
         try {
             // phase->EXECUTING
-            ExecutionPhase ep = jobUpdater.setPhase(job.getID(), ExecutionPhase.QUEUED, ExecutionPhase.EXECUTING, new Date());
+            ExecutionPhase ep = jobUpdater.setPhase(job.getID(), ExecutionPhase.QUEUED, ExecutionPhase.EXECUTING,
+                                                    new Date());
             if (!ExecutionPhase.EXECUTING.equals(ep)) {
                 ep = jobUpdater.getPhase(job.getID());
                 LOGGER.debug(job.getID() + ": QUEUED -> EXECUTING [FAILED] -- phase is " + ep);
@@ -351,7 +352,7 @@ public class AlmaSodaJobRunner implements JobRunner {
 
         if (syncOutput != null) {
             syncOutput.setCode(code);
-            syncOutput.setHeader("Content-Type", "text/plain");
+            syncOutput.setHeader(HttpTransfer.CONTENT_TYPE.toLowerCase(Locale.ROOT), "text/plain");
             PrintWriter w = new PrintWriter(syncOutput.getOutputStream());
             w.println(msg);
             w.flush();

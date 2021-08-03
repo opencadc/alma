@@ -99,7 +99,6 @@ import java.util.Set;
 public class FITSAction extends BaseAction {
     private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
     private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
-    private static final String CONTENT_DISPOSITION = "content-disposition";
 
 
     void throwUsageError() {
