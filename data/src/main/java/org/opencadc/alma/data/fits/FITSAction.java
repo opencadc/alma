@@ -81,6 +81,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.opencadc.alma.data.BaseAction;
 import org.opencadc.fits.FitsOperations;
+import org.opencadc.fits.NoOverlapException;
 import org.opencadc.soda.SodaParamValidator;
 import org.opencadc.soda.server.Cutout;
 
@@ -138,6 +139,8 @@ public class FITSAction extends BaseAction {
             byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
             write(byteCountOutputStream);
             byteCountOutputStream.flush();
+        } catch (NoOverlapException noOverlapException) {
+            throw new IllegalArgumentException(noOverlapException.getMessage());
         } catch (WriteException e) {
             // error on client write
             String msg = "write output error";
@@ -153,7 +156,8 @@ public class FITSAction extends BaseAction {
         }
     }
 
-    void write(final ByteCountOutputStream byteCountOutputStream) throws ResourceNotFoundException, IOException {
+    void write(final ByteCountOutputStream byteCountOutputStream) throws ResourceNotFoundException, IOException,
+                                                                         NoOverlapException {
         final SodaCutout sodaCutout = new SodaCutout();
         final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject();
 

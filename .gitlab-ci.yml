@@ -27,12 +27,6 @@ build_data:
     - cd /tmp/ && tar jxvf wcslib.tar.bz2 && cd wcslib-5.15
     - ./configure --prefix=/usr
     - make && make install
-    - git clone https://github.com/opencadc/dal.git
-    - cd dal
-    - git fetch origin pull/67/head:github-pr-67
-    - git checkout github-pr-67
-    - cd cadc-data-ops-fits
-    - ../gradlew -i clean build install
     - cd ${CI_PROJECT_DIR}/data && ../gradlew -i clean build test
 
 build_datalink:

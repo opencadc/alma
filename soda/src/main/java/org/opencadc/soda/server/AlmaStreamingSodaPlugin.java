@@ -69,8 +69,10 @@
 
 package org.opencadc.soda.server;
 
+import ca.nrc.cadc.net.ResourceAlreadyExistsException;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.net.HttpGet;
+import ca.nrc.cadc.net.TransientException;
 import ca.nrc.cadc.rest.SyncOutput;
 
 import java.io.IOException;
@@ -110,6 +112,18 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
         LOGGER.info(String.format("Trying to cutout from %s", cutoutURL));
         final HttpGet httpGet = createDownloader(cutoutURL, out.getOutputStream());
         httpGet.run();
+
+        final Throwable getError = httpGet.getThrowable();
+
+        if (getError != null) {
+            if (getError instanceof IllegalArgumentException) {
+                throw (IllegalArgumentException) getError;
+            } else if (getError instanceof ResourceNotFoundException) {
+                throw new IllegalArgumentException(getError.getMessage(), getError);
+            } else if (getError instanceof RuntimeException) {
+                throw (RuntimeException) getError;
+            }
+        }
     }
 
     /**

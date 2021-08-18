@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "title": "IVOA SODA",
-        "description": "Service for Data Access\n\n This service implements the IVOA DataLink-1.0 service specification. To use this service, the caller must use a dataset identifier found through some means (for example, querying the ALMA TAP ObsCore Service). The DataLink service provides a drill-down mechanism to access the data files and associated resources.\n",
+        "description": "Service for Data Access\n\n This service implements the IVOA SODA-1.0 service specification. To use this service, the caller must use a dataset identifier found through some means (for example, querying the ALMA TAP ObsCore Service). The SODA service provides a drill-down mechanism to access the data files and associated resources.\n",
         "version": "1.0.0"
     },
     "schemes": [
@@ -14,7 +14,7 @@
             "get": {
                 "summary": "IVOA SODA v1.0",
                 "tags": [
-                    "Datalink"
+                    "SODA"
                 ],
                 "description": "The linking of data discovery metadata to access to the data itself, further\ndetailed metadata, related resources, and to services that perform operations of \nthe data.\n",
                 "parameters": [
@@ -43,7 +43,7 @@
                     }
                 ],
                 "produces": [
-                    "application/x-votable+xml;content=datalink"
+                    "application/fits"
                 ],
                 "responses": {
                     "200": {

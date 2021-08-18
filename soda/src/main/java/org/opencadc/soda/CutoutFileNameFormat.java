@@ -102,7 +102,7 @@ public class CutoutFileNameFormat {
     public String format(final Cutout cutout) {
         final StringBuilder appendage = new StringBuilder();
 
-        if (cutout.pixelCutouts != null) {
+        if (cutout.pixelCutouts != null && !cutout.pixelCutouts.isEmpty()) {
             appendPixelCutouts(cutout.pixelCutouts, appendage);
         }
 
@@ -118,18 +118,21 @@ public class CutoutFileNameFormat {
             appendIntervalCutout(cutout.time, appendage);
         }
 
-        if (cutout.pol != null) {
+        if (cutout.pol != null && !cutout.pol.isEmpty()) {
             appendPolarizationCutout(cutout.pol, appendage);
         }
 
-        // Strip off last underscore.
-        while (appendage.lastIndexOf(OUTPUT_DELIMITER) == (appendage.length() - 1)) {
-            appendage.deleteCharAt(appendage.lastIndexOf(OUTPUT_DELIMITER));
-        }
-
         final StringBuilder fileBuilder = new StringBuilder(originalFileName);
-        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1,
-                           appendage.toString().replaceAll("\\.", OUTPUT_DELIMITER) + ".");
+
+        // Strip off last underscore.
+        if (appendage.length() > 0) {
+            while (appendage.lastIndexOf(OUTPUT_DELIMITER) == (appendage.length() - 1)) {
+                appendage.deleteCharAt(appendage.lastIndexOf(OUTPUT_DELIMITER));
+            }
+
+            fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1,
+                               appendage.toString().replaceAll("\\.", OUTPUT_DELIMITER) + ".");
+        }
 
         return fileBuilder.toString();
     }
@@ -180,6 +183,10 @@ public class CutoutFileNameFormat {
                     appendage.append(OUTPUT_DELIMITER);
                 } else {
                     appendage.append(pixelRange.lowerBound).append(OUTPUT_DELIMITER).append(pixelRange.upperBound);
+                }
+
+                if (pixelRange.step > 1) {
+                    appendage.append(OUTPUT_DELIMITER).append(pixelRange.step);
                 }
 
                 appendage.append(OUTPUT_DELIMITER);
