@@ -137,8 +137,8 @@ CREATE OR REPLACE FORCE VIEW obscore (
     (SELECT LISTAGG(collection, ' ') WITHIN GROUP (ORDER BY collection) AS collection FROM (SELECT DISTINCT collection FROM ALMA.asa_product_files WHERE asa_ous_id = science.member_ouss_id)),
     science.last_updated
 FROM asa_science science
-INNER JOIN asa_energy energy ON energy.asa_dataset_id = science.dataset_id
+INNER JOIN asa_energy energy ON upper(energy.asa_dataset_id) = upper(science.dataset_id)
 INNER JOIN asa_project asap ON asap.code = science.project_code
 LEFT OUTER JOIN asa_delivery_asdm_ous adao ON science.asdm_uid = adao.asdm_uid
-LEFT OUTER JOIN asa_delivery_status ads ON adao.deliverable_name = ads.delivery_id
-WHERE science.product_type = 'MOUS';
+LEFT OUTER JOIN asa_delivery_status ads ON adao.delivery_id = ads.id
+WHERE nvl(science.product_type, '0') = 'MOUS';
