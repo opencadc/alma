@@ -20,7 +20,14 @@ build_data:
     paths:
       - data/build
   script:
-    - cd data && ../gradlew -i clean build test
+    # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
+    - export CURR_DIR
+    - apt-get update && apt-get install -y curl gcc git make
+    - curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2
+    - cd /tmp/ && tar jxvf wcslib.tar.bz2 && cd wcslib-5.15
+    - ./configure --prefix=/usr
+    - make && make install
+    - cd ${CI_PROJECT_DIR}/data && ../gradlew -i clean build test
 
 build_datalink:
   stage: build
@@ -32,14 +39,14 @@ build_datalink:
     - cd alma-lib && ../gradlew -i clean build test publishToMavenLocal
     - cd ../datalink && ../gradlew -i clean build test
 
-build_obscore:
+build_tap:
   stage: build
   image: gradle:jdk11
   artifacts:
     paths:
-      - obscore/build
+      - tap/build
   script:
-    - cd obscore && ../gradlew -i clean build test
+    - cd tap && ../gradlew -i clean build test
 
 build_reg:
   stage: build
@@ -112,7 +119,7 @@ deploy_soda:
 deploy_tap:
   variables:
     name: tap
-    module: obscore
+    module: tap
   needs:
-    - build_obscore
+    - build_tap
   <<: *shared_deploy  # This is a reference to the anchor above.

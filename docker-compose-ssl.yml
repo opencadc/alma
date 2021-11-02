@@ -25,7 +25,7 @@ services:
       - "proxy_config:/configuration:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
   sia:
-    image: opencadc/alma-sia:1.0.5
+    image: opencadc/alma-sia:1.0.6
     networks:
       - "alma"
     command: "catalina.sh run"
@@ -50,7 +50,7 @@ services:
       - "traefik.http.routers.sia.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.sia.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   tap:
-    image: opencadc/alma-tap:1.1.22
+    image: opencadc/alma-tap:1.1.19-2
     ports:
       - "10002:5555"
     networks:
@@ -74,7 +74,7 @@ services:
       - "traefik.http.routers.tap.tls.domains[0].sans=*.cadc.dao.nrc.ca"
       - "traefik.http.routers.tap.service=tap"
   reg:
-    image: opencadc/alma-reg:1.0.2
+    image: opencadc/alma-reg:1.0.3
     networks:
       - "alma"
     ports:
@@ -94,7 +94,7 @@ services:
       - "traefik.http.routers.reg.tls.domains[0].sans=*.cadc.dao.nrc.ca"
       - "traefik.http.routers.reg.service=reg"
   data:
-    image: opencadc/alma-data:1.1.2
+    image: opencadc/alma-data:1.1.4
     networks:
       - "alma"
     ports:
@@ -110,26 +110,21 @@ services:
       - "traefik.http.routers.data.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.data.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   rh:
-    image: nginx:alpine
-    command:
-      - 'nginx-debug'
-      - '-g'
-      - 'daemon off;'
+    image: opencadc/alma-cadc-rh:0.1
+    command: "mix phx.server"
     networks:
       - "alma"
-    volumes:
-      - "alma_rh_config:/etc/nginx/conf.d"
-      - "alma_rh_root:/usr/share/nginx/html"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.rh.loadbalancer.server.port=80"
+      - "traefik.http.services.rh.loadbalancer.server.port=4000"
       - "traefik.http.routers.rh.rule=PathPrefix(`/rh`)"
       - "traefik.http.routers.rh.entrypoints=websecure"
       - "traefik.http.routers.rh.tls=true"
       - "traefik.http.routers.rh.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.rh.tls.domains[0].sans=*.cadc.dao.nrc.ca"
+      - "traefik.http.routers.rh.service=rh"
   datalink:
-    image: opencadc/alma-datalink:1.3.4
+    image: opencadc/alma-datalink:1.3.5
     networks:
       - "alma"
     command: "catalina.sh run"
@@ -151,7 +146,7 @@ services:
       - "traefik.http.routers.datalink.tls.domains[0].main=cadc.dao.nrc.ca"
       - "traefik.http.routers.datalink.tls.domains[0].sans=*.cadc.dao.nrc.ca"
   soda:
-    image: opencadc/alma-soda:1.2.1
+    image: opencadc/alma-soda:1.2.3
     ports:
       - "10006:5555"
     networks:

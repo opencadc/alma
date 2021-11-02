@@ -71,42 +71,35 @@ package org.opencadc.alma.data.fits;
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Interval;
 import ca.nrc.cadc.dali.Polygon;
+import ca.nrc.cadc.dali.Shape;
 import ca.nrc.cadc.io.ByteCountOutputStream;
 import ca.nrc.cadc.io.WriteException;
-import ca.nrc.cadc.net.HttpTransfer;
 import ca.nrc.cadc.net.ResourceNotFoundException;
-import ca.nrc.cadc.util.StringUtil;
-import nom.tam.fits.FitsException;
-import nom.tam.fits.Header;
-import nom.tam.util.ArrayDataOutput;
-import nom.tam.util.BufferedDataOutputStream;
 import nom.tam.util.RandomAccessDataObject;
 import nom.tam.util.RandomAccessFileExt;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.opencadc.alma.data.BaseAction;
-import org.opencadc.alma.data.CutoutFileNameFormat;
 import org.opencadc.fits.FitsOperations;
-import org.opencadc.soda.ExtensionSlice;
+import org.opencadc.fits.NoOverlapException;
 import org.opencadc.soda.SodaParamValidator;
 import org.opencadc.soda.server.Cutout;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 
+/**
+ * Base action for all FITS files obtained from this SODA service.
+ */
 public class FITSAction extends BaseAction {
     private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
     private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
-    private static final String CUTOUT_PARAMETER_KEY = SodaParamValidator.SUB;
-    private static final String CONTENT_DISPOSITION = "Content-Disposition";
 
 
     void throwUsageError() {
@@ -126,24 +119,13 @@ public class FITSAction extends BaseAction {
     }
 
     final void verifyArguments() {
-        // Put them into a Set in case the same file was provided more than once, and can be reduced here.
-
         final Set<String> requestedFilePaths = new HashSet<>(getParametersNullSafe("file"));
-        final List<String> cutoutSpec = getParametersNullSafe(CUTOUT_PARAMETER_KEY);
-
-        final boolean hasCutout = !cutoutSpec.isEmpty();
         final boolean hasFile = !requestedFilePaths.isEmpty();
-        final String headerRequest = syncInput.getParameter("headers");
 
         if (!hasFile) {
             throwUsageError();
         } else if (requestedFilePaths.size() > 1) {
             throw new IllegalArgumentException("Only one file parameter can be provided.");
-        } else if (hasCutout) {
-            LOGGER.debug("Cutting out " + Arrays.toString(cutoutSpec.toArray(new String[0])) + " from "
-                         + requestedFilePaths);
-        } else if (StringUtil.hasText(headerRequest)) {
-            LOGGER.debug("Printing headers from " + requestedFilePaths);
         }
     }
 
@@ -151,13 +133,14 @@ public class FITSAction extends BaseAction {
     public void doAction() throws Exception {
         verifyArguments();
 
+        ByteCountOutputStream byteCountOutputStream = null;
         try {
             // The caller will close this stream.
-            final ByteCountOutputStream byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
+            byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
             write(byteCountOutputStream);
-            super.logInfo.setBytes(byteCountOutputStream.getByteCount());
-
             byteCountOutputStream.flush();
+        } catch (NoOverlapException noOverlapException) {
+            throw new IllegalArgumentException(noOverlapException.getMessage());
         } catch (WriteException e) {
             // error on client write
             String msg = "write output error";
@@ -166,129 +149,117 @@ public class FITSAction extends BaseAction {
                 msg += ": " + e.getMessage();
             }
             throw new IllegalArgumentException(msg, e);
+        } finally {
+            if (byteCountOutputStream != null) {
+                this.logInfo.setBytes(byteCountOutputStream.getByteCount());
+            }
         }
     }
 
     void write(final ByteCountOutputStream byteCountOutputStream) throws ResourceNotFoundException, IOException,
-                                                                         FitsException {
-        final String headerRequest = syncInput.getParameter("headers");
-        final Map<String, List<String>> sodaParameterMap = getSodaParameters();
+                                                                         NoOverlapException {
+        final SodaCutout sodaCutout = new SodaCutout();
+        final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject();
 
-        if (StringUtil.hasText(headerRequest) && Boolean.parseBoolean(headerRequest)) {
-            LOGGER.debug("FitsOperations.headers: START");
-            try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
-                final ArrayDataOutput output = new BufferedDataOutputStream(byteCountOutputStream);
-                final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
-                for (final Header header : fitsOperations.getHeaders()) {
-                    header.write(output);
-                }
-
-                output.flush();
-                LOGGER.debug("FitsOperations.headers: OK");
-            }
-        } else if (sodaParameterMap.isEmpty()) {
+        if (sodaCutout.hasNoOperations()) {
             LOGGER.debug("FitsOperations.empty: START");
             // If nothing is provided, then simply write the entire file out.
-            try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
-                final int bufferSize = 64 * 1024; // 64KB buffer has proven a good performance size.
-                final byte[] buffer = new byte[bufferSize];
-                int byteCount;
-                while ((byteCount = randomAccessDataObject.read(buffer)) >= 0) {
-                    byteCountOutputStream.write(buffer, 0, byteCount);
-                }
-
-                byteCountOutputStream.flush();
+            final int bufferSize = 64 * 1024; // 64KB buffer has proven a good performance size.
+            final byte[] buffer = new byte[bufferSize];
+            int byteCount;
+            while ((byteCount = randomAccessDataObject.read(buffer)) >= 0) {
+                byteCountOutputStream.write(buffer, 0, byteCount);
             }
             LOGGER.debug("FitsOperations.empty: OK");
         } else {
-            final CutoutFileNameFormat cutoutFileNameFormat = new CutoutFileNameFormat(getFile().getName());
-            final Cutout cutout = new Cutout();
-
-            final List<ExtensionSlice> slices = SODA_PARAM_VALIDATOR.validateSUB(sodaParameterMap);
-            if (!slices.isEmpty()) {
-                cutout.pixelCutouts = slices;
+            final List<String> conflicts = sodaCutout.getConflicts();
+            if (!conflicts.isEmpty()) {
+                throw new IllegalArgumentException("Conflicting SODA parameters found: " + conflicts);
             }
 
-            final List<Circle> circles = SODA_PARAM_VALIDATOR.validateCircle(sodaParameterMap);
-            if (!circles.isEmpty()) {
-                cutout.pos = circles.get(0);
-            }
+            final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
 
-            final List<Polygon> polygons = SODA_PARAM_VALIDATOR.validatePolygon(sodaParameterMap);
-            if (!polygons.isEmpty()) {
-                cutout.pos = polygons.get(0);
-            }
+            if (sodaCutout.hasSUB() || sodaCutout.hasWCS()) {
+                final Cutout cutout = new Cutout();
 
-            final List<Interval> bands = SODA_PARAM_VALIDATOR.validateBAND(sodaParameterMap);
-            if (!bands.isEmpty()) {
-                cutout.band = bands.get(0);
-            }
+                if (sodaCutout.hasSUB()) {
+                    LOGGER.debug("SUB supplied");
+                    cutout.pixelCutouts = SODA_PARAM_VALIDATOR.validateSUB(
+                            Collections.singletonMap(SodaParamValidator.SUB, sodaCutout.requestedSubs));
+                } else if (sodaCutout.hasWCS()) {
+                    LOGGER.debug("WCS supplied.");
 
-            final List<Interval> times = SODA_PARAM_VALIDATOR.validateTIME(sodaParameterMap);
-            if (!times.isEmpty()) {
-                cutout.time = times.get(0);
-            }
+                    if (sodaCutout.hasCIRCLE()) {
+                        LOGGER.debug("CIRCLE supplied.");
+                        final List<Circle> validCircles = SODA_PARAM_VALIDATOR.validateCircle(
+                                Collections.singletonMap(SodaParamValidator.CIRCLE, sodaCutout.requestedCircles));
 
-            final List<String> polarizations = SODA_PARAM_VALIDATOR.validatePOL(sodaParameterMap);
-            if (!polarizations.isEmpty()) {
-                cutout.pol = polarizations;
-            }
+                        cutout.pos = assertSingleWCS(SodaParamValidator.CIRCLE, validCircles);
+                    }
 
-            if (!isEmpty(cutout)) {
-                syncOutput.setHeader(CONTENT_DISPOSITION,
-                                     "inline; filename=\"" + cutoutFileNameFormat.format(cutout) + "\"");
-                syncOutput.setHeader(HttpTransfer.CONTENT_TYPE, "application/fits");
+                    if (sodaCutout.hasPOLYGON()) {
+                        LOGGER.debug("POLYGON supplied.");
+                        final List<Polygon> validPolygons = SODA_PARAM_VALIDATOR.validatePolygon(
+                                Collections.singletonMap(SodaParamValidator.POLYGON, sodaCutout.requestedPolygons));
 
-                try (final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject()) {
-                    final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
-                    fitsOperations.cutoutToStream(cutout, byteCountOutputStream);
+                        cutout.pos = assertSingleWCS(SodaParamValidator.POLYGON, validPolygons);
+                    }
+
+                    if (sodaCutout.hasPOS()) {
+                        LOGGER.debug("POS supplied.");
+                        final List<Shape> validShapes = SODA_PARAM_VALIDATOR.validatePOS(
+                                Collections.singletonMap(SodaParamValidator.POS, sodaCutout.requestedPOSs));
+
+                        cutout.pos = assertSingleWCS(SodaParamValidator.POS, validShapes);
+                    }
+
+                    if (sodaCutout.hasBAND()) {
+                        LOGGER.debug("BAND supplied.");
+                        final List<Interval> validBandIntervals = SODA_PARAM_VALIDATOR.validateBAND(
+                                Collections.singletonMap(SodaParamValidator.BAND, sodaCutout.requestedBands));
+
+                        cutout.band = assertSingleWCS(SodaParamValidator.BAND, validBandIntervals);
+                    }
+
+                    if (sodaCutout.hasTIME()) {
+                        LOGGER.debug("TIME supplied.");
+                        final List<Interval> validTimeIntervals = SODA_PARAM_VALIDATOR.validateTIME(
+                                Collections.singletonMap(SodaParamValidator.TIME, sodaCutout.requestedTimes));
+
+                        cutout.time = assertSingleWCS(SodaParamValidator.TIME, validTimeIntervals);
+                    }
+
+                    if (sodaCutout.hasPOL()) {
+                        LOGGER.debug("POL supplied.");
+                        cutout.pol = SODA_PARAM_VALIDATOR.validatePOL(
+                                Collections.singletonMap(SodaParamValidator.POL, sodaCutout.requestedPOLs));
+
+                        if (cutout.pol.size() != sodaCutout.requestedPOLs.size()) {
+                            LOGGER.debug("Accepted " + cutout.pol + " valid POL states but "
+                                         + sodaCutout.requestedPOLs + " was requested.");
+                        }
+                    }
                 }
+
+                fitsOperations.cutoutToStream(cutout, byteCountOutputStream);
+            } else if (sodaCutout.isMETA()) {
+                LOGGER.debug("META supplied");
+                fitsOperations.headersToStream(byteCountOutputStream);
             } else {
-                throw new IllegalArgumentException("No usabel cutouts supplied.");
+                throw new IllegalArgumentException("BUG: unhandled SODA parameters");
             }
         }
     }
 
-    private boolean isEmpty(final Cutout cutout) {
-        return cutout.pos == null && cutout.band == null && cutout.time == null
-               && (cutout.pol == null || cutout.pol.isEmpty()) && cutout.custom == null
-               && cutout.customAxis == null && (cutout.pixelCutouts == null || cutout.pixelCutouts.isEmpty());
-    }
-
-    private Map<String, List<String>> getSodaParameters() {
-        final Set<String> parameterNames = syncInput.getParameterNames();
-        final Map<String, List<String>> paramMap = new HashMap<>();
-
-        if (parameterNames.contains(SodaParamValidator.SUB)) {
-            paramMap.put(SodaParamValidator.SUB, syncInput.getParameters(SodaParamValidator.SUB));
-        } else if (parameterNames.contains(SodaParamValidator.CIRCLE)) {
-            paramMap.put(SodaParamValidator.CIRCLE, syncInput.getParameters(SodaParamValidator.CIRCLE));
-        } else if (parameterNames.contains(SodaParamValidator.POLYGON)) {
-            paramMap.put(SodaParamValidator.POLYGON, syncInput.getParameters(SodaParamValidator.POLYGON));
-        } else if (parameterNames.contains(SodaParamValidator.POS)) {
-            final List<String> posParamValues = syncInput.getParameters(SodaParamValidator.POS);
-            posParamValues.forEach(s -> {
-                if (s.startsWith(SodaParamValidator.CIRCLE)) {
-                    paramMap.put(SodaParamValidator.CIRCLE,
-                                 Collections.singletonList(s.substring(SodaParamValidator.CIRCLE.length()).trim()));
-                } else if (s.startsWith(SodaParamValidator.POLYGON)) {
-                    paramMap.put(SodaParamValidator.POLYGON,
-                                 Collections.singletonList(s.substring(SodaParamValidator.POLYGON.length()).trim()));
-                } else if (s.startsWith("RANGE")) {
-                    paramMap.put("RANGE", Collections.singletonList(s.substring("RANGE".length()).trim()));
-                } else {
-                    LOGGER.error("Unsupported POS: " + s);
-                }
-            });
-        } else if (parameterNames.contains(SodaParamValidator.BAND)) {
-            paramMap.put(SodaParamValidator.BAND, syncInput.getParameters(SodaParamValidator.BAND));
-        } else if (parameterNames.contains(SodaParamValidator.TIME)) {
-            paramMap.put(SodaParamValidator.TIME, syncInput.getParameters(SodaParamValidator.TIME));
-        } else if (parameterNames.contains(SodaParamValidator.POL)) {
-            paramMap.put(SodaParamValidator.POL, syncInput.getParameters(SodaParamValidator.POL));
+    private <T> T assertSingleWCS(final String key, final List<T> wcsValues) {
+        if (wcsValues.isEmpty()) {
+            LOGGER.debug("No valid " + key + "s found.");
+            return null;
+        } else if (wcsValues.size() > 1) {
+            throw new IllegalArgumentException("More than one " + key + " provided.");
+        } else {
+            return wcsValues.get(0);
         }
-
-        return paramMap;
     }
 
     /**
@@ -305,6 +276,105 @@ public class FITSAction extends BaseAction {
             return new RandomAccessFileExt(getFile(), "r");
         } catch (FileNotFoundException fileNotFoundException) {
             throw new ResourceNotFoundException(fileNotFoundException.getMessage());
+        }
+    }
+
+    /**
+     * Simple encompassing class to handle cutout checks.
+     */
+    private final class SodaCutout {
+        final List<String> requestedSubs;
+        final List<String> requestedCircles;
+        final List<String> requestedPolygons;
+        final List<String> requestedPOSs;
+        final List<String> requestedBands;
+        final List<String> requestedTimes;
+        final List<String> requestedPOLs;
+        final boolean requestedMeta;
+
+        public SodaCutout() {
+            this.requestedSubs = syncInput.getParameters(SodaParamValidator.SUB);
+            this.requestedCircles = syncInput.getParameters(SodaParamValidator.CIRCLE);
+            this.requestedPolygons = syncInput.getParameters(SodaParamValidator.POLYGON);
+            this.requestedPOSs = syncInput.getParameters(SodaParamValidator.POS);
+            this.requestedBands = syncInput.getParameters(SodaParamValidator.BAND);
+            this.requestedTimes = syncInput.getParameters(SodaParamValidator.TIME);
+            this.requestedPOLs = syncInput.getParameters(SodaParamValidator.POL);
+            this.requestedMeta = "true".equals(syncInput.getParameter(SodaParamValidator.META));
+        }
+
+        boolean hasSUB() {
+            return requestedSubs != null && !requestedSubs.isEmpty();
+        }
+
+        public boolean hasWCS() {
+            return hasCIRCLE() || hasPOLYGON() || hasPOS() || hasBAND() || hasTIME() || hasPOL();
+        }
+
+        public boolean hasPOL() {
+            return this.requestedPOLs != null && !this.requestedPOLs.isEmpty();
+        }
+
+        public boolean hasPOS() {
+            return this.requestedPOSs != null && !this.requestedPOSs.isEmpty();
+        }
+
+        public boolean hasCIRCLE() {
+            return this.requestedCircles != null && !this.requestedCircles.isEmpty();
+        }
+
+        public boolean hasPOLYGON() {
+            return this.requestedPolygons != null && !this.requestedPolygons.isEmpty();
+        }
+
+        public boolean hasBAND() {
+            return this.requestedBands != null && !this.requestedBands.isEmpty();
+        }
+
+        public boolean hasTIME() {
+            return this.requestedTimes != null && !this.requestedTimes.isEmpty();
+        }
+
+        boolean isMETA() {
+            return requestedMeta;
+        }
+
+        boolean hasNoOperations() {
+            return !hasSUB() && !isMETA() && !hasWCS();
+        }
+
+        /**
+         * Obtain a list of conflicting parameters, if any.  Conflicting parameters include combining the META parameter
+         * with any cutout, as well as combining the SUB parameter with any WCS (CIRCLE, POLYGON, etc.) cutout.
+         *
+         * @return  List of SODA Parameter names, or empty List.  Never null.
+         */
+        List<String> getConflicts() {
+            final List<String> conflicts = new ArrayList<>();
+            if (isMETA() && hasSUB()) {
+                conflicts.add(SodaParamValidator.META);
+                conflicts.add(SodaParamValidator.SUB);
+            }
+
+            final List<String> shapeConflicts = new ArrayList<>();
+            if (hasCIRCLE()) {
+                shapeConflicts.add(SodaParamValidator.CIRCLE);
+            }
+
+            if (hasPOLYGON()) {
+                shapeConflicts.add(SodaParamValidator.POLYGON);
+            }
+
+            if (hasPOS()) {
+                shapeConflicts.add(SodaParamValidator.POS);
+            }
+
+            // Only one spatial axis cutout is permitted.
+            if (shapeConflicts.size() > 1) {
+                conflicts.addAll(shapeConflicts);
+            }
+
+            return conflicts;
         }
     }
 }

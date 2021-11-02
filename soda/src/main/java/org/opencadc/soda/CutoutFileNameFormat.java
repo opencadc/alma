@@ -66,18 +66,19 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.data;
+package org.opencadc.soda;
 
-import ca.nrc.cadc.dali.Circle;
-import ca.nrc.cadc.dali.Polygon;
-import ca.nrc.cadc.dali.Range;
+import ca.nrc.cadc.dali.Interval;
+import ca.nrc.cadc.dali.PolarizationState;
 import ca.nrc.cadc.dali.Shape;
+import ca.nrc.cadc.dali.util.IntervalFormat;
+import ca.nrc.cadc.dali.util.PolarizationStateListFormat;
+import ca.nrc.cadc.dali.util.ShapeFormat;
 import ca.nrc.cadc.util.StringUtil;
-import org.opencadc.soda.ExtensionSlice;
-import org.opencadc.soda.PixelRange;
-import org.opencadc.soda.server.Cutout;
 
 import java.util.List;
+
+import org.opencadc.soda.server.Cutout;
 
 
 /**
@@ -93,29 +94,73 @@ public class CutoutFileNameFormat {
     }
 
     /**
-     * Obtain a new file name based on the provided cutout.
-     * @param cutout    The cutout to use in naming.
+     * Obtain a new file name based on the provided cutout.  This is done by replacing values with underscores, and then
+     * inserting this underscore value into the file name after the last period, and adding the input parameters.
+     * @param cutout    The cutout instance.
      * @return      New filename String.  Never null.
      */
     public String format(final Cutout cutout) {
-        if (cutout.pixelCutouts != null && !cutout.pixelCutouts.isEmpty()) {
-            return format(cutout.pixelCutouts);
-        } else if (cutout.pos != null) {
-            return format(cutout.pos);
-        } else {
-            return this.originalFileName;
-        }
-    }
-
-    /**
-     * This is done by replacing values with underscores, and then
-     * inserting this underscore value into the file name after the last period.
-     * @param slices    The list of extension slice objects.
-     * @return      New filename String.  Never null.
-     */
-    private String format(final List<ExtensionSlice> slices) {
         final StringBuilder appendage = new StringBuilder();
 
+        if (cutout.pixelCutouts != null && !cutout.pixelCutouts.isEmpty()) {
+            appendPixelCutouts(cutout.pixelCutouts, appendage);
+        }
+
+        if (cutout.pos != null) {
+            appendShapeCutout(cutout.pos, appendage);
+        }
+
+        if (cutout.band != null) {
+            appendIntervalCutout(cutout.band, appendage);
+        }
+
+        if (cutout.time != null) {
+            appendIntervalCutout(cutout.time, appendage);
+        }
+
+        if (cutout.pol != null && !cutout.pol.isEmpty()) {
+            appendPolarizationCutout(cutout.pol, appendage);
+        }
+
+        final StringBuilder fileBuilder = new StringBuilder(originalFileName);
+
+        // Strip off last underscore.
+        if (appendage.length() > 0) {
+            while (appendage.lastIndexOf(OUTPUT_DELIMITER) == (appendage.length() - 1)) {
+                appendage.deleteCharAt(appendage.lastIndexOf(OUTPUT_DELIMITER));
+            }
+
+            fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1,
+                               appendage.toString().replaceAll("\\.", OUTPUT_DELIMITER) + ".");
+        }
+
+        return fileBuilder.toString();
+    }
+
+    private void appendIntervalCutout(final Interval<?> interval, final StringBuilder appendage) {
+        final IntervalFormat intervalFormat = new IntervalFormat();
+        final String formattedInterval = intervalFormat.format(interval);
+        appendage.append(formattedInterval.replaceAll(" ", OUTPUT_DELIMITER)).append(OUTPUT_DELIMITER)
+                 .append(OUTPUT_DELIMITER);
+    }
+
+    private void appendShapeCutout(final Shape shape, final StringBuilder appendage) {
+        final ShapeFormat shapeFormat = new ShapeFormat();
+        final String formattedShape = shapeFormat.format(shape);
+        appendage.append(formattedShape.replaceAll(" ", OUTPUT_DELIMITER))
+                 .append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER);
+    }
+
+    private void appendPolarizationCutout(final List<PolarizationState> polarizationStates,
+                                          final StringBuilder appendage) {
+        final PolarizationStateListFormat polarizationStateListFormat = new PolarizationStateListFormat();
+        final String formattedPolarizationStates = polarizationStateListFormat.format(polarizationStates);
+        appendage.append(formattedPolarizationStates.replaceAll(" ", OUTPUT_DELIMITER)
+                                                    .replaceAll("\\|", OUTPUT_DELIMITER))
+                 .append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER);
+    }
+
+    private void appendPixelCutouts(final List<ExtensionSlice> slices, final StringBuilder appendage) {
         for (final ExtensionSlice slice : slices) {
             if (slice.extensionIndex != null) {
                 appendage.append(slice.extensionIndex);
@@ -126,7 +171,7 @@ public class CutoutFileNameFormat {
                 }
             } else {
                 // Assume the default extension, which is zero.
-                appendage.append(0);
+                appendage.append("0");
             }
 
             // Double underscore to separate extension from pixel ranges.
@@ -140,73 +185,14 @@ public class CutoutFileNameFormat {
                     appendage.append(pixelRange.lowerBound).append(OUTPUT_DELIMITER).append(pixelRange.upperBound);
                 }
 
+                if (pixelRange.step > 1) {
+                    appendage.append(OUTPUT_DELIMITER).append(pixelRange.step);
+                }
+
                 appendage.append(OUTPUT_DELIMITER);
             }
 
             appendage.append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER);
         }
-
-        // Strip off last underscore.
-        while (appendage.lastIndexOf(OUTPUT_DELIMITER) == (appendage.length() - 1)) {
-            appendage.deleteCharAt(appendage.lastIndexOf(OUTPUT_DELIMITER));
-        }
-
-        final StringBuilder fileBuilder = new StringBuilder(this.originalFileName);
-        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, appendage + ".");
-
-        return fileBuilder.toString();
-    }
-
-    private String format(final Shape shape) {
-        if (shape instanceof Circle) {
-            return format((Circle) shape);
-        } else if (shape instanceof Polygon) {
-            return format((Polygon) shape);
-        } else if (shape instanceof Range) {
-            return format((Range) shape);
-        } else {
-            return this.originalFileName;
-        }
-    }
-
-    private String format(final Circle circle) {
-        final StringBuilder fileBuilder = new StringBuilder(this.originalFileName);
-        String appendage = OUTPUT_DELIMITER + OUTPUT_DELIMITER
-                           + circle.getCenter().getLongitude() + OUTPUT_DELIMITER
-                           + circle.getCenter().getLatitude() + OUTPUT_DELIMITER
-                           + circle.getRadius() + OUTPUT_DELIMITER;
-        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, appendage + ".");
-
-        return fileBuilder.toString();
-    }
-
-    private String format(final Polygon polygon) {
-        final StringBuilder fileBuilder = new StringBuilder(this.originalFileName);
-        final StringBuilder appendage = new StringBuilder();
-
-        polygon.getVertices().forEach(v -> appendage.append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER)
-                                                    .append(v.getLongitude()).append(OUTPUT_DELIMITER)
-                                                    .append(v.getLatitude()));
-
-        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, appendage + ".");
-
-        return fileBuilder.toString();
-    }
-
-    private String format(final Range range) {
-        final StringBuilder fileBuilder = new StringBuilder(this.originalFileName);
-
-        fileBuilder.append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER)
-                   .append(range.getLongitude().getLower())
-                   .append(OUTPUT_DELIMITER)
-                   .append(range.getLongitude().getUpper())
-                   .append(OUTPUT_DELIMITER).append(OUTPUT_DELIMITER)
-                   .append(range.getLatitude().getLower())
-                   .append(OUTPUT_DELIMITER)
-                   .append(range.getLatitude().getUpper());
-
-        fileBuilder.insert(fileBuilder.lastIndexOf(".") + 1, ".");
-
-        return fileBuilder.toString();
     }
 }

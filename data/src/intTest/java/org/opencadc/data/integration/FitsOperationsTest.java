@@ -84,8 +84,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.opencadc.alma.data.CutoutFileNameFormat;
-import org.opencadc.soda.ExtensionSlice;
-import org.opencadc.soda.ExtensionSliceFormat;
+import org.opencadc.soda.SodaParamValidator;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -94,9 +93,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Integration test to pull existing test FITS files from CADC VOSpace (Vault) into a local directory, then PUT them
@@ -140,7 +137,8 @@ public class FitsOperationsTest extends DataIntTest {
                 "[30:45,50:75,10:105,*]"
         };
 
-        downloadAndCompare(fileURI, cutoutSpecs, testFilePrefix, testFileExtension, HttpServletResponse.SC_OK);
+        downloadAndCompare(fileURI, SodaParamValidator.SUB, cutoutSpecs, testFilePrefix, testFileExtension,
+                           HttpServletResponse.SC_OK, "application/fits");
     }
 
     /**
@@ -156,8 +154,8 @@ public class FitsOperationsTest extends DataIntTest {
         };
 
         try {
-            downloadAndCompare(fileURI, cutoutSpecs, testFilePrefix, testFileExtension,
-                               HttpServletResponse.SC_BAD_REQUEST);
+            downloadAndCompare(fileURI, SodaParamValidator.SUB, cutoutSpecs, testFilePrefix, testFileExtension,
+                               HttpServletResponse.SC_BAD_REQUEST, "text/plain");
             Assert.fail("Should throw IllegalArgumentException");
         } catch (IllegalArgumentException illegalArgumentException) {
             Assert.assertTrue("Wrong message.", illegalArgumentException.getMessage().contains(
@@ -183,24 +181,10 @@ public class FitsOperationsTest extends DataIntTest {
         }
     }
 
-    private void downloadAndCompare(final URI fileURI, final String[] cutoutSpecs, final String testFilePrefix,
-                                    final String testFileExtension, final int expectedResponseCode) throws Throwable {
-        ensureFile(fileURI);
-        final StringBuilder queryStringBuilder = new StringBuilder("?");
-        final List<ExtensionSlice> slices = new ArrayList<>(cutoutSpecs.length);
-        final ExtensionSliceFormat extensionSliceFormat = new ExtensionSliceFormat();
-        Arrays.stream(cutoutSpecs).
-                forEach(cut -> {
-                    queryStringBuilder.append("SUB=").append(NetUtil.encode(cut)).append("&");
-                    slices.add(extensionSliceFormat.parse(cut));
-                });
-
-        // Ensure there is an ampersand ready for the file parameter
-        queryStringBuilder.deleteCharAt(queryStringBuilder.lastIndexOf("&")).append("&");
-        queryStringBuilder.append("file=").append(SERVICE_DATA_FILE_DIR).append("/").append(testFilePrefix).
-                append(".").append(testFileExtension);
-
-        final URL fileSUBURL = new URL(filesURL + queryStringBuilder.toString());
+    private File doCutout(final String queryString, final String testFilePrefix,
+                          final String testFileExtension, final int expectedResponseCode,
+                          final String expectedContentType) throws Throwable {
+        final URL fileSUBURL = new URL(filesURL + (queryString == null ? "" : ("?" + queryString)));
         final File outputFile = Files.createTempFile(testFilePrefix + "-", "." + testFileExtension).toFile();
         LOGGER.debug("Writing cutout to " + outputFile);
 
@@ -215,20 +199,34 @@ public class FitsOperationsTest extends DataIntTest {
                 throw cutoutClient.getThrowable();
             }
 
-            if (!slices.isEmpty()) {
-                final CutoutFileNameFormat cutoutFileNameFormat =
-                        new CutoutFileNameFormat(testFilePrefix + "." + testFileExtension);
+            Assert.assertNotNull("Should include Content-Disposition ("
+                                 + cutoutClient.getResponseHeader("Content-Disposition") + ")",
+                                 cutoutClient.getResponseHeader("Content-Disposition"));
 
-                Assert.assertEquals("Wrong Content-Disposition",
-                                    "inline; filename=\"" + cutoutFileNameFormat.format(slices) + "\"",
-                                    cutoutClient.getResponseHeader("Content-Disposition"));
-            }
-
-            Assert.assertEquals("Wrong Content-Type", "application/fits",
+            Assert.assertEquals("Wrong Content-Type", expectedContentType,
                                 cutoutClient.getResponseHeader(HttpTransfer.CONTENT_TYPE));
 
             fileOutputStream.flush();
         }
+
+        return outputFile;
+    }
+
+    private void downloadAndCompare(final URI fileURI, final String cutoutKey, final String[] cutoutSpecs,
+                                    final String testFilePrefix, final String testFileExtension,
+                                    final int expectedResponseCode, final String expectedContentType) throws Throwable {
+        ensureFile(fileURI);
+        final StringBuilder queryStringBuilder = new StringBuilder();
+        Arrays.stream(cutoutSpecs).
+              forEach(cut -> queryStringBuilder.append(cutoutKey).append("=").append(NetUtil.encode(cut)).append("&"));
+
+        // Ensure there is an ampersand ready for the file parameter
+        queryStringBuilder.deleteCharAt(queryStringBuilder.lastIndexOf("&")).append("&");
+        queryStringBuilder.append("file=").append(SERVICE_DATA_FILE_DIR).append("/").append(testFilePrefix).
+                append(".").append(testFileExtension);
+
+        final File outputFile = doCutout(queryStringBuilder.toString(), testFilePrefix,
+                                         testFileExtension, expectedResponseCode, expectedContentType);
         LOGGER.debug("Cutout complete -> " + fileURI);
 
         // setup
