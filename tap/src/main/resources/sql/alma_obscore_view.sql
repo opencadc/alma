@@ -1,4 +1,4 @@
-CREATE OR REPLACE FORCE VIEW ALMA.obscore (
+CREATE OR REPLACE FORCE VIEW obscore (
     dataproduct_type,
     calib_level,
     obs_collection,
@@ -73,8 +73,8 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     'ALMA',
     science.asa_ous_id,
     'ADS/JAO.ALMA#' || asap.code,
-    'http://almascience.org/aq?member_ous_id=' || science.member_ouss_id,
-    'text/html',
+    'https://almascience.org/datalink/sync?ID=' || science.member_ouss_id,
+    'application/x-votable+xml; content=datalink',
     science.source_name,
     science.ra,
     science.dec,
@@ -111,11 +111,11 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     science.frequency,
     science.velocity_resolution,
     asap.pi_name,
-    (SELECT LISTAGG(title, ' ') WITHIN GROUP (ORDER BY title) AS title FROM (SELECT DISTINCT aab.title FROM ALMA.asa_bibliography aab JOIN ALMA.asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
-    (SELECT LISTAGG(first_author, ' ') WITHIN GROUP (ORDER BY first_author) AS first_author FROM (SELECT DISTINCT aab.first_author FROM ALMA.asa_bibliography aab JOIN ALMA.asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
-    (SELECT LISTAGG(authors, ' ' ON OVERFLOW TRUNCATE) WITHIN GROUP (ORDER BY authors) AS authors FROM (SELECT DISTINCT aab.authors FROM ALMA.asa_bibliography aab JOIN ALMA.asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
-    (SELECT LISTAGG(abstract, ' ' ON OVERFLOW TRUNCATE) WITHIN GROUP (ORDER BY abstract) AS abstract FROM(SELECT DISTINCT aab.abstract FROM ALMA.asa_bibliography aab JOIN ALMA.asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
-    (SELECT DISTINCT aab.publication_year FROM ALMA.asa_bibliography aab JOIN ALMA.asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code AND ROWNUM < 2),
+    (SELECT LISTAGG(title, ' ') WITHIN GROUP (ORDER BY title) AS title FROM (SELECT DISTINCT aab.title FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
+    (SELECT LISTAGG(first_author, ' ') WITHIN GROUP (ORDER BY first_author) AS first_author FROM (SELECT DISTINCT aab.first_author FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
+    (SELECT LISTAGG(authors, ' ' ON OVERFLOW TRUNCATE) WITHIN GROUP (ORDER BY authors) AS authors FROM (SELECT DISTINCT aab.authors FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
+    (SELECT LISTAGG(abstract, ' ' ON OVERFLOW TRUNCATE) WITHIN GROUP (ORDER BY abstract) AS abstract FROM(SELECT DISTINCT aab.abstract FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
+    (SELECT DISTINCT aab.publication_year FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code AND ROWNUM < 2),
     asap.proposal_abstract,
     science.schedblock_name,
     asap.coi_name,
@@ -131,14 +131,14 @@ CREATE OR REPLACE FORCE VIEW ALMA.obscore (
     CASE WHEN science.scan_intent LIKE '%TARGET%' THEN 'T' ELSE 'F' END,
     science.spatial_scale_max,
     CASE WHEN ads.qa2_passed = 'Y' THEN 'T' ELSE 'F' END,
-    (SELECT LISTAGG(bibcode, ' ') WITHIN GROUP (ORDER BY bibcode) AS bibcode FROM (SELECT DISTINCT bibcode FROM ALMA.asa_project_bibliography WHERE project_code = science.project_code)),
+    (SELECT LISTAGG(bibcode, ' ') WITHIN GROUP (ORDER BY bibcode) AS bibcode FROM (SELECT DISTINCT bibcode FROM asa_project_bibliography WHERE project_code = science.project_code)),
     asap.science_keyword,
     asap.scientific_category,
     (SELECT LISTAGG(collection, ' ') WITHIN GROUP (ORDER BY collection) AS collection FROM (SELECT DISTINCT collection FROM ALMA.asa_product_files WHERE asa_ous_id = science.member_ouss_id)),
     science.last_updated
-FROM ALMA.asa_science science
-INNER JOIN ALMA.asa_energy energy ON energy.asa_dataset_id = science.dataset_id
-INNER JOIN ALMA.asa_project asap ON asap.code = science.project_code
-LEFT OUTER JOIN alma.asa_delivery_asdm_ous adao ON science.asdm_uid = adao.asdm_uid
-LEFT OUTER JOIN ALMA.asa_delivery_status ads ON adao.deliverable_name = ads.delivery_id
-WHERE science.product_type = 'MOUS';
+FROM asa_science science
+INNER JOIN asa_energy energy ON upper(energy.asa_dataset_id) = upper(science.dataset_id)
+INNER JOIN asa_project asap ON asap.code = science.project_code
+LEFT OUTER JOIN asa_delivery_asdm_ous adao ON science.asdm_uid = adao.asdm_uid
+LEFT OUTER JOIN asa_delivery_status ads ON adao.delivery_id = ads.id
+WHERE nvl(science.product_type, '0') = 'MOUS';
