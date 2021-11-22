@@ -11,26 +11,14 @@ repositories {
 
 sourceCompatibility = 1.8
 
-ext {
-    default_app_name = 'tap'
-}
-
 war {
-    if (project.hasProperty('alma_tap_app_name')) {
-        eachFile {
-            if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-                filter(ReplaceTokens, tokens: [app_name: project.alma_tap_app_name])
-            }
+    eachFile {
+        if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
+            filter(ReplaceTokens, tokens: [app_name: 'tap'])
         }
-        archiveName = project.alma_tap_app_name + '.war'
-    } else {
-        eachFile {
-            if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-                filter(ReplaceTokens, tokens: [app_name: project.default_app_name])
-            }
-        }
-        archiveName = project.default_app_name + '.war'
     }
+
+    archiveName = 'tap.war'
 
     // Include the swagger-ui so that /tap provides the TAP API documentation
     from('../') {
@@ -70,9 +58,6 @@ sourceSets {
             runtimeClasspath += main.output + test.output
             srcDir file('src/intTest/java')
         }
-
-        // No longer necessary with Gradle 7.1 (causes error).
-//        resources.srcDir file('src/intTest/resources')
     }
 }
 
