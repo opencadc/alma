@@ -108,7 +108,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
          ELSE CAST(ads.release_date AS TIMESTAMP) END,
     science.spatial_resolution,
     science.frequency_support,
-    science.frequency,
+    0.5 * (energy.frequency_max + energy.frequency_min),
     science.velocity_resolution,
     asap.pi_name,
     (SELECT LISTAGG(title, ' ') WITHIN GROUP (ORDER BY title) AS title FROM (SELECT DISTINCT aab.title FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
