@@ -1,8 +1,8 @@
 {
-    "id": "2016.1.00007.S_uid___A001_X879_X8f1_001_of_001.tar",
-    "name": "2016.1.00007.S_uid___A001_X879_X8f1_001_of_001.tar",
-    "type": "PIPELINE_PRODUCT",
-    "sizeInBytes": 1392629760,
+    "id": "member.uid___A001_X879_X8f1.README.txt",
+    "name": "member.uid___A001_X879_X8f1.README.txt",
+    "type": "PIPELINE_AUXILIARY_README",
+    "sizeInBytes": 14284,
     "permission": "ALLOWED",
     "children": [],
     "allMousUids": []

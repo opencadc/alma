@@ -1,9 +1,46 @@
 {
-    "id": "uid___A002_Xb8e115_X1f82",
-    "name": "2016.1.00007.S_uid___A002_Xb8e115_X1f82.asdm.sdm.tar",
-    "type": "ASDM",
-    "sizeInBytes": 1653287936,
+    "id": null,
+    "name": "2016.1.00007.S_uid___A001_X879_X8f1_001_of_001.tar",
+    "type": "PIPELINE_PRODUCT_TARFILE",
+    "sizeInBytes": 34588672,
     "permission": "ALLOWED",
-    "children": [],
+    "children": [
+        {
+            "id": "member.uid___A001_X879_X8f1.AFGL3068.spw17.I.sd.im.fits",
+            "name": "member.uid___A001_X879_X8f1.AFGL3068.spw17.I.sd.im.fits",
+            "type": "PIPELINE_PRODUCT",
+            "sizeInBytes": 1059840,
+            "permission": "ALLOWED",
+            "children": [],
+            "allMousUids": []
+        },
+        {
+            "id": "member.uid___A001_X879_X8f1.AFGL3068.spw19.I.sd.im.fits",
+            "name": "member.uid___A001_X879_X8f1.AFGL3068.spw19.I.sd.im.fits",
+            "type": "PIPELINE_PRODUCT",
+            "sizeInBytes": 16787520,
+            "permission": "ALLOWED",
+            "children": [],
+            "allMousUids": []
+        },
+        {
+            "id": "member.uid___A001_X879_X8f1.AFGL3068.spw21.I.sd.im.fits",
+            "name": "member.uid___A001_X879_X8f1.AFGL3068.spw21.I.sd.im.fits",
+            "type": "PIPELINE_PRODUCT",
+            "sizeInBytes": 993600,
+            "permission": "ALLOWED",
+            "children": [],
+            "allMousUids": []
+        },
+        {
+            "id": "member.uid___A001_X879_X8f1.AFGL3068.spw23.I.sd.im.fits",
+            "name": "member.uid___A001_X879_X8f1.AFGL3068.spw23.I.sd.im.fits",
+            "type": "PIPELINE_PRODUCT",
+            "sizeInBytes": 15739200,
+            "permission": "ALLOWED",
+            "children": [],
+            "allMousUids": []
+        }
+    ],
     "allMousUids": []
 }

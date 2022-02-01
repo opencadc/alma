@@ -66,7 +66,7 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.deliverable;
+package org.opencadc.datalink;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -270,15 +270,15 @@ public class HierarchyItem {
         SGOUS("Science Goal OUS"),
         GOUS("Group OUS"),
         MOUS("Member OUS"),
-        // following two are not _actually_ things which we deliver, abnd hence not a deliverable in that sense. They
+        // following two are not _actually_ things which we deliver, and hence not a deliverable in that sense. They
         // are used for displaying information
         // in the RequestHandler regarding the SB and SOURCE names for each MOUS.
         SCHEDBLOCK("SchedBlock"),
         SOURCE("Source"),
         // the order of the enums here determines the order of children in the DeliverableInfo class. README should
-        // come before PIIPELINE files
+        // come before PIPELINE files
         PIPELINE_AUXILIARY_README("Auxiliary/Readme"),
-        // An on-the-fly tarfile which is created from actual, individual files contained in NGAS. This entity
+        // An on-the-fly tar file which is created from actual, individual files contained in NGAS. This entity
         // doesn't physically
         // exist anywhere, rather it consists of lots of (real, actually existing)....
         PIPELINE_PRODUCT_TARFILE("Product"),
@@ -360,9 +360,7 @@ public class HierarchyItem {
                    || this == PIPELINE_AUXILIARY
                    || this == PIPELINE_AUXILIARY_SCRIPT
                    || this == PIPELINE_AUXILIARY_QA
-                   || this == PIPELINE_AUXILIARY_LOG
-                   || this == PIPELINE_AUXILIARY_CALIBRATION
-                   || this == PIPELINE_AUXILIARY_README;
+                   || this == PIPELINE_AUXILIARY_CALIBRATION;
         }
 
         /**
@@ -377,6 +375,10 @@ public class HierarchyItem {
                    || (this.isAuxiliary() && this != PIPELINE_AUXILIARY_TARFILE)
                    || this == EXTERNAL
                    || this == ADMIT;
+        }
+
+        public boolean isDocumentation() {
+            return this == PIPELINE_AUXILIARY_LOG || this == PIPELINE_AUXILIARY_README;
         }
     }
 }
