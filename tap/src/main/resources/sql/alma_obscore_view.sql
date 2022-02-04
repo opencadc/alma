@@ -70,8 +70,8 @@ CREATE OR REPLACE FORCE VIEW obscore (
     CASE WHEN science.product_type = 'MOUS' THEN 2
          WHEN science.product_type = 'GOUS' THEN 3
          ELSE null END,
-    'ALMA',
-    science.asa_ous_id,
+    'ALMA/' || REGEXP_REPLACE(LTRIM(RTRIM(science.band_list)), '\s', '/'),
+    energy.asa_energy_id,
     'ADS/JAO.ALMA#' || asap.code,
     'https://almascience.org/datalink/sync?ID=' || science.member_ouss_id,
     'application/x-votable+xml; content=datalink',
@@ -136,8 +136,8 @@ CREATE OR REPLACE FORCE VIEW obscore (
     asap.scientific_category,
     (SELECT LISTAGG(collection, ' ') WITHIN GROUP (ORDER BY collection) AS collection FROM (SELECT DISTINCT collection FROM ALMA.asa_product_files WHERE asa_ous_id = science.member_ouss_id)),
     science.last_updated
-FROM asa_science science
-INNER JOIN asa_energy energy ON upper(energy.asa_dataset_id) = upper(science.dataset_id)
+FROM asa_energy energy
+INNER JOIN asa_science science ON upper(energy.asa_dataset_id) = upper(science.dataset_id)
 INNER JOIN asa_project asap ON asap.code = science.project_code
 LEFT OUTER JOIN asa_delivery_asdm_ous adao ON science.asdm_uid = adao.asdm_uid
 LEFT OUTER JOIN asa_delivery_status ads ON adao.delivery_id = ads.id
