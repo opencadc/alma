@@ -7,6 +7,20 @@
 
     <display-name>TAP ObsCore</display-name>
 
+    <!-- Register the listener for the remote logger initialization. -->
+    <context-param>
+        <!-- This is the system property name to look for and to POST to. -->
+        <!-- i.e. -DlogServerURL=http://alma.com.../entry -->
+        <param-name>logControlURLProperty</param-name>
+        <param-value>logServerURL</param-value>
+    </context-param>
+
+    <listener>
+        <!-- Relies on the logServerURLProperty parameter being set above. -->
+        <listener-class>org.opencadc.alma.logging.web.HTTPLoggingContextListener</listener-class>
+    </listener>
+    <!-- End Register listener for remote logger. -->
+
     <servlet>
         <servlet-name>logControl</servlet-name>
         <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
@@ -34,31 +48,6 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
-    <!-- asynchronous access to JobManager service -->
-    <servlet>
-        <load-on-startup>2</load-on-startup>
-        <servlet-name>AsyncServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
-        <init-param>
-            <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.uws.web.GetAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>post</param-name>
-            <!-- The ALMAASyncPostAction enables the x-forward-xxx headers and redirects appropriately. -->
-<!--            <param-value>org.opencadc.tap.uws.ALMAAsyncPostAction</param-value>-->
-            <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>delete</param-name>
-            <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
-            <param-value>org.opencadc.tap.ws.QueryJobManager</param-value>
-        </init-param>
-    </servlet>
-
     <!-- synchronous access to JobManager service -->
     <servlet>
         <load-on-startup>2</load-on-startup>
@@ -66,15 +55,18 @@
         <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>post</param-name>
             <!-- The ALMASyncPostAction enables the x-forward-xxx headers and redirects appropriately. -->
 <!--            <param-value>org.opencadc.tap.uws.ALMASyncPostAction</param-value>-->
-            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
         </init-param>
-
+        <init-param>
+            <param-name>ca.nrc.cadc.uws.web.SyncPostAction.execOnPOST</param-name>
+            <param-value>true</param-value>
+        </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>org.opencadc.tap.ws.QueryJobManager</param-value>
@@ -82,13 +74,21 @@
     </servlet>
 
     <servlet>
+        <load-on-startup>3</load-on-startup>
         <servlet-name>CapabilitiesServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.vosi.CapabilitiesServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>init</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
+        </init-param>
         <init-param>
             <param-name>input</param-name>
             <param-value>/capabilities.xml</param-value>
         </init-param>
-        <load-on-startup>3</load-on-startup>
     </servlet>
 
     <servlet>
@@ -109,16 +109,6 @@
         <servlet-class>org.opencadc.tap.impl.ALMATableServlet</servlet-class>
         <load-on-startup>3</load-on-startup>
     </servlet>
-
-    <!-- the TAP Endpoints -->
-    <servlet-mapping>
-        <servlet-name>AsyncServlet</servlet-name>
-        <url-pattern>/async/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>AsyncServlet</servlet-name>
-        <url-pattern>/auth-async/*</url-pattern>
-    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>SyncServlet</servlet-name>

@@ -37,6 +37,11 @@ war {
         archiveName = project.default_app_name + '##' + project.version + '.war'
     }
 
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "SIA"
+    }
+
     // Include the swagger-ui so that /sia2 provides the Sia API documentation
     from('../') {
         include 'swagger-ui/'

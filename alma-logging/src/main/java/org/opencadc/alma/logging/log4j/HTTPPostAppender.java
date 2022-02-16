@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2011.                            (c) 2011.
+ *  (c) 2022.                            (c) 2022.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,64 +62,81 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *  $Revision: 5 $
  *
  ************************************************************************
  */
 
-package org.opencadc.tap.integration;
+package org.opencadc.alma.logging.log4j;
+
+import ca.nrc.cadc.net.FileContent;
+import ca.nrc.cadc.net.HttpPost;
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Core;
+import org.apache.logging.log4j.core.Filter;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.plugins.Plugin;
+import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
+import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
+import org.apache.logging.log4j.core.config.plugins.PluginElement;
+import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
+
+import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.junit.Assert;
-import ca.nrc.cadc.conformance.uws2.JobResultWrapper;
-import ca.nrc.cadc.tap.integration.TapAsyncQueryTest;
-import ca.nrc.cadc.util.FileUtil;
-import ca.nrc.cadc.util.Log4jInit;
-import ca.nrc.cadc.uws.ExecutionPhase;
-import ca.nrc.cadc.uws.Result;
+@Plugin(name = "Alma", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE, printObject = true)
+public final class HTTPPostAppender extends AbstractAppender {
 
-import java.io.File;
-import java.net.URI;
+    @PluginBuilderAttribute
+    @Required(message = "No URL provided for HTTPPostAppender (Set loggingEndpoint)")
+    private final String loggingEndpoint;
 
-/**
- * @author pdowler
- */
-public class ObsCoreTapAsyncQueryTest extends TapAsyncQueryTest {
-    private static final Logger log = Logger.getLogger(ObsCoreTapAsyncQueryTest.class);
 
-    private static final long TIMEOUT = 60 * 1000L;
-
-    static {
-        Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
-        Log4jInit.setLevel("ca.nrc.cadc.conformance.uws2", Level.INFO);
+    /**
+     * Create new instance.
+     */
+    private HTTPPostAppender(final String name, final Layout<? extends Serializable> layout, final Filter filter,
+                             final boolean ignoreExceptions, final String loggingEndpoint) {
+        super(name, filter, layout, ignoreExceptions, null);
+        this.loggingEndpoint = loggingEndpoint;
     }
 
-    public ObsCoreTapAsyncQueryTest() {
-        super(URI.create("ivo://almascience.org/tap"));
-
-        File testFile = FileUtil.getFileFromResource("AsyncResultTest-ivoa.ObsCore.properties",
-                                                     ObsCoreTapAsyncQueryTest.class);
-        if (testFile.exists()) {
-            File testDir = testFile.getParentFile();
-            super.setPropertiesDir(testDir, "AsyncResultTest");
-        }
+    @PluginFactory
+    public static HTTPPostAppender createAppender(@PluginAttribute("name") String name,
+                                                  @PluginAttribute("ignoreExceptions") boolean ignoreExceptions,
+                                                  @PluginElement("Layout") Layout<? extends Serializable> layout,
+                                                  @PluginElement("Filters") Filter filter,
+                                                  @PluginAttribute("loggingEndpoint") String loggingEndpoint) {
+        return new HTTPPostAppender(name, layout, filter, ignoreExceptions, loggingEndpoint);
     }
 
+    /**
+     * Logs a LogEvent using whatever logic this Appender wishes to use. It is typically recommended to use a
+     * bridge pattern not only for the benefits from decoupling an Appender from its implementation, but it is also
+     * handy for sharing resources which may require some form of locking.
+     *
+     * @param event The LogEvent.
+     */
     @Override
-    protected void validateResponse(JobResultWrapper result) {
-        Assert.assertEquals(ExecutionPhase.COMPLETED, result.job.getExecutionPhase());
-
-        //Result r = result.job.getResultsList().get(0);
-        Result r = null;
-        for (Result jr : result.job.getResultsList()) {
-            if ("result".equals(jr.getName())) {
-                r = jr;
-                break;
-            }
+    public void append(LogEvent event) {
+        final FileContent fileContent = new FileContent(createMessage(event), "application/json");
+        try {
+            final HttpPost httpPost = new HttpPost(new URL(loggingEndpoint), fileContent, true);
+            httpPost.run();
+        } catch (MalformedURLException malformedURLException) {
+            throw new IllegalArgumentException(malformedURLException.getMessage(), malformedURLException);
         }
+    }
 
-        Assert.assertNotNull("found result", r);
+    byte[] createMessage(final LogEvent event) {
+        LOGGER.info(String.format("Event message is:\n'%s'", event.getMessage().toString()));
+        return event.getMessage().toString().getBytes(StandardCharsets.UTF_8);
     }
 }

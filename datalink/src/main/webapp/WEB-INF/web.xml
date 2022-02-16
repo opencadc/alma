@@ -5,6 +5,20 @@
          id="target_resolver" version="3.0">
     <display-name>DataLink</display-name>
 
+    <!-- Register the listener for the remote logger initialization. -->
+    <context-param>
+        <!-- This is the system property name to look for and to POST to. -->
+        <!-- i.e. -DlogServerURL=http://alma.com.../entry -->
+        <param-name>logControlURLProperty</param-name>
+        <param-value>logServerURL</param-value>
+    </context-param>
+
+    <listener>
+        <!-- Relies on the logServerURLProperty parameter being set above. -->
+        <listener-class>org.opencadc.alma.logging.web.HTTPLoggingContextListener</listener-class>
+    </listener>
+    <!-- End Register listener for remote logger. -->
+
     <welcome-file-list>
         <welcome-file>/index.jsp</welcome-file>
     </welcome-file-list>
@@ -42,11 +56,11 @@
         <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
@@ -57,7 +71,15 @@
     <servlet>
         <load-on-startup>3</load-on-startup>
         <servlet-name>CapabilitiesServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.vosi.CapabilitiesServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>init</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
+        </init-param>
         <init-param>
             <param-name>input</param-name>
             <param-value>/capabilities.xml</param-value>

@@ -69,24 +69,25 @@
 
 package org.opencadc.soda.ws;
 
+import ca.nrc.cadc.uws.server.ThreadPoolExecutor;
 import org.opencadc.soda.AlmaSodaJobRunner;
 import ca.nrc.cadc.uws.server.JobExecutor;
 import ca.nrc.cadc.uws.server.MemoryJobPersistence;
 import ca.nrc.cadc.uws.server.SimpleJobManager;
-import ca.nrc.cadc.uws.server.SyncJobExecutor;
 
 
 public class SodaJobManager extends SimpleJobManager {
-    private static final long MAX_EXEC_DURATION = 4 * 3600L;    // 4 hours to dump a catalog to vpsace
+    private static final long MAX_EXEC_DURATION = 4 * 3600L;    // 4 hours to dump a catalog to VOSpace
     private static final long MAX_DESTRUCTION = 7 * 24 * 60 * 60L; // 1 week
-    private static final long MAX_QUOTE = 24 * 3600L;         // 24 hours since we have a threadpool with
+    private static final long MAX_QUOTE = 24 * 3600L;         // 24 hours since we have a ThreadPool with
+    private static final int THREAD_POOL_SIZE = 3;              // Async execution threads
 
     public SodaJobManager() {
         super();
 
         // Persist UWS jobs to memory by default.
         final MemoryJobPersistence jobPersist = new MemoryJobPersistence();
-        final JobExecutor jobExec = new SyncJobExecutor(jobPersist, AlmaSodaJobRunner.class);
+        final JobExecutor jobExec = new ThreadPoolExecutor(jobPersist, AlmaSodaJobRunner.class, THREAD_POOL_SIZE);
 
         super.setJobPersistence(jobPersist);
         super.setJobExecutor(jobExec);

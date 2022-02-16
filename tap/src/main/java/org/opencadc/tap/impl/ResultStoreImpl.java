@@ -88,13 +88,7 @@ public class ResultStoreImpl implements ResultStore {
     public URL put(final ResultSet resultSet,
                    final TableWriter<ResultSet> resultSetTableWriter)
         throws IOException {
-        final File file = getOutputFile();
-
-        try (final FileOutputStream os = new FileOutputStream(file)) {
-            resultSetTableWriter.write(resultSet, os);
-        }
-
-        return file.toURI().toURL();
+        return put(resultSet, resultSetTableWriter, null);
     }
 
     @Override
