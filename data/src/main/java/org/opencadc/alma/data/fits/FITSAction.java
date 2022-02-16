@@ -77,14 +77,21 @@ import ca.nrc.cadc.io.WriteException;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import nom.tam.util.RandomAccessDataObject;
 import nom.tam.util.RandomAccessFileExt;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.data.BaseAction;
+import org.opencadc.alma.logging.LoggingClient;
+import org.opencadc.alma.logging.LoggingEvent;
+import org.opencadc.alma.logging.LoggingEventKey;
+import org.opencadc.alma.logging.web.SyncLoggerWrapper;
+import org.opencadc.alma.logging.web.WebServiceMetaData;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.fits.NoOverlapException;
 import org.opencadc.soda.SodaParamValidator;
 import org.opencadc.soda.server.Cutout;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -98,7 +105,8 @@ import java.util.Set;
  * Base action for all FITS files obtained from this SODA service.
  */
 public class FITSAction extends BaseAction {
-    private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
+    private static final Logger LOGGER = LogManager.getLogger(FITSAction.class);
+    private static final Logger REMOTE_LOGGER = LogManager.getLogger(LoggingClient.class.getName());
     private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
 
 
@@ -131,16 +139,26 @@ public class FITSAction extends BaseAction {
 
     @Override
     public void doAction() throws Exception {
-        verifyArguments();
+        final WebServiceMetaData webServiceMetaData = getWebServiceMetaData();
+        final SyncLoggerWrapper loggerWrapper = new SyncLoggerWrapper(syncInput, webServiceMetaData.getVersion(),
+                                                                      webServiceMetaData.getTitle());
+        final LoggingEvent loggingEvent = loggerWrapper.start();
+        loggingEvent.set(LoggingEventKey.USERNAME, logInfo.user);
 
         ByteCountOutputStream byteCountOutputStream = null;
+        Exception toBeThrown = null;
         try {
+            verifyArguments();
+
             // The caller will close this stream.
             byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
             write(byteCountOutputStream);
             byteCountOutputStream.flush();
+        } catch (IllegalArgumentException illegalArgumentException) {
+            loggingEvent.set(LoggingEventKey.ERROR_CODE, HttpServletResponse.SC_BAD_REQUEST);
+            toBeThrown = illegalArgumentException;
         } catch (NoOverlapException noOverlapException) {
-            throw new IllegalArgumentException(noOverlapException.getMessage());
+            toBeThrown = new IllegalArgumentException(noOverlapException.getMessage());
         } catch (WriteException e) {
             // error on client write
             String msg = "write output error";
@@ -148,10 +166,22 @@ public class FITSAction extends BaseAction {
             if (e.getMessage() != null) {
                 msg += ": " + e.getMessage();
             }
-            throw new IllegalArgumentException(msg, e);
+            toBeThrown = new IllegalArgumentException(msg, e);
         } finally {
             if (byteCountOutputStream != null) {
-                this.logInfo.setBytes(byteCountOutputStream.getByteCount());
+                final long bytesWritten = byteCountOutputStream.getByteCount();
+                loggingEvent.set(LoggingEventKey.SIZE_BYTES_WIRE, bytesWritten);
+                this.logInfo.setBytes(bytesWritten);
+            }
+
+            if (toBeThrown != null) {
+                loggingEvent.set(LoggingEventKey.ERROR_STRING, toBeThrown.getMessage());
+            }
+
+            sendToLogger(loggingEvent);
+
+            if (toBeThrown != null) {
+                throw toBeThrown;
             }
         }
     }
@@ -277,6 +307,14 @@ public class FITSAction extends BaseAction {
         } catch (FileNotFoundException fileNotFoundException) {
             throw new ResourceNotFoundException(fileNotFoundException.getMessage());
         }
+    }
+
+    WebServiceMetaData getWebServiceMetaData() throws IOException {
+        return new WebServiceMetaData(getResource("/META-INF/MANIFEST.MF"));
+    }
+
+    void sendToLogger(final LoggingEvent loggingEvent) {
+        REMOTE_LOGGER.log(Level.ALL, loggingEvent.stopTimer());
     }
 
     /**

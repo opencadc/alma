@@ -78,6 +78,8 @@ import nom.tam.util.RandomAccessDataObject;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
+import org.opencadc.alma.logging.LoggingEvent;
+import org.opencadc.alma.logging.web.WebServiceMetaData;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.soda.SodaParamValidator;
 
@@ -88,6 +90,9 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -220,6 +225,8 @@ public class FITSActionTest {
     public void testDoActionHeaders() throws Exception {
         final FitsOperations mockFitsOperations = mock(FitsOperations.class);
         final RandomAccessDataObject mockRandomAccessDataObject = mock(RandomAccessDataObject.class);
+        final WebServiceMetaData mockWebServiceMetaData = mock(WebServiceMetaData.class);
+        final URL metaDataURL = new URL("file:/path/to/file");
         final WebServiceLogInfo mockLogInfo = mock(WebServiceLogInfo.class);
 
         final List<Header> headers = new ArrayList<>(3);
@@ -238,6 +245,16 @@ public class FITSActionTest {
             RandomAccessDataObject getRandomAccessDataObject() {
                 return mockRandomAccessDataObject;
             }
+
+            @Override
+            void sendToLogger(LoggingEvent loggingEvent) {
+                // Do nothing.
+            }
+
+            @Override
+            WebServiceMetaData getWebServiceMetaData() throws IOException {
+                return mockWebServiceMetaData;
+            }
         };
 
         testSubject.setLogInfo(mockLogInfo);
@@ -253,6 +270,8 @@ public class FITSActionTest {
         if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
             when(mockRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
         }
+
+        when(mockRequest.getRequestURL()).thenReturn(new StringBuffer("https://almasite.com/test/app"));
         when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(inputParameters.keySet()));
 
         for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
@@ -263,6 +282,9 @@ public class FITSActionTest {
         when(mockResponse.getOutputStream()).thenReturn(testServletOutputStream);
 
         when(mockFitsOperations.getHeaders()).thenReturn(headers);
+
+        when(mockWebServiceMetaData.getTitle()).thenReturn("Test Application");
+        when(mockWebServiceMetaData.getVersion()).thenReturn("3.4.0");
 
         final SyncInput syncInput = new SyncInput(mockRequest, null);
         syncInput.init();
@@ -276,11 +298,16 @@ public class FITSActionTest {
         if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
             verify(mockRequest).getHeaderNames();
         }
+
+        verify(mockRequest).getRequestURL();
         verify(mockRequest).getParameterNames();
         verify(mockResponse).getOutputStream();
 
         // Nothing actually counted.
         verify(mockLogInfo).setBytes(0L);
+
+        verify(mockWebServiceMetaData).getTitle();
+        verify(mockWebServiceMetaData).getVersion();
     }
 
     static final class TestServletOutputStream extends ServletOutputStream {
