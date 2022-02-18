@@ -73,30 +73,21 @@ import ca.nrc.cadc.util.StringUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.Filter;
-import org.apache.logging.log4j.core.appender.AsyncAppender;
-import org.apache.logging.log4j.core.appender.HttpAppender;
-import org.apache.logging.log4j.core.config.AppenderRef;
-import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.AppenderRefComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
-import org.apache.logging.log4j.core.config.builder.api.FilterComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
-import org.apache.logging.log4j.core.layout.JsonLayout;
-import org.apache.logging.log4j.layout.template.json.JsonTemplateLayout;
 import org.opencadc.alma.logging.LoggingClient;
-import org.opencadc.alma.logging.log4j.HTTPPostAppender;
+import org.opencadc.alma.logging.log4j.AlmaPatternLayout;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 
 
 /**
@@ -167,17 +158,20 @@ public class HTTPLoggingContextListener implements ServletContextListener {
         final AppenderRefComponentBuilder asyncAppenderRefComponentBuilder =
                 configurationBuilder.newAppenderRef("alma-async");
 
+        final LayoutComponentBuilder layoutComponentBuilder =
+                configurationBuilder.newLayout("AlmaLayout");
         final AppenderComponentBuilder httpAppenderComponentBuilder =
                 configurationBuilder
-                        .newAppender("alma-remote", "Alma")
-                        .addAttribute("loggingEndpoint", new URL(loggingControlServiceURLString).toExternalForm());
+                        .newAppender("alma-remote", "Http")
+                        .addAttribute("url", new URL(loggingControlServiceURLString).toExternalForm())
+                        .add(layoutComponentBuilder);
 
         final AppenderComponentBuilder asyncAppenderComponentBuilder =
                 configurationBuilder
                         .newAppender("alma-async", "Async")
                         .addComponent(httpAppenderRefComponentBuilder);
 
-        configurationBuilder.setPackages(HTTPPostAppender.class.getPackage().getName())
+        configurationBuilder.setPackages(AlmaPatternLayout.class.getPackage().getName())
                             .add(httpAppenderComponentBuilder)
                             .add(asyncAppenderComponentBuilder)
                             .add(configurationBuilder

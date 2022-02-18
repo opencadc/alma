@@ -68,75 +68,44 @@
 
 package org.opencadc.alma.logging.log4j;
 
-import ca.nrc.cadc.net.FileContent;
-import ca.nrc.cadc.net.HttpPost;
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.spi.LoggingEvent;
-import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.Core;
-import org.apache.logging.log4j.core.Filter;
-import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
-import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
-import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
-import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
-import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
+import org.apache.logging.log4j.core.layout.AbstractStringLayout;
 
-import java.io.Serializable;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Simple JSON message pass through layout.
+ */
+@Plugin(name = "AlmaLayout", category = "Core", elementType = "layout", printObject = true)
+public class AlmaPatternLayout extends AbstractStringLayout {
 
-@Plugin(name = "Alma", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE, printObject = true)
-public final class HTTPPostAppender extends AbstractAppender {
-
-    @PluginBuilderAttribute
-    @Required(message = "No URL provided for HTTPPostAppender (Set loggingEndpoint)")
-    private final String loggingEndpoint;
-
-
-    /**
-     * Create new instance.
-     */
-    private HTTPPostAppender(final String name, final Layout<? extends Serializable> layout, final Filter filter,
-                             final boolean ignoreExceptions, final String loggingEndpoint) {
-        super(name, filter, layout, ignoreExceptions, null);
-        this.loggingEndpoint = loggingEndpoint;
+    public AlmaPatternLayout() {
+        super(StandardCharsets.UTF_8);
     }
 
     @PluginFactory
-    public static HTTPPostAppender createAppender(@PluginAttribute("name") String name,
-                                                  @PluginAttribute("ignoreExceptions") boolean ignoreExceptions,
-                                                  @PluginElement("Layout") Layout<? extends Serializable> layout,
-                                                  @PluginElement("Filters") Filter filter,
-                                                  @PluginAttribute("loggingEndpoint") String loggingEndpoint) {
-        return new HTTPPostAppender(name, layout, filter, ignoreExceptions, loggingEndpoint);
+    public static AlmaPatternLayout createLayout() {
+        return new AlmaPatternLayout();
     }
 
     /**
-     * Logs a LogEvent using whatever logic this Appender wishes to use. It is typically recommended to use a
-     * bridge pattern not only for the benefits from decoupling an Appender from its implementation, but it is also
-     * handy for sharing resources which may require some form of locking.
+     * Formats the event as an Object that can be serialized.
      *
-     * @param event The LogEvent.
+     * @param event The Logging Event.
+     * @return The formatted event.
      */
     @Override
-    public void append(LogEvent event) {
-        final FileContent fileContent = new FileContent(createMessage(event), "application/json");
-        try {
-            final HttpPost httpPost = new HttpPost(new URL(loggingEndpoint), fileContent, true);
-            httpPost.run();
-        } catch (MalformedURLException malformedURLException) {
-            throw new IllegalArgumentException(malformedURLException.getMessage(), malformedURLException);
-        }
+    public String toSerializable(LogEvent event) {
+        return event.getMessage().getFormattedMessage();
     }
 
-    byte[] createMessage(final LogEvent event) {
-        LOGGER.info(String.format("Event message is:\n'%s'", event.getMessage().toString()));
-        return event.getMessage().toString().getBytes(StandardCharsets.UTF_8);
+    /**
+     * Returns the content type output by this layout. This is a JSON layout.
+     */
+    @Override
+    public String getContentType() {
+        return "application/json";
     }
 }
