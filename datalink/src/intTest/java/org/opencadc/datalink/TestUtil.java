@@ -83,6 +83,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -176,6 +177,8 @@ class TestUtil {
 
     static void checkContent(VOTableTable tab) throws Exception {
         Integer[] indices = TestUtil.getFieldIndexes(tab.getFields());
+        log.info(String.format("Checking content against %s", Arrays.toString(indices)));
+
         int uriCol = indices[0];
         int urlCol = indices[1];
         int srvCol = indices[2];
@@ -199,7 +202,6 @@ class TestUtil {
             } else if (srvO != null) {
                 Assert.assertNull(urlO);
                 Assert.assertNull(errO);
-                Assert.assertEquals(DataLink.Term.CUTOUT.getValue(), semO);
             } else {
                 Assert.assertNotNull(errO);
             }

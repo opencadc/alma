@@ -91,6 +91,8 @@ public class HierarchyItem {
     private final Type type;
     private final long sizeInBytes;
     private final boolean readable;
+    private final String fileClass;
+    private final String subDirectory;
     private final HierarchyItem[] childrenArray;
     private final AlmaUID[] mousIDArray;
 
@@ -122,6 +124,11 @@ public class HierarchyItem {
                                  Type.valueOf(document.get("type").toString()),
                                  document.getLong("sizeInBytes"),
                                  document.get("permission").toString().equals("ALLOWED"),
+
+                                 // fileClass and subDirectory are recent additions and may not yet be supported.
+                                 document.has("fileClass") ? document.get("fileClass").toString() : "",
+                                 document.has("subDirectory") ? document.get("subDirectory").toString() : "",
+
                                  childrenList.toArray(new HierarchyItem[0]),
                                  mousIDList.toArray(new AlmaUID[0]));
     }
@@ -139,13 +146,15 @@ public class HierarchyItem {
      * @param mousIDArray   The Array of MOUS IDs associated.
      */
     public HierarchyItem(AlmaUID uid, String id, String name, Type type, long sizeInBytes, boolean readable,
-                         HierarchyItem[] childrenArray, AlmaUID[] mousIDArray) {
+                         String fileClass, String subDirectory, HierarchyItem[] childrenArray, AlmaUID[] mousIDArray) {
         this.uid = uid;
         this.id = id;
         this.name = name;
         this.type = type;
         this.sizeInBytes = sizeInBytes;
         this.readable = readable;
+        this.fileClass = fileClass;
+        this.subDirectory = subDirectory;
         this.childrenArray = childrenArray;
         this.mousIDArray = mousIDArray;
     }
@@ -188,6 +197,14 @@ public class HierarchyItem {
 
     public boolean isReadable() {
         return readable;
+    }
+
+    public String getFileClass() {
+        return fileClass;
+    }
+
+    public String getSubDirectory() {
+        return subDirectory;
     }
 
     public boolean hasChildren() {
@@ -252,7 +269,10 @@ public class HierarchyItem {
                + "\"name\": \"" + this.name + "\","
                + "\"type\": \"" + this.type.name() + "\","
                + "\"sizeInBytes\": \"" + this.sizeInBytes + "\","
-               + "\"readable\": " + this.readable
+               + "\"readable\": " + this.readable + "\","
+               + "\"fileClass\": " + this.fileClass + "\","
+               + "\"subDirectory\": " + this.subDirectory + "\","
+               + "\"children\": " + Arrays.toString(this.childrenArray)
                + "}";
     }
 

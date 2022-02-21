@@ -194,15 +194,6 @@ public class LinksTest {
             VOTableDocument getVotable = TestUtil.get(resourceURL, new String[] {"id=" + uri});
             VOTableResource gvr = getVotable.getResourceByType("results");
 
-            VOTableInfo queryStatus = null;
-            for (VOTableInfo info : gvr.getInfos()) {
-                if (info.getName().equals("QUERY_STATUS")) {
-                    queryStatus = info;
-                }
-            }
-            Assert.assertNotNull("queryStatus", queryStatus);
-            Assert.assertEquals("OK", queryStatus.getValue());
-
             VOTableTable gvtab = gvr.getTable();
 
             // Check the VOTable FIELD's.
@@ -256,15 +247,6 @@ public class LinksTest {
             VOTableDocument getVotable =
                     TestUtil.get(anonURL, new String[] {"id=" + PUB_QUERY_URI1, "id=" + QUERY_URI2});
             VOTableResource gvr = getVotable.getResourceByType("results");
-
-            VOTableInfo queryStatus = null;
-            for (VOTableInfo info : gvr.getInfos()) {
-                if (info.getName().equals("QUERY_STATUS")) {
-                    queryStatus = info;
-                }
-            }
-            Assert.assertNotNull("queryStatus", queryStatus);
-            Assert.assertEquals("OK", queryStatus.getValue());
 
             VOTableTable gvtab = gvr.getTable();
 
@@ -351,15 +333,6 @@ public class LinksTest {
             // GET the query.
             VOTableDocument getVotable = TestUtil.get(anonURL, new String[] {"ID=" + NOT_FOUND_URI}, 200);
             VOTableResource gvr = getVotable.getResourceByType("results");
-            VOTableInfo queryStatus = null;
-            for (VOTableInfo info : gvr.getInfos()) {
-                if (info.getName().equals("QUERY_STATUS")) {
-                    queryStatus = info;
-                }
-            }
-            Assert.assertNotNull("queryStatus", queryStatus);
-            Assert.assertEquals("OK", queryStatus.getValue());
-
 
             VOTableTable gvtab = gvr.getTable();
 

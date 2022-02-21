@@ -70,6 +70,7 @@
 package org.opencadc.datalink;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -83,6 +84,7 @@ import java.util.Queue;
 import ca.nrc.cadc.reg.Standards;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
 
 import ca.nrc.cadc.util.StringUtil;
@@ -102,13 +104,15 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private final DataLinkURLBuilder dataLinkURLBuilder;
     private final Iterator<String> datasetIDIterator;
     private final DataLinkQuery dataLinkQuery;
+    private final AlmaProperties almaProperties;
 
 
     DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
-                     final DataLinkQuery dataLinkQuery) {
+                     final DataLinkQuery dataLinkQuery, final AlmaProperties almaProperties) {
         this.dataLinkURLBuilder = dataLinkURLBuilder;
         this.datasetIDIterator = datasetIDIterator;
         this.dataLinkQuery = dataLinkQuery;
+        this.almaProperties = almaProperties;
     }
 
     @Override
@@ -136,7 +140,12 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private void visitSubDeliverables(final HierarchyItem hierarchyItem) {
         Arrays.stream(hierarchyItem.getChildrenArray()).filter(h -> {
             final HierarchyItem.Type type = h.getType();
-            return type.isLeaf() || type.isOus() || type.isTarfile() || type.isAuxiliary() || type.isDocumentation();
+            final boolean isAccepted = type.isLeaf() || type.isOus() || type.isTarfile() || type.isAuxiliary()
+                                       || type.isDocumentation();
+            if (LOGGER.isDebugEnabled() && !isAccepted) {
+                LOGGER.debug(String.format("Rejecting %s.", h.getUidString()));
+            }
+            return isAccepted;
         }).forEach(h -> dataLinkQueue.addAll(createDataLinks(h)));
     }
 
@@ -165,7 +174,33 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLinkCollection.add(createNotFoundDataLink(hierarchyItem));
         } else {
             final DataLink.Term dataLinkTerm = determineSemantic(hierarchyItem);
-            dataLinkCollection.add(createDataLink(hierarchyItem, dataLinkTerm));
+            final DataLink dataLink = createDataLink(hierarchyItem, dataLinkTerm);
+            dataLinkCollection.add(dataLink);
+
+            try {
+                if (hierarchyItem.hasChildren()) {
+                    final DataLink recursiveDataLink = new DataLink(hierarchyItem.getUidString(), dataLinkTerm);
+                    final ServiceDescriptor serviceDescriptor =
+                            new ServiceDescriptor(createRecursiveURL(hierarchyItem));
+                    final String[] pathSegments = dataLink.accessURL.getPath().split("/");
+                    // Use just the filename.
+                    serviceDescriptor.id = String.format("DataLink.%s", pathSegments[pathSegments.length - 1]);
+                    serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
+
+                    recursiveDataLink.descriptor = serviceDescriptor;
+                    recursiveDataLink.serviceDef = serviceDescriptor.id;
+                    recursiveDataLink.contentType = "text/xml";
+
+                    setDescription(dataLink, null, null);
+
+                    dataLinkCollection.add(recursiveDataLink);
+                }
+            } catch (MalformedURLException e) {
+                LOGGER.error("Access URL creation failed.", e);
+                dataLink.errorMessage = String.format("Unable to create Service Descriptor URL for %s/%s|%s.",
+                                                      hierarchyItem.getSubDirectory(), hierarchyItem.getNullSafeId(),
+                                                      hierarchyItem.getFileClass());
+            }
         }
 
         if (deliverableType == HierarchyItem.Type.PIPELINE_PRODUCT) {
@@ -207,55 +242,70 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLink = new DataLink(hierarchyItem.getUidString(), semantic);
             try {
                 dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(hierarchyItem);
-
-                if (hierarchyItem.hasChildren()) {
-                    final ServiceDescriptor serviceDescriptor =
-                            new ServiceDescriptor(createRecursiveURL(hierarchyItem));
-                    serviceDescriptor.id = String.format("DataLink%s", dataLink.accessURL.getFile());
-                    serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
-
-                    dataLink.descriptor = serviceDescriptor;
-                    dataLink.serviceDef = serviceDescriptor.id;
-                }
-
                 dataLink.contentLength = determineSizeInBytes(hierarchyItem);
                 dataLink.contentType = determineContentType(hierarchyItem);
                 dataLink.readable = hierarchyItem.isReadable();
 
-                if (dataLink.getSemantics().contains(DataLink.Term.PACKAGE)) {
-                    final String appendage;
-                    if (dataLink.descriptor == null) {
-                        appendage = "";
-                    } else {
-                        appendage = ", or follow the service_def field value to access files directly";
-                    }
+                final String subDirectory = hierarchyItem.getSubDirectory();
+                final String fileClass = hierarchyItem.getFileClass();
 
-                    dataLink.description = String.format("Download all data associated with %s%s.", dataLink.getID(),
-                                                         appendage);
-                } else if (dataLink.getSemantics().contains(DataLink.Term.DOCUMENTATION)) {
-                    dataLink.description = String.format("Download documentation for %s.", dataLink.getID());
-                } else {
-                    // Assumes #this
-                    dataLink.description = String.format("Download the dataset for %s.", dataLink.getID());
-                }
+                setDescription(dataLink, subDirectory, fileClass);
             } catch (MalformedURLException e) {
                 LOGGER.error("Access URL creation failed.", e);
-                dataLink.errorMessage = String.format("Unable to create access URL for %s.",
-                                                      hierarchyItem.getNullSafeId());
+                dataLink.errorMessage = String.format("Unable to create access URL for %s/%s|%s.",
+                                                      hierarchyItem.getSubDirectory(), hierarchyItem.getNullSafeId(),
+                                                      hierarchyItem.getFileClass());
             }
         }
 
         return dataLink;
     }
 
+    private void setDescription(final DataLink dataLink, final String subDirectory, final String fileClass) {
+        final StringBuilder descriptionID = new StringBuilder();
+
+        if (StringUtil.hasText(subDirectory)) {
+            descriptionID.append(subDirectory).append("/");
+        }
+
+        descriptionID.append(dataLink.getID());
+
+        if (StringUtil.hasText(fileClass)) {
+            descriptionID.append("|").append(fileClass);
+        }
+
+        if (dataLink.getSemantics().contains(DataLink.Term.PACKAGE)) {
+            final String appendage;
+            if (dataLink.descriptor == null) {
+                appendage = "";
+            } else {
+                appendage = ", or follow the service_def field value to access files directly";
+            }
+
+            dataLink.description = String.format("Download all data associated with %s%s.", descriptionID,
+                                                 appendage);
+        } else if (dataLink.getSemantics().contains(DataLink.Term.DOCUMENTATION)) {
+            dataLink.description = String.format("Download documentation for %s.", descriptionID);
+        } else {
+            // Assumes #this
+            dataLink.description = String.format("Download the dataset for %s.", descriptionID);
+        }
+    }
+
     private DataLink createCutoutDataLink(final HierarchyItem hierarchyItem) {
         final DataLink dataLink = new DataLink(hierarchyItem.getUidString(), DataLink.Term.CUTOUT);
 
         try {
-            dataLink.accessURL = createCutoutURL(hierarchyItem);
+            final URL accessURL = createCutoutURL(hierarchyItem);
+            final String[] pathSegments = accessURL.getPath().split("/");
+            final ServiceDescriptor serviceDescriptor = new ServiceDescriptor(accessURL);
+            serviceDescriptor.id = String.format("SODA.%s", pathSegments[pathSegments.length - 1]);
+            serviceDescriptor.standardID = Standards.SODA_SYNC_10;
+            serviceDescriptor.resourceIdentifier = almaProperties.getSodaServiceURI();
+
             dataLink.contentType = FITS_CONTENT_TYPE;
-            dataLink.description = String.format("Synchronous SODA sub-image of %s.",
-                                                 hierarchyItem.getUidString());
+            dataLink.serviceDef = serviceDescriptor.id;
+            dataLink.description = String.format("Synchronous SODA sub-image of %s.", hierarchyItem.getUidString());
         } catch (MalformedURLException e) {
             LOGGER.warn("Cutout URL creation failed.", e);
             dataLink.errorMessage = String.format("Unable to create Cutout URL for %s.",

@@ -70,6 +70,7 @@ package org.opencadc.datalink;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,6 +79,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.Log4jInit;
 import org.apache.log4j.Level;
 import org.json.JSONObject;
@@ -199,17 +201,19 @@ public class DataLinkIteratorTest {
         final URL datalinkURL = new URL("https://alma.com/datalink");
         final URL sodaURL = new URL("https://alma.com/soda");
         final URL dataPortalURL = new URL("https://alma.com/dataportal");
+        final URI sodaURI = URI.create("ivo://alma.com/soda");
 
         final HierarchyItem hierarchy = fromJSONFile(uid, DataLinkIteratorTest.class.getSimpleName() + ".json");
         when(mockDataLinkQuery.query(uid)).thenReturn(hierarchy);
         when(mockAlmaProperties.lookupDataLinkServiceURL()).thenReturn(datalinkURL);
         when(mockAlmaProperties.lookupSodaServiceURL()).thenReturn(sodaURL);
         when(mockAlmaProperties.lookupDataPortalURL()).thenReturn(dataPortalURL);
+        when(mockAlmaProperties.getSodaServiceURI()).thenReturn(sodaURI);
 
         final DataLinkURLBuilder dataLinkURLBuilder = new DataLinkURLBuilder(mockAlmaProperties);
         final List<DataLink> expectedDataLinks = new ArrayList<>();
         final List<DataLink> resultDataLinks = new ArrayList<>();
-        new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator, mockDataLinkQuery)
+        new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator, mockDataLinkQuery, mockAlmaProperties)
                 .forEachRemaining(resultDataLinks::add);
         final String itemFileNameTemplate = "%s.%d.json";
 
@@ -225,12 +229,22 @@ public class DataLinkIteratorTest {
         final HierarchyItem hierarchyItemTwo =
                 fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
                                                 index++));
-        final DataLink packageLink = createDataLink(hierarchyItemTwo, "application/x-tar",
+        final DataLink thisLink = createDataLink(hierarchyItemTwo, "application/x-tar",
                                                     new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
                                                                           hierarchyItemTwo.getName())),
                                                     DataLink.Term.THIS);
-        packageLink.descriptor = new ServiceDescriptor(new URL(datalinkURL + "?ID=" + hierarchyItemTwo.getName()));
-        expectedDataLinks.add(packageLink);
+        final DataLink recursiveThisLink = createDataLink(hierarchyItemTwo, "text/xml",
+                                                    null, DataLink.Term.THIS);
+        final ServiceDescriptor serviceDescriptor =
+                new ServiceDescriptor(new URL(datalinkURL.toExternalForm() + "?ID=" + uid));
+        serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
+
+        recursiveThisLink.serviceDef = serviceDescriptor.id;
+        recursiveThisLink.contentType = "text/xml";
+        expectedDataLinks.add(recursiveThisLink);
+
+        thisLink.descriptor = new ServiceDescriptor(new URL(datalinkURL + "?ID=" + hierarchyItemTwo.getName()));
+        expectedDataLinks.add(thisLink);
 
         final HierarchyItem hierarchyItemThree =
                 fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
