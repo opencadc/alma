@@ -7,14 +7,14 @@ defmodule RhWeb.RhController do
   end
   
   def expand(conn, %{"uid" => uid}) do
-    visit(conn, "https://almascience.org/rh/ous/expand/#{uid}/downwards")
+    visit(conn, "https://almascience.eso.org/rh/ous/expand/#{uid}/downwards")
   end
   
   defp visit(conn, url) do
     IO.puts("Visiting #{url}")
     
     # 15 second timeout should (hopefully) be plenty.
-    {:ok, response} = HTTPoison.get(url, [], [recv_timeout: 15000])
+    {:ok, response} = HTTPoison.get(url, [], [recv_timeout: 45000])
 
     headers = response.headers
               |> Enum.into(%{})

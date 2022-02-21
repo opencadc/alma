@@ -83,7 +83,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
-import org.opencadc.alma.data.CutoutFileNameFormat;
 import org.opencadc.soda.SodaParamValidator;
 
 import javax.servlet.http.HttpServletResponse;

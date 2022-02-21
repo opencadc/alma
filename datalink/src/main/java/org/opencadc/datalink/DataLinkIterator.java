@@ -211,7 +211,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
                 if (hierarchyItem.hasChildren()) {
                     final ServiceDescriptor serviceDescriptor =
                             new ServiceDescriptor(createRecursiveURL(hierarchyItem));
-                    serviceDescriptor.id = String.format("DataLink.%s", hierarchyItem.getUidString());
+                    serviceDescriptor.id = String.format("DataLink%s", dataLink.accessURL.getFile());
                     serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
 
                     dataLink.descriptor = serviceDescriptor;
