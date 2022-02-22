@@ -304,6 +304,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
             serviceDescriptor.resourceIdentifier = almaProperties.getSodaServiceURI();
 
             dataLink.contentType = FITS_CONTENT_TYPE;
+            dataLink.descriptor = serviceDescriptor;
             dataLink.serviceDef = serviceDescriptor.id;
             dataLink.description = String.format("Synchronous SODA sub-image of %s.", hierarchyItem.getUidString());
         } catch (MalformedURLException e) {
