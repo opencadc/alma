@@ -82,7 +82,6 @@ import java.util.Queue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.HierarchyItem;
 
 import ca.nrc.cadc.util.StringUtil;
 

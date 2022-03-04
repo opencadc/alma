@@ -70,7 +70,6 @@ package org.opencadc.datalink;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,16 +77,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import ca.nrc.cadc.auth.AuthMethod;
-import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
 import org.junit.Assert;
 import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.HierarchyItem;
 
 import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.PropertiesReader;
