@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk11-openjdk-slim
+FROM at88mph/alma-tomcat:9-openjdk11-slim
 
 RUN rm -rf webapps/* \
     && mkdir -p /root/config
