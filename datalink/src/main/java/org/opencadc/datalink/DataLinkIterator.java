@@ -299,6 +299,31 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return contentType;
     }
 
+    private String getDescription(final String id, final String[] semantics, final String subDirectory,
+                                  final String fileClass) {
+        final StringBuilder descriptionID = new StringBuilder();
+
+        if (StringUtil.hasText(subDirectory)) {
+            descriptionID.append(subDirectory).append("/");
+        }
+
+        descriptionID.append(id);
+
+        if (StringUtil.hasText(fileClass)) {
+            descriptionID.append("|").append(fileClass);
+        }
+
+        final String description;
+        if (Arrays.stream(semantics).anyMatch(s -> s.equals(DataLink.Term.PKG.name()))) {
+            description = String.format("Download all data associated with %s.", descriptionID);
+        } else {
+            // Assumes #this
+            description = String.format("Download the dataset for %s.", descriptionID);
+        }
+
+        return description;
+    }
+
     private String getIdentifier(final HierarchyItem hierarchyItem) {
         return hierarchyItem == null ? null : (hierarchyItem.getType() == HierarchyItem.Type.ASDM
                                                ? hierarchyItem.getName()
