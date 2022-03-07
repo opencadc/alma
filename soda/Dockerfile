@@ -1,4 +1,4 @@
-FROM at88mph/alma-tomcat:9-openjdk11-slim
+FROM opencadc/alma-tomcat:9-openjdk11-slim
 
 RUN rm -rf webapps/*
 
