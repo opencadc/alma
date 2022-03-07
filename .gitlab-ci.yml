@@ -76,12 +76,24 @@ build_soda:
     - cd alma-lib && ../gradlew -i clean build test publishToMavenLocal
     - cd ../soda && ../gradlew -i clean build test
 
+build_tomcat:
+  stage: build
+  image: docker:latest
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
+  script:
+    - docker build --no-cache --pull --network host -t opencadc/alma-tomcat:9-jdk11-openjdk-slim -f docker/tomcat/Dockerfile docker/tomcat/
+    - docker push opencadc/alma-tomcat:9-jdk11-openjdk-slim
+  services:
+    - docker:dind
+
 deploy_data:
   variables:
     name: data
     module: data
   needs:
     - build_data
+    - build_tomcat
   <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_datalink:
@@ -98,6 +110,7 @@ deploy_reg:
     module: reg
   needs:
     - build_reg
+    - build_tomcat
   <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_sia:
@@ -106,6 +119,7 @@ deploy_sia:
     module: sia
   needs:
     - build_sia
+    - build_tomcat
   <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_soda:
@@ -114,6 +128,7 @@ deploy_soda:
     module: soda
   needs:
     - build_soda
+    - build_tomcat
   <<: *shared_deploy  # This is a reference to the anchor above.
 
 deploy_tap:
@@ -122,4 +137,5 @@ deploy_tap:
     module: tap
   needs:
     - build_tap
+    - build_tomcat
   <<: *shared_deploy  # This is a reference to the anchor above.

@@ -30,14 +30,8 @@ jobs:
         && ./configure --prefix=/usr \
         && make && sudo make install
 
-    - name: temporarily pull DAL PR 67
-      run: |
-        git clone https://github.com/opencadc/dal.git \
-        && cd dal \
-        && git fetch origin pull/67/head:github-pr-67 \
-        && git checkout github-pr-67 \
-        && cd cadc-data-ops-fits \
-        && ../gradlew -i clean build install
+    - name: build Tomcat
+      run: cd docker/tomcat && docker build -t opencadc/alma-tomcat:9-jdk11-openjdk-slim .
 
     - name: build and test data
       run: cd data && gradle --info clean build test
