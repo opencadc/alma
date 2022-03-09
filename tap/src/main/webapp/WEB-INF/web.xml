@@ -68,11 +68,8 @@
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <!-- The ALMASyncPostAction enables the x-forward-xxx headers and redirects appropriately. -->
-<!--            <param-value>org.opencadc.tap.uws.ALMASyncPostAction</param-value>-->
             <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
         </init-param>
-
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>org.opencadc.tap.ws.QueryJobManager</param-value>
@@ -104,7 +101,11 @@
          This implementation uses the TAP_SCHEMA to find the required metadata -->
     <servlet>
         <servlet-name>TableServlet</servlet-name>
-        <servlet-class>org.opencadc.tap.impl.ALMATableServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.vosi.actions.GetAction</param-value>
+        </init-param>
         <load-on-startup>3</load-on-startup>
     </servlet>
 
