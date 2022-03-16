@@ -95,6 +95,8 @@ public class AlmaProperties extends PropertiesReader {
     static final String ALMA_FILE_SODA_SERVICE_PORT = "almaFileSodaServicePort";
     static final String ALMA_DATALINK_SERVICE_URI = "almaDataLinkServiceURI";
     static final String ALMA_SODA_SERVICE_URI = "almaSODAServiceURI";
+    static final String ALMA_TAP_SERVICE_URI = "almaTAPServiceURI";
+    static final String ALMA_TAP_TEMP_STORAGE_DIR = "almaTAPTempStorageDir";
     static final String ALMA_DATAPROTAL_SERVICE_URI = "almaDataPortalServiceURI";
 
 
@@ -129,6 +131,14 @@ public class AlmaProperties extends PropertiesReader {
         return ensureRequiredURI(ALMA_SODA_SERVICE_URI);
     }
 
+    public URI getTapServiceURI() {
+        return ensureRequiredURI(ALMA_TAP_SERVICE_URI);
+    }
+
+    public String getTapTempStorageDir() {
+        return ensureRequiredString(ALMA_TAP_TEMP_STORAGE_DIR);
+    }
+
     public URI getDataPortalServiceURI() {
         return ensureRequiredURI(ALMA_DATAPROTAL_SERVICE_URI);
     }
@@ -150,11 +160,15 @@ public class AlmaProperties extends PropertiesReader {
     }
 
     public URL lookupDataLinkServiceURL() {
-        return lookupServiceURL(getDataLinkServiceURI());
+        return lookupServiceURL(getDataLinkServiceURI(), Standards.DATALINK_LINKS_10);
     }
 
     public URL lookupSodaServiceURL() {
-        return lookupServiceURL(getSodaServiceURI());
+        return lookupServiceURL(getSodaServiceURI(), Standards.SODA_SYNC_10);
+    }
+
+    public URL lookupTapServiceURL() {
+        return lookupServiceURL(getTapServiceURI(), Standards.TAP_10);
     }
 
     public URL lookupDataPortalURL() throws IOException, ResourceNotFoundException {
@@ -167,8 +181,14 @@ public class AlmaProperties extends PropertiesReader {
         return lookupApplicationURL(requestHandlerServiceURI);
     }
 
-    URL lookupServiceURL(final URI serviceURI) {
-        return createRegistryClient().getServiceURL(serviceURI, Standards.INTERFACE_PARAM_HTTP, AuthMethod.ANON);
+    URL lookupServiceURL(final URI serviceURI, final URI standardID) {
+        LOGGER.debug(String.format("Looking up {\"serviceURI\":\"%s\", \"standardID\":\"%s\"}", serviceURI, standardID));
+        final URL serviceURL = createRegistryClient().getServiceURL(serviceURI, standardID, AuthMethod.ANON,
+                                                                    Standards.INTERFACE_PARAM_HTTP);
+        LOGGER.debug(String.format("Looking up OK {\"serviceURI\":\"%s\", \"standardID\":\"%s\", \"serviceURL\":\"%s\"}",
+                                   serviceURI, standardID, serviceURL));
+
+        return serviceURL;
     }
 
     URL lookupApplicationURL(final URI serviceURI) throws IOException, ResourceNotFoundException {

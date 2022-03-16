@@ -18,6 +18,7 @@
             <param-name>logLevelPackages</param-name>
             <param-value>
                 ca.nrc.cadc.tap
+                org.opencadc.alma
                 org.opencadc.tap
                 ca.nrc.cadc.rest
                 ca.nrc.cadc.uws
@@ -48,14 +49,27 @@
             <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
         </init-param>
         <init-param>
+            <param-name>temp-storage-config-file</param-name>
+            <param-value>org.opencadc.alma.properties</param-value>
+        </init-param>
+        <init-param>
             <param-name>delete</param-name>
             <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>org.opencadc.tap.ws.QueryJobManager</param-value>
         </init-param>
-    </servlet>
+        <init-param>
+            <param-name>ca.nrc.cadc.rest.InlineContentHandler</param-name>
+            <param-value>org.opencadc.tap.storage.ALMATempStorageManager</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+     </servlet>
 
     <!-- synchronous access to JobManager service -->
     <servlet>
@@ -71,9 +85,36 @@
             <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
         </init-param>
         <init-param>
+            <param-name>temp-storage-config-file</param-name>
+            <param-value>org.opencadc.alma.properties</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>org.opencadc.tap.ws.QueryJobManager</param-value>
         </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.rest.InlineContentHandler</param-name>
+            <param-value>org.opencadc.tap.storage.ALMATempStorageManager</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>TempStorageServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>org.opencadc.tap.storage.ALMATempStorageGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <load-on-startup>3</load-on-startup>
     </servlet>
 
     <servlet>
@@ -126,6 +167,11 @@
     <servlet-mapping>
         <servlet-name>SyncServlet</servlet-name>
         <url-pattern>/auth-sync/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>TempStorageServlet</servlet-name>
+        <url-pattern>/files/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
