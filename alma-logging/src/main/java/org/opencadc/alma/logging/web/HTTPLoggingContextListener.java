@@ -70,8 +70,15 @@ package org.opencadc.alma.logging.web;
 
 
 import ca.nrc.cadc.util.StringUtil;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
@@ -83,12 +90,6 @@ import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.opencadc.alma.logging.LoggingClient;
 import org.opencadc.alma.logging.log4j.AlmaPatternLayout;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 
 /**
  * Listener to initialize the remote logger.  This relies on a System Property to define the URL of the remote logger.
@@ -97,6 +98,9 @@ import java.net.URL;
 public class HTTPLoggingContextListener implements ServletContextListener {
     private static final Logger LOGGER = LogManager.getLogger(HTTPLoggingContextListener.class);
     private static final String LOG_CONTROL_URL_PROPERTY = "logControlURLProperty";
+    private static final String REMOTE_LOGGER_APPENDER_NAME = "alma-remote";
+    private static final String ASYNC_LOGGER_APPENDER_NAME = "alma-async";
+    private static final String LOGGER_LAYOUT_NAME = AlmaPatternLayout.LAYOUT_NAME;
 
     /**
      * Receives notification that the web application initialization
@@ -154,21 +158,21 @@ public class HTTPLoggingContextListener implements ServletContextListener {
                 ConfigurationBuilderFactory.newConfigurationBuilder();
 
         final AppenderRefComponentBuilder httpAppenderRefComponentBuilder =
-                configurationBuilder.newAppenderRef("alma-remote");
+                configurationBuilder.newAppenderRef(HTTPLoggingContextListener.REMOTE_LOGGER_APPENDER_NAME);
         final AppenderRefComponentBuilder asyncAppenderRefComponentBuilder =
-                configurationBuilder.newAppenderRef("alma-async");
+                configurationBuilder.newAppenderRef(HTTPLoggingContextListener.ASYNC_LOGGER_APPENDER_NAME);
 
         final LayoutComponentBuilder layoutComponentBuilder =
-                configurationBuilder.newLayout("AlmaLayout");
+                configurationBuilder.newLayout(HTTPLoggingContextListener.LOGGER_LAYOUT_NAME);
         final AppenderComponentBuilder httpAppenderComponentBuilder =
                 configurationBuilder
-                        .newAppender("alma-remote", "Http")
+                        .newAppender(HTTPLoggingContextListener.REMOTE_LOGGER_APPENDER_NAME, "Http")
                         .addAttribute("url", new URL(loggingControlServiceURLString).toExternalForm())
                         .add(layoutComponentBuilder);
 
         final AppenderComponentBuilder asyncAppenderComponentBuilder =
                 configurationBuilder
-                        .newAppender("alma-async", "Async")
+                        .newAppender(HTTPLoggingContextListener.ASYNC_LOGGER_APPENDER_NAME, "Async")
                         .addComponent(httpAppenderRefComponentBuilder);
 
         configurationBuilder.setPackages(AlmaPatternLayout.class.getPackage().getName())

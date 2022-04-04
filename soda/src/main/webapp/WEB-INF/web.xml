@@ -38,14 +38,6 @@
                 ca.nrc.cadc.wcs
             </param-value>
         </init-param>
-        <!--        <init-param>-->
-        <!--            <param-name>logAccessGroup</param-name>-->
-        <!--            <param-value>ivo://cadc.nrc.ca/gms?CADC</param-value>-->
-        <!--        </init-param>-->
-        <!--        <init-param>-->
-        <!--            <param-name>groupAuthorizer</param-name>-->
-        <!--            <param-value>ca.nrc.cadc.ac.client.GroupAuthorizer</param-value>-->
-        <!--        </init-param>-->
         <load-on-startup>1</load-on-startup>
     </servlet>
 

@@ -37,14 +37,6 @@
                 ca.nrc.cadc.uws
             </param-value>
         </init-param>
-<!--        <init-param>-->
-<!--            <param-name>logAccessGroup</param-name>-->
-<!--            <param-value>CADC</param-value>-->
-<!--        </init-param>-->
-        <!--<init-param>-->
-        <!--<param-name>groupAuthorizer</param-name>-->
-        <!--<param-value>ca.nrc.cadc.auth.CADCGroupAuthorizer</param-value>-->
-        <!--</init-param>-->
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -59,13 +51,15 @@
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <!-- The ALMASyncPostAction enables the x-forward-xxx headers and redirects appropriately. -->
-<!--            <param-value>org.opencadc.tap.uws.ALMASyncPostAction</param-value>-->
             <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.web.SyncPostAction.execOnPOST</param-name>
             <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
@@ -84,6 +78,10 @@
         <init-param>
             <param-name>init</param-name>
             <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>input</param-name>

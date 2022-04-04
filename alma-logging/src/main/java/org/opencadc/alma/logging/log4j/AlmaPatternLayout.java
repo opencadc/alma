@@ -81,6 +81,8 @@ import java.nio.charset.StandardCharsets;
 @Plugin(name = "AlmaLayout", category = "Core", elementType = "layout", printObject = true)
 public class AlmaPatternLayout extends AbstractStringLayout {
 
+    public static final String LAYOUT_NAME = "AlmaLayout";
+
     public AlmaPatternLayout() {
         super(StandardCharsets.UTF_8);
     }
