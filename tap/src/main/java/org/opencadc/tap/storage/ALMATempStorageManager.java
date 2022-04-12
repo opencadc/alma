@@ -68,8 +68,7 @@
 
 package org.opencadc.tap.storage;
 
-
-import ca.nrc.cadc.tap.TempStorageManager;
+import org.openadc.tap.tmp.TempStorageManager;
 import org.opencadc.alma.AlmaProperties;
 
 

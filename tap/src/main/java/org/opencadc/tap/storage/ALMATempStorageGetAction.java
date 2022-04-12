@@ -68,8 +68,8 @@
 
 package org.opencadc.tap.storage;
 
-import ca.nrc.cadc.tap.TempStorageGetAction;
-import ca.nrc.cadc.tap.TempStorageManager;
+import org.openadc.tap.tmp.TempStorageGetAction;
+import org.openadc.tap.tmp.TempStorageManager;
 
 public class ALMATempStorageGetAction extends TempStorageGetAction {
     @Override

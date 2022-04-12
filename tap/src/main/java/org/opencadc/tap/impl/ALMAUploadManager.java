@@ -72,6 +72,7 @@ import ca.nrc.cadc.tap.BasicUploadManager;
 import ca.nrc.cadc.tap.db.TapConstants;
 import ca.nrc.cadc.tap.schema.ColumnDesc;
 import ca.nrc.cadc.tap.schema.TableDesc;
+import ca.nrc.cadc.tap.schema.TapDataType;
 import org.apache.log4j.Logger;
 
 import java.util.Arrays;
@@ -95,19 +96,18 @@ public class ALMAUploadManager extends BasicUploadManager {
     @Override
     protected void sanitizeTable(TableDesc td) {
         for (final ColumnDesc cd : td.getColumnDescs()) {
-            final String xtype = cd.getDatatype().xtype;
+            final TapDataType dataType = cd.getDatatype();
+            final String xtype = dataType.xtype;
             if (TapConstants.TAP10_TIMESTAMP.equals(xtype)) {
                 LOGGER.warn("Found old timestamp (" + xtype + ").  DALI 1.1 replaces it with \"timestamp\".");
             } else if (OLD_XTYPES.contains(xtype)) {
                 LOGGER.warn("Found old (TAP 1.0) xtype (" + xtype + ").  It can be omitted.");
-                cd.getDatatype().xtype = null;
+                dataType.xtype = null;
             }
 
-            final String arraysize = cd.getDatatype().arraysize;
-
             // Deprecated as of VOTable 1.3.  Remove arraysize if set to '1' for a char.
-            if ("1".equals(arraysize)) {
-                cd.getDatatype().arraysize = null;
+            if ("1".equals(dataType.arraysize)) {
+                dataType.arraysize = null;
             }
         }
     }
