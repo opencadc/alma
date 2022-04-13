@@ -19,7 +19,7 @@ jobs:
     - name: build, test, and install alma-lib
       run: cd alma-lib && gradle --info clean build test publishToMavenLocal
 
-    # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
+    # TODO: Upgrade to WCSLib 7?
     - name: install WCSLIB (libwcs5-15)
       run: |
         sudo apt-get update && sudo apt-get install -y curl gcc make \
