@@ -50,10 +50,6 @@
             <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
         </init-param>
         <init-param>
-            <param-name>temp-storage-config-file</param-name>
-            <param-value>org.opencadc.alma.properties</param-value>
-        </init-param>
-        <init-param>
             <param-name>delete</param-name>
             <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
         </init-param>
@@ -67,7 +63,7 @@
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.rest.InlineContentHandler</param-name>
-            <param-value>org.opencadc.tap.storage.ALMATempStorageManager</param-value>
+            <param-value>org.opencadc.tap.tmp.TempStorageManager</param-value>
         </init-param>
         <load-on-startup>2</load-on-startup>
      </servlet>
@@ -86,10 +82,6 @@
             <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
         </init-param>
         <init-param>
-            <param-name>temp-storage-config-file</param-name>
-            <param-value>org.opencadc.alma.properties</param-value>
-        </init-param>
-        <init-param>
             <param-name>authHeaders</param-name>
             <param-value>false</param-value>
         </init-param>
@@ -99,7 +91,7 @@
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.rest.InlineContentHandler</param-name>
-            <param-value>org.opencadc.tap.storage.ALMATempStorageManager</param-value>
+            <param-value>org.opencadc.tap.tmp.TempStorageManager</param-value>
         </init-param>
         <load-on-startup>2</load-on-startup>
     </servlet>
@@ -109,7 +101,7 @@
         <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
-            <param-value>org.opencadc.tap.storage.ALMATempStorageGetAction</param-value>
+            <param-value>org.opencadc.tap.tmp.TempStorageGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
