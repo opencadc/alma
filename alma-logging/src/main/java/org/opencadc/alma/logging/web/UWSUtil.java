@@ -68,98 +68,17 @@
 
 package org.opencadc.alma.logging.web;
 
-import ca.nrc.cadc.auth.NotAuthenticatedException;
-import ca.nrc.cadc.io.ByteCountOutputStream;
-import ca.nrc.cadc.rest.SyncOutput;
-import ca.nrc.cadc.uws.web.SyncPostAction;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.opencadc.alma.logging.LoggingClient;
-import org.opencadc.alma.logging.LoggingEvent;
-import org.opencadc.alma.logging.LoggingEventKey;
+import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.uws.Job;
+import ca.nrc.cadc.uws.server.JobManager;
 
-import javax.servlet.http.HttpServletResponse;
-import java.security.AccessControlException;
-
-
-/**
- * POST request action that will remotely log the request if this POST request executes the Job.
- */
-public class LoggingSyncPostAction extends SyncPostAction {
-    private static final Logger LOGGER = LogManager.getLogger(LoggingSyncGetAction.class);
-    private static final Logger REMOTE_LOGGER = LogManager.getLogger(LoggingClient.class.getName());
-
-    @Override
-    public void doAction() throws Exception {
-        super.init();
-        if (isLoggable()) {
-            final WebServiceMetaData webServiceMetaData = new WebServiceMetaData(getResource("/META-INF/MANIFEST.MF"));
-            final SyncLoggerWrapper loggerWrapper =
-                    new SyncLoggerWrapper(syncInput, UWSUtil.getJob(getJobID(), syncInput.getRequestPath(),
-                                                                    this.jobManager),
-                                          webServiceMetaData.getVersion(),
-                                          webServiceMetaData.getTitle());
-
-            final LoggingEvent loggingEvent = loggerWrapper.start();
-            loggingEvent.set(LoggingEventKey.USERNAME, logInfo.user);
-
-            try {
-                super.doAction();
-
-                loggingEvent.set(LoggingEventKey.SIZE_BYTES_WIRE,
-                                 ((ByteCountOutputStream) syncOutput.getOutputStream()).getByteCount());
-
-                // Add others if necessary.
-                addLoggingEntries(loggingEvent);
-            } catch (Exception exception) {
-                loggingEvent.set(LoggingEventKey.ERROR_STRING, exception.getMessage());
-
-                final int code;
-                if (exception instanceof IllegalAccessException) {
-                    code = HttpServletResponse.SC_BAD_REQUEST;
-                } else if (exception instanceof NotAuthenticatedException) {
-                    code = HttpServletResponse.SC_UNAUTHORIZED;
-                } else if (exception instanceof AccessControlException) {
-                    code = HttpServletResponse.SC_FORBIDDEN;
-                } else {
-                    code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-                }
-
-                loggingEvent.set(LoggingEventKey.ERROR_CODE, code);
-            }
-
-            try {
-                REMOTE_LOGGER.log(Level.ALL, loggingEvent.stopTimer());
-            } catch (IllegalStateException illegalStateException) {
-                LOGGER.error(illegalStateException.getMessage(), illegalStateException);
-                throw illegalStateException;
-            }
+public class UWSUtil {
+    public static Job getJob(final String jobID, final String requestPath, final JobManager jobManager)
+            throws Exception {
+        if (StringUtil.hasLength(jobID)) {
+            return jobManager.get(requestPath, jobID);
         } else {
-            super.doAction();
+            return null;
         }
-    }
-
-    boolean isLoggable() {
-        final String sval = initParams.get(SyncPostAction.class.getName() + ".execOnPOST");
-        return "true".equals(sval);
-    }
-
-    /**
-     * Classes that extend this will likely want to add further keys that do not apply to all services.  Override this
-     * method to do that.
-     * @param ignore  The LoggingEvent to set entries on.  Not used by default.
-     */
-    public void addLoggingEntries(final LoggingEvent ignore) {
-
-    }
-
-    /**
-     * Intercept here to add a byte counting output stream.
-     * @param syncOutput    The SyncOutput being set by the parent.
-     */
-    @Override
-    public void setSyncOutput(SyncOutput syncOutput) {
-        super.setSyncOutput(new ByteCountingSyncOutput(syncOutput));
     }
 }

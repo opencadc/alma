@@ -9,7 +9,7 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 1.8
+sourceCompatibility = 11
 group = 'ca.nrc.cadc'
 version = '1.0.5'
 
@@ -38,17 +38,14 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.apache.logging.log4j:log4j-core:[2.17.1,3.0)'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:[2.17.1,3.0)'
     implementation 'org.opencadc:alma-logging:[1.0.1,2.0)'
     implementation 'org.opencadc:cadc-access-control-identity:[1.0.8,2.0)'
     implementation 'org.opencadc:cadc-cdp:[1.2.3,2.0)'
     implementation 'org.opencadc:cadc-log:[1.1.2,1.2.0)'
-    implementation 'org.opencadc:cadc-sia:[1.1.9,2.0)'
+    implementation 'org.opencadc:cadc-sia:[1.1.12,2.0)'
     implementation 'org.opencadc:cadc-tap:[1.0,2.0)'
     implementation 'org.opencadc:cadc-util:[1.3.7,2.0)'
     implementation 'org.opencadc:cadc-uws-server:[1.2.5,2.0)'
-//    implementation 'ca.nrc.cadc:uws-util:[1.0,2.0)'
 
     runtimeOnly 'org.opencadc:cadc-vosi:[1.3.4,2.0)'
     runtimeOnly 'org.opencadc:cadc-registry:[1.5.9,2.0)'

@@ -69,9 +69,11 @@
 package org.opencadc.alma.logging.web;
 
 import ca.nrc.cadc.rest.SyncInput;
+import ca.nrc.cadc.uws.Job;
 import org.opencadc.alma.logging.LoggingEvent;
 import org.opencadc.alma.logging.LoggingEventKey;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,11 +82,13 @@ import java.util.List;
  */
 public class SyncLoggerWrapper {
     private final SyncInput syncInput;
+    private final Job job;
     private final String version;
     private final String title;
 
-    public SyncLoggerWrapper(SyncInput syncInput, String version, String title) {
+    public SyncLoggerWrapper(SyncInput syncInput, Job job, String version, String title) {
         this.syncInput = syncInput;
+        this.job = job;
         this.version = version;
         this.title = title;
     }
@@ -94,12 +98,23 @@ public class SyncLoggerWrapper {
                                                            syncInput.getHeader("user-agent"), true);
         loggingEvent.startTimer();
         final List<String> parameters = new ArrayList<>();
-        syncInput.getParameterNames()
-                 .forEach(param -> parameters.add(String.format("%s=%s", param, syncInput.getParameter(param))));
+        final String requestURI;
+        if (this.job == null) {
+            syncInput.getParameterNames()
+                     .forEach(param -> parameters.add(String.format("%s=%s", param, syncInput.getParameter(param))));
+            requestURI = syncInput.getRequestURI();
+        } else {
+            this.job.getParameterList().forEach(param -> parameters.add(
+                    String.format("%s=%s", param.getName(), param.getValue())));
+            final URI inputURI = URI.create(syncInput.getRequestURI());
+            final int port = inputURI.getPort();
+            final String portString = (port == 80 || port == 443 || port < 0) ? "" : Integer.toString(port);
+            requestURI = String.format("%s:%s//%s%s", inputURI.getScheme(), portString, inputURI.getHost(),
+                                       this.job.getRequestPath());
+        }
+
         final String query = String.join("&", parameters);
-
-
-        loggingEvent.set(LoggingEventKey.QUERY, String.format("%s%s%s", syncInput.getRequestURI(),
+        loggingEvent.set(LoggingEventKey.QUERY, String.format("%s%s%s", requestURI,
                                                               parameters.isEmpty() ? "" : "?", query));
 
         return loggingEvent;

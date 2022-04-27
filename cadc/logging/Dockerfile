@@ -13,4 +13,5 @@ COPY mix.lock .
 RUN mix local.hex --force \
     && mix local.rebar --force \
     && mix deps.get \
-    && mix release
+    && mix release \
+    && mix phx.digest

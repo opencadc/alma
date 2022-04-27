@@ -12,7 +12,7 @@ RUN cd /tmp \
     && make \
     && make install
 
-FROM tomcat:9-jdk11-openjdk-slim
+FROM opencadc/proxy-tomcat:9-jdk11-openjdk-slim
 
 RUN rm -rf webapps/*
 
@@ -23,5 +23,4 @@ COPY --from=build /usr/lib/libwcs.so /usr/lib/
 COPY --from=build /usr/lib/libwcs.so.5 /usr/lib/
 COPY --from=build /usr/lib/libwcs.so.5.15 /usr/lib/
 
-COPY LocalAuthority.properties /root/config/
 COPY build/libs/*.war webapps/

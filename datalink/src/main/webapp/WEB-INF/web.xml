@@ -4,15 +4,6 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          id="target_resolver" version="3.0">
     <display-name>DataLink</display-name>
-
-    <!-- Register the listener for the remote logger initialization. -->
-    <context-param>
-        <!-- This is the system property name to look for and to POST to. -->
-        <!-- i.e. -DlogServerURL=http://alma.com.../entry -->
-        <param-name>logControlURLProperty</param-name>
-        <param-value>logServerURL</param-value>
-    </context-param>
-
     <listener>
         <!-- Relies on the logServerURLProperty parameter being set above. -->
         <listener-class>org.opencadc.alma.logging.web.HTTPLoggingContextListener</listener-class>
@@ -39,14 +30,6 @@
                 alma
             </param-value>
         </init-param>
-        <!--        <init-param>-->
-        <!--            <param-name>logAccessGroup</param-name>-->
-        <!--            <param-value>ivo://cadc.nrc.ca/gms?CADC</param-value>-->
-        <!--        </init-param>-->
-        <!--        <init-param>-->
-        <!--            <param-name>groupAuthorizer</param-name>-->
-        <!--            <param-value>ca.nrc.cadc.ac.client.GroupAuthorizer</param-value>-->
-        <!--        </init-param>-->
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -61,6 +44,14 @@
         <init-param>
             <param-name>post</param-name>
             <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
@@ -79,6 +70,14 @@
         <init-param>
             <param-name>init</param-name>
             <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>input</param-name>
@@ -125,11 +124,6 @@
         <url-pattern>/sync/*</url-pattern>
     </servlet-mapping>
 
-<!--    <servlet-mapping>-->
-<!--        <servlet-name>DataLinkServlet</servlet-name>-->
-<!--        <url-pattern>/auth-datalink/*</url-pattern>-->
-<!--    </servlet-mapping>-->
-
     <servlet>
         <servlet-name>doc</servlet-name>
         <jsp-file>/index.jsp</jsp-file>
@@ -154,34 +148,4 @@
         <description>Public security role</description>
         <role-name>public</role-name>
     </security-role>
-
-<!--    <security-constraint>-->
-<!--        <web-resource-collection>-->
-<!--            <web-resource-name>auth</web-resource-name>-->
-<!--            <description/>-->
-<!--            <url-pattern>/auth-cutout/*</url-pattern>-->
-<!--            <url-pattern>/auth-datalink/*</url-pattern>-->
-<!--            <url-pattern>/auth-meta/*</url-pattern>-->
-<!--            <url-pattern>/auth-pkg/*</url-pattern>-->
-<!--            <url-pattern>/auth-sync/*</url-pattern>-->
-<!--            <url-pattern>/auth-async/*</url-pattern>-->
-<!--            <url-pattern>/logControl/*</url-pattern>-->
-<!--            <http-method>GET</http-method>-->
-<!--            <http-method>POST</http-method>-->
-<!--            <http-method>HEAD</http-method>-->
-<!--            <http-method>PUT</http-method>-->
-<!--            <http-method>OPTIONS</http-method>-->
-<!--            <http-method>TRACE</http-method>-->
-<!--            <http-method>DELETE</http-method>-->
-<!--        </web-resource-collection>-->
-<!--        <auth-constraint>-->
-<!--            <description>force authentication for all requests</description>-->
-<!--            <role-name>public</role-name>-->
-<!--        </auth-constraint>-->
-<!--    </security-constraint>-->
-
-<!--    <login-config>-->
-<!--        <auth-method>BASIC</auth-method>-->
-<!--        <realm-name>Canadian Astronomy Data Centre</realm-name>-->
-<!--    </login-config>-->
 </web-app>

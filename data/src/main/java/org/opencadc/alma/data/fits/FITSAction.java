@@ -85,6 +85,7 @@ import org.opencadc.alma.logging.LoggingClient;
 import org.opencadc.alma.logging.LoggingEvent;
 import org.opencadc.alma.logging.LoggingEventKey;
 import org.opencadc.alma.logging.web.SyncLoggerWrapper;
+import org.opencadc.alma.logging.web.UWSUtil;
 import org.opencadc.alma.logging.web.WebServiceMetaData;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.fits.NoOverlapException;
@@ -140,7 +141,8 @@ public class FITSAction extends BaseAction {
     @Override
     public void doAction() throws Exception {
         final WebServiceMetaData webServiceMetaData = getWebServiceMetaData();
-        final SyncLoggerWrapper loggerWrapper = new SyncLoggerWrapper(syncInput, webServiceMetaData.getVersion(),
+        final SyncLoggerWrapper loggerWrapper = new SyncLoggerWrapper(syncInput, null,
+                                                                      webServiceMetaData.getVersion(),
                                                                       webServiceMetaData.getTitle());
         final LoggingEvent loggingEvent = loggerWrapper.start();
         loggingEvent.set(LoggingEventKey.USERNAME, logInfo.user);

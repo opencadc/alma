@@ -2,21 +2,13 @@
 
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://java.sun.com/xml/ns/javaee"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         id="tap-obscore" version="3.0">
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         id="tap-obscore" version="3.1">
 
     <display-name>TAP ObsCore</display-name>
 
-    <!-- Register the listener for the remote logger initialization. -->
-    <context-param>
-        <!-- This is the system property name to look for and to POST to. -->
-        <!-- i.e. -DlogServerURL=http://alma.com.../entry -->
-        <param-name>logControlURLProperty</param-name>
-        <param-value>logServerURL</param-value>
-    </context-param>
-
     <listener>
-        <!-- Relies on the logServerURLProperty parameter being set above. -->
+        <!-- Relies on the logServerURL parameter being set above. -->
         <listener-class>org.opencadc.alma.logging.web.HTTPLoggingContextListener</listener-class>
     </listener>
     <!-- End Register listener for remote logger. -->
@@ -58,6 +50,10 @@
             <param-value>true</param-value>
         </init-param>
         <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
             <param-name>authHeaders</param-name>
             <param-value>false</param-value>
         </init-param>
@@ -78,6 +74,10 @@
         <init-param>
             <param-name>init</param-name>
             <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>

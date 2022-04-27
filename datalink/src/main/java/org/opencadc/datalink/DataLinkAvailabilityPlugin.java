@@ -74,7 +74,7 @@ import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vosi.AvailabilityPlugin;
-import ca.nrc.cadc.vosi.AvailabilityStatus;
+import ca.nrc.cadc.vosi.Availability;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -104,7 +104,7 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
      * @return current status
      */
     @Override
-    public AvailabilityStatus getStatus() {
+    public Availability getStatus() {
         boolean available = true;
         final StringBuilder message = new StringBuilder(String.format("%s state:", applicationName));
         final AlmaProperties almaProperties = new AlmaProperties();
@@ -119,7 +119,7 @@ public class DataLinkAvailabilityPlugin implements AvailabilityPlugin {
             available = false;
             message.append(String.format("INACTIVE: %s", e.getMessage()));
         }
-        return new AvailabilityStatus(available, null, null, null, message.toString());
+        return new Availability(available, message.toString());
     }
 
     public static URL getDataLinkBaseURL(final AlmaProperties almaProperties) throws MalformedURLException {

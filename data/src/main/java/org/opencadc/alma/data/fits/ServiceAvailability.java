@@ -69,7 +69,6 @@ package org.opencadc.alma.data.fits;
 
 import ca.nrc.cadc.vosi.Availability;
 import ca.nrc.cadc.vosi.AvailabilityPlugin;
-import ca.nrc.cadc.vosi.AvailabilityStatus;
 
 import java.text.DecimalFormat;
 import java.util.Date;
@@ -117,9 +116,9 @@ public class ServiceAvailability implements AvailabilityPlugin {
      * @deprecated Use getAvailability() instead.
      */
     @Override
-    public AvailabilityStatus getStatus() {
+    public Availability getStatus() {
         final Availability availability = getAvailability();
-        return new AvailabilityStatus(availability.isAvailable(), UP_SINCE, null, null, availability.note);
+        return new Availability(availability.isAvailable(), availability.note);
     }
 
     /**

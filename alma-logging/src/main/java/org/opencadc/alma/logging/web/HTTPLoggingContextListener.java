@@ -72,21 +72,22 @@ package org.opencadc.alma.logging.web;
 import ca.nrc.cadc.util.StringUtil;
 
 import java.net.MalformedURLException;
-import java.net.URL;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.AppenderRefComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
 import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.LoggerComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.apache.logging.log4j.core.impl.ContextAnchor;
 import org.opencadc.alma.logging.LoggingClient;
 import org.opencadc.alma.logging.log4j.AlmaPatternLayout;
 
@@ -97,10 +98,14 @@ import org.opencadc.alma.logging.log4j.AlmaPatternLayout;
  */
 public class HTTPLoggingContextListener implements ServletContextListener {
     private static final Logger LOGGER = LogManager.getLogger(HTTPLoggingContextListener.class);
-    private static final String LOG_CONTROL_URL_PROPERTY = "logControlURLProperty";
+    private static final String LOG_CONTROL_URL_PROPERTY_NAME = "logServerURL";
     private static final String REMOTE_LOGGER_APPENDER_NAME = "alma-remote";
     private static final String ASYNC_LOGGER_APPENDER_NAME = "alma-async";
     private static final String LOGGER_LAYOUT_NAME = AlmaPatternLayout.LAYOUT_NAME;
+
+    public HTTPLoggingContextListener() {
+        Configurator.setLevel(LOGGER, Level.DEBUG);
+    }
 
     /**
      * Receives notification that the web application initialization
@@ -115,9 +120,7 @@ public class HTTPLoggingContextListener implements ServletContextListener {
      */
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        final ServletContext servletContext = sce.getServletContext();
-        final String loggingControlServiceURLPropertyName = servletContext.getInitParameter(LOG_CONTROL_URL_PROPERTY);
-        final String loggingControlServiceURLString = System.getProperty(loggingControlServiceURLPropertyName);
+        final String loggingControlServiceURLString = System.getProperty(LOG_CONTROL_URL_PROPERTY_NAME);
 
         try {
             if (StringUtil.hasText(loggingControlServiceURLString)) {
@@ -157,32 +160,51 @@ public class HTTPLoggingContextListener implements ServletContextListener {
         final ConfigurationBuilder<BuiltConfiguration> configurationBuilder =
                 ConfigurationBuilderFactory.newConfigurationBuilder();
 
-        final AppenderRefComponentBuilder httpAppenderRefComponentBuilder =
-                configurationBuilder.newAppenderRef(HTTPLoggingContextListener.REMOTE_LOGGER_APPENDER_NAME);
-        final AppenderRefComponentBuilder asyncAppenderRefComponentBuilder =
-                configurationBuilder.newAppenderRef(HTTPLoggingContextListener.ASYNC_LOGGER_APPENDER_NAME);
+        configurationBuilder.setConfigurationName("ALMAConfigurationBuilder");
 
-        final LayoutComponentBuilder layoutComponentBuilder =
-                configurationBuilder.newLayout(HTTPLoggingContextListener.LOGGER_LAYOUT_NAME);
+        // Reference to the HTTP logger.
+        final AppenderRefComponentBuilder httpAppenderRefComponentBuilder =
+                configurationBuilder.newAppenderRef(REMOTE_LOGGER_APPENDER_NAME);
+
+        // Reference to the async logger.
+        final AppenderRefComponentBuilder asyncAppenderRefComponentBuilder =
+                configurationBuilder.newAppenderRef(ASYNC_LOGGER_APPENDER_NAME);
+
+        final LayoutComponentBuilder layoutComponentBuilder = configurationBuilder.newLayout(LOGGER_LAYOUT_NAME);
         final AppenderComponentBuilder httpAppenderComponentBuilder =
                 configurationBuilder
-                        .newAppender(HTTPLoggingContextListener.REMOTE_LOGGER_APPENDER_NAME, "Http")
-                        .addAttribute("url", new URL(loggingControlServiceURLString).toExternalForm())
-                        .add(layoutComponentBuilder);
+                        .newAppender(REMOTE_LOGGER_APPENDER_NAME, "Http")
+                        .add(layoutComponentBuilder)
+                        .addAttribute("url", loggingControlServiceURLString);
 
         final AppenderComponentBuilder asyncAppenderComponentBuilder =
-                configurationBuilder
-                        .newAppender(HTTPLoggingContextListener.ASYNC_LOGGER_APPENDER_NAME, "Async")
-                        .addComponent(httpAppenderRefComponentBuilder);
+                configurationBuilder.newAppender(ASYNC_LOGGER_APPENDER_NAME, "Async")
+                                    .addComponent(httpAppenderRefComponentBuilder);
 
-        configurationBuilder.setPackages(AlmaPatternLayout.class.getPackage().getName())
-                            .add(httpAppenderComponentBuilder)
-                            .add(asyncAppenderComponentBuilder)
-                            .add(configurationBuilder
-                                         .newLogger(LoggingClient.class.getName(), Level.ALL)
-                                         .add(asyncAppenderRefComponentBuilder));
+        final LoggerComponentBuilder loggerComponentBuilder =
+                configurationBuilder.newLogger(LoggingClient.class.getName(), Level.ALL)
+                                    .add(asyncAppenderRefComponentBuilder);
 
-        Configurator.initialize(configurationBuilder.build());
+        final BuiltConfiguration builtConfiguration =
+                configurationBuilder.setPackages(AlmaPatternLayout.class.getPackage().getName())
+                                    .add(httpAppenderComponentBuilder)
+                                    .add(asyncAppenderComponentBuilder)
+                                    .add(loggerComponentBuilder)
+                                    .build();
+
+        final LoggerContext loggerContext = Configurator.initialize(builtConfiguration);
+
+        // This part seems unnecessary as it should happen in the Log4jContextFactory:206, but the logger context
+        // never seems to be set to INITIALIZED up front.
+        // jenkinsd 2022.04.26
+        //
+        ContextAnchor.THREAD_CONTEXT.set(loggerContext);
+        try {
+            loggerContext.start(builtConfiguration);
+        } finally {
+            ContextAnchor.THREAD_CONTEXT.remove();
+        }
+
         LOGGER.info("initializeAppender() OK");
     }
 }

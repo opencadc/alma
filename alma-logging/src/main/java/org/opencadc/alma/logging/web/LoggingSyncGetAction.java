@@ -92,9 +92,14 @@ public class LoggingSyncGetAction extends SyncGetAction {
 
     @Override
     public void doAction() throws Exception {
+        super.init();
         final WebServiceMetaData webServiceMetaData = new WebServiceMetaData(getResource("/META-INF/MANIFEST.MF"));
-        final SyncLoggerWrapper loggerWrapper = new SyncLoggerWrapper(syncInput, webServiceMetaData.getVersion(),
-                                                                      webServiceMetaData.getTitle());
+        final SyncLoggerWrapper loggerWrapper =
+                new SyncLoggerWrapper(syncInput, UWSUtil.getJob(getJobID(), syncInput.getRequestPath(),
+                                                                this.jobManager),
+                                      webServiceMetaData.getVersion(),
+                                      webServiceMetaData.getTitle());
+
         final LoggingEvent loggingEvent = loggerWrapper.start();
         loggingEvent.set(LoggingEventKey.USERNAME, logInfo.user);
 

@@ -6,15 +6,6 @@
 
 <web-app>
     <display-name>Data Retrieval Service</display-name>
-
-    <!-- Register the listener for the remote logger initialization. -->
-    <context-param>
-        <!-- This is the system property name to look for and to POST to. -->
-        <!-- i.e. -DlogServerURL=http://alma.com.../entry -->
-        <param-name>logControlURLProperty</param-name>
-        <param-value>logServerURL</param-value>
-    </context-param>
-
     <listener>
         <!-- Relies on the logServerURLProperty parameter being set above. -->
         <listener-class>org.opencadc.alma.logging.web.HTTPLoggingContextListener</listener-class>
@@ -38,14 +29,6 @@
                 ca.nrc.cadc.dali
             </param-value>
         </init-param>
-<!--        <init-param>-->
-<!--            <param-name>logAccessGroup</param-name>-->
-<!--            <param-value>ivo://cadc.nrc.ca/gms?CADC</param-value>-->
-<!--        </init-param>-->
-<!--        <init-param>-->
-<!--            <param-name>groupAuthorizer</param-name>-->
-<!--            <param-value>ca.nrc.cadc.ac.client.GroupAuthorizer</param-value>-->
-<!--        </init-param>-->
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -54,6 +37,10 @@
         <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
         <init-param>
             <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
             <param-value>false</param-value>
         </init-param>
         <init-param>
@@ -88,6 +75,10 @@
         </init-param>
         <init-param>
             <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
             <param-value>false</param-value>
         </init-param>
         <init-param>

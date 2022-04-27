@@ -1,6 +1,6 @@
-FROM tomcat:9-jdk11-openjdk-slim
+FROM opencadc/proxy-tomcat:9-jdk11-openjdk-slim
 
 RUN rm -rf webapps/*
 
-COPY docker/*.properties /root/config/
+COPY docker/*.properties /usr/local/tomcat/config/
 COPY build/libs/*.war webapps/
