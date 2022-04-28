@@ -9,7 +9,7 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 1.8
+sourceCompatibility = 11
 
 war {
     eachFile {
@@ -35,8 +35,8 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.apache.logging.log4j:log4j-core:[2.15.0,3.0)'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:[2.15.0,3.0)'
+    implementation 'org.apache.logging.log4j:log4j-core:[2.17.2,3.0)'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:[2.17.2,3.0)'
     implementation 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
     implementation 'org.opencadc:alma-lib:[1.3.5,1.4.0)'
     implementation 'org.opencadc:cadc-access-control-server:[1.3.6,1.4.0)'

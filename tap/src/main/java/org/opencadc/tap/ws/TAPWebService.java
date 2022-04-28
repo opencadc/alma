@@ -70,8 +70,8 @@
 package org.opencadc.tap.ws;
 
 import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.vosi.Availability;
 import ca.nrc.cadc.vosi.AvailabilityPlugin;
-import ca.nrc.cadc.vosi.AvailabilityStatus;
 import ca.nrc.cadc.vosi.avail.CheckDataSource;
 import ca.nrc.cadc.vosi.avail.CheckException;
 import org.apache.log4j.Logger;
@@ -89,7 +89,7 @@ public class TAPWebService implements AvailabilityPlugin {
     private final static String TAPDS_NAME = "jdbc/tapuser";
     // note tap_schema table names
     private final static String TAPDS_TEST =
-        "select SCHEMA_NAME from TAP_SCHEMA.SCHEMAS11 where SCHEMA_NAME='TAP_SCHEMA'";
+            "select SCHEMA_NAME from TAP_SCHEMA.SCHEMAS11 where SCHEMA_NAME='TAP_SCHEMA'";
     private final static String ALMA_TEST = "select DATASET_ID from ALMA.ASA_SCIENCE where ROWNUM = 1";
 
     private String applicationName;
@@ -110,7 +110,7 @@ public class TAPWebService implements AvailabilityPlugin {
     }
 
     @Override
-    public AvailabilityStatus getStatus() {
+    public Availability getStatus() {
         boolean isGood = true;
         String note = String.format("The%s service is accepting queries",
                                     StringUtil.hasText(applicationName) ? " " + applicationName : "");
@@ -132,7 +132,7 @@ public class TAPWebService implements AvailabilityPlugin {
             isGood = false;
             note = "test failed, reason: " + t;
         }
-        return new AvailabilityStatus(isGood, null, null, null, note);
+        return new Availability(isGood, note);
     }
 
     /**
@@ -152,7 +152,8 @@ public class TAPWebService implements AvailabilityPlugin {
 
     /**
      * Omit this test in Travis since the ALMA database is unreachable.
-     * @return  True if the omit-alma-test system property is set.
+     *
+     * @return True if the omit-alma-test system property is set.
      */
     private boolean omitALMATest() {
         return Boolean.parseBoolean(System.getProperty(OMIT_ALMA_TEST_PROPERTY));
