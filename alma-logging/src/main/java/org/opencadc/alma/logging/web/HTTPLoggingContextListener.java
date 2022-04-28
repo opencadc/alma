@@ -103,8 +103,8 @@ public class HTTPLoggingContextListener implements ServletContextListener {
     private static final String ASYNC_LOGGER_APPENDER_NAME = "alma-async";
     private static final String LOGGER_LAYOUT_NAME = AlmaPatternLayout.LAYOUT_NAME;
 
-    public HTTPLoggingContextListener() {
-        Configurator.setLevel(LOGGER, Level.DEBUG);
+    static {
+        Configurator.setLevel(LOGGER, Level.INFO);
     }
 
     /**
@@ -157,9 +157,11 @@ public class HTTPLoggingContextListener implements ServletContextListener {
      * @throws MalformedURLException If the provided URL string is not a URL.
      */
     void initializeAppender(final String loggingControlServiceURLString) throws MalformedURLException {
+        LOGGER.info("initializeAppender()");
         final ConfigurationBuilder<BuiltConfiguration> configurationBuilder =
                 ConfigurationBuilderFactory.newConfigurationBuilder();
 
+        configurationBuilder.setStatusLevel(LOGGER.getLevel());
         configurationBuilder.setConfigurationName("ALMAConfigurationBuilder");
 
         // Reference to the HTTP logger.
@@ -175,6 +177,7 @@ public class HTTPLoggingContextListener implements ServletContextListener {
                 configurationBuilder
                         .newAppender(REMOTE_LOGGER_APPENDER_NAME, "Http")
                         .add(layoutComponentBuilder)
+                        .addAttribute("method", "POST")
                         .addAttribute("url", loggingControlServiceURLString);
 
         final AppenderComponentBuilder asyncAppenderComponentBuilder =
@@ -200,7 +203,13 @@ public class HTTPLoggingContextListener implements ServletContextListener {
         //
         ContextAnchor.THREAD_CONTEXT.set(loggerContext);
         try {
+            LOGGER.info("Start logger context");
             loggerContext.start(builtConfiguration);
+            Configurator.setLevel("org.opencadc.alma", Level.INFO);
+            LOGGER.info("Start logger context: OK");
+        } catch (Exception e) {
+            LOGGER.error("Unable to start the logger context", e);
+            LOGGER.warn("Logging locally to STDOUT.");
         } finally {
             ContextAnchor.THREAD_CONTEXT.remove();
         }
