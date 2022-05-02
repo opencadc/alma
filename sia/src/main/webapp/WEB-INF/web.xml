@@ -118,28 +118,20 @@
         <servlet-name>CapabilitiesServlet</servlet-name>
         <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
         <init-param>
-<<<<<<< HEAD
             <param-name>get</param-name>
             <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
         </init-param>
         <init-param>
-=======
->>>>>>> db31afa5787a54ceaf3c120a63fffbe08aa24e31
             <param-name>init</param-name>
             <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
         </init-param>
         <init-param>
-<<<<<<< HEAD
             <param-name>augmentSubject</param-name>
             <param-value>false</param-value>
-=======
-            <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>head</param-name>
             <param-value>ca.nrc.cadc.vosi.CapHeadAction</param-value>
->>>>>>> db31afa5787a54ceaf3c120a63fffbe08aa24e31
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
