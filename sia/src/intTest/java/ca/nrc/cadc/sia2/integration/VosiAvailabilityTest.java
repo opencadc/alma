@@ -8,6 +8,6 @@ public class VosiAvailabilityTest extends AvailabilityTest
 {
     public VosiAvailabilityTest()
     {
-        super(URI.create("ivo://cadc.nrc.ca/alma-sia"));
+        super(URI.create("ivo://almascience.org/sia"));
     }
 }
