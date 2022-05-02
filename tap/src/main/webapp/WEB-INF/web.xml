@@ -50,6 +50,10 @@
             <param-value>true</param-value>
         </init-param>
         <init-param>
+            <param-name>delete</param-name>
+            <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
+        </init-param>
+        <init-param>
             <param-name>augmentSubject</param-name>
             <param-value>false</param-value>
         </init-param>
@@ -76,17 +80,22 @@
             <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
         </init-param>
         <init-param>
-            <param-name>augmentSubject</param-name>
-            <param-value>false</param-value>
+            <param-name>post</param-name>
+            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
             <param-value>false</param-value>
         </init-param>
         <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
             <param-name>input</param-name>
             <param-value>/capabilities.xml</param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet>

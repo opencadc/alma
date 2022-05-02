@@ -73,8 +73,8 @@ import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vosi.AvailabilityPlugin;
 import ca.nrc.cadc.vosi.Availability;
+import ca.nrc.cadc.vosi.AvailabilityPlugin;
 
 import java.net.MalformedURLException;
 import java.net.URI;

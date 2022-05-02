@@ -10,7 +10,6 @@ repositories {
 }
 
 sourceCompatibility = 11
-group = 'ca.nrc.cadc'
 version = '1.0.5'
 
 war {
@@ -62,9 +61,6 @@ sourceSets {
             runtimeClasspath += main.output + test.output
             srcDir file('src/intTest/java')
         }
-
-        // set the intTest resource directory
-        resources.srcDir file('src/intTest/resources')
     }
 }
 

@@ -117,18 +117,6 @@ public class ServiceAvailability implements AvailabilityPlugin {
      */
     @Override
     public Availability getStatus() {
-        final Availability availability = getAvailability();
-        return new Availability(availability.isAvailable(), availability.note);
-    }
-
-    /**
-     * Do a comprehensive check of the service and it's dependencies.
-     * <p>
-     * TODO - Check access to NGAS service?
-     *
-     * @return Information of the availability check.
-     */
-    public Availability getAvailability() {
         final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
         return new Availability(true, (this.applicationName == null
                                        ? "Service" : this.applicationName) + " is accepting requests.  Up for "

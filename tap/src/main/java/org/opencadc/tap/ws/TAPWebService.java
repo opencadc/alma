@@ -89,7 +89,7 @@ public class TAPWebService implements AvailabilityPlugin {
     private final static String TAPDS_NAME = "jdbc/tapuser";
     // note tap_schema table names
     private final static String TAPDS_TEST =
-        "select SCHEMA_NAME from TAP_SCHEMA.SCHEMAS11 where SCHEMA_NAME='TAP_SCHEMA'";
+            "select SCHEMA_NAME from TAP_SCHEMA.SCHEMAS11 where SCHEMA_NAME='TAP_SCHEMA'";
     private final static String ALMA_TEST = "select DATASET_ID from ALMA.ASA_SCIENCE where ROWNUM = 1";
 
     private String applicationName;
@@ -152,7 +152,8 @@ public class TAPWebService implements AvailabilityPlugin {
 
     /**
      * Omit this test in Travis since the ALMA database is unreachable.
-     * @return  True if the omit-alma-test system property is set.
+     *
+     * @return True if the omit-alma-test system property is set.
      */
     private boolean omitALMATest() {
         return Boolean.parseBoolean(System.getProperty(OMIT_ALMA_TEST_PROPERTY));

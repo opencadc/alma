@@ -101,7 +101,7 @@ public class SiaQueryGetTest extends SyncUWSTest
 
     public SiaQueryGetTest()
     {
-        super(URI.create("ivo://cadc.nrc.ca/alma-sia"), Standards.SIA_QUERY_20);
+        super(URI.create("ivo://almascience.org/sia"), Standards.SIA_QUERY_20);
 
         File testFile = FileUtil.getFileFromResource("SyncTest-OK-BAND.properties", SiaQueryGetTest.class);
         if (testFile.exists())
