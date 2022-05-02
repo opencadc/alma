@@ -83,6 +83,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -302,9 +303,10 @@ class TestUtil {
             str = TestUtil.followGetRedirect(get.getRedirectURL());
         } else {
             log.debug("throwable", get.getThrowable());
-            Assert.assertEquals("HTTP status code", expectedCode, get.getResponseCode());
+            Assert.assertEquals("HTTP status code from " + endpoint + " (" + Arrays.toString(parameters) + ")",
+                                expectedCode, get.getResponseCode());
             if (expectedCode < 400 && get.getThrowable() != null) {
-                Assert.fail("GET of " + url.toString() + " failed because " + get.getThrowable().getMessage());
+                Assert.fail("GET of " + url + " failed because " + get.getThrowable().getMessage());
             }
             str = out.toString();
         }
