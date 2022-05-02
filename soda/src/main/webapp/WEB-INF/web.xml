@@ -69,6 +69,10 @@
             <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
         </init-param>
         <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>org.opencadc.soda.ws.SodaJobManager</param-value>
         </init-param>
@@ -89,7 +93,10 @@
             <param-name>delete</param-name>
             <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
         </init-param>
-
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>org.opencadc.soda.ws.SodaJobManager</param-value>
@@ -104,6 +111,10 @@
         <init-param>
             <param-name>get</param-name>
             <param-value>org.opencadc.soda.ws.EchoAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
         </init-param>
     </servlet>
 
