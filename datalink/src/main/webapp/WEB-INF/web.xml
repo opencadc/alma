@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://java.sun.com/xml/ns/javaee"
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         id="target_resolver" version="3.0">
+         id="datalink" version="3.0">
+
     <display-name>DataLink</display-name>
 
     <welcome-file-list>
@@ -26,14 +28,6 @@
                 alma
             </param-value>
         </init-param>
-        <!--        <init-param>-->
-        <!--            <param-name>logAccessGroup</param-name>-->
-        <!--            <param-value>ivo://cadc.nrc.ca/gms?CADC</param-value>-->
-        <!--        </init-param>-->
-        <!--        <init-param>-->
-        <!--            <param-name>groupAuthorizer</param-name>-->
-        <!--            <param-value>ca.nrc.cadc.ac.client.GroupAuthorizer</param-value>-->
-        <!--        </init-param>-->
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -60,13 +54,29 @@
     </servlet>
 
     <servlet>
-        <load-on-startup>3</load-on-startup>
         <servlet-name>CapabilitiesServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.vosi.CapabilitiesServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>init</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>head</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapHeadAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
         <init-param>
             <param-name>input</param-name>
             <param-value>/capabilities.xml</param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet>

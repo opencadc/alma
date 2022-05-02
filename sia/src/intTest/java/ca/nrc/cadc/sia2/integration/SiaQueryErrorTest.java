@@ -77,7 +77,11 @@ import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.Log4jInit;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+
+import junit.framework.AssertionFailedError;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -98,7 +102,7 @@ public class SiaQueryErrorTest extends SyncUWSTest
     
     public SiaQueryErrorTest()
     { 
-        super(URI.create("ivo://cadc.nrc.ca/alma-sia"), Standards.SIA_QUERY_20);
+        super(URI.create("ivo://almascience.org/sia"), Standards.SIA_QUERY_20);
         
         File testFile = FileUtil.getFileFromResource("SyncTest-ERROR-BAND.properties", SiaQueryErrorTest.class);
         if (testFile.exists())
@@ -114,20 +118,18 @@ public class SiaQueryErrorTest extends SyncUWSTest
         Assert.assertEquals(400, result.responseCode);
         Assert.assertEquals("application/x-votable+xml", result.contentType);
         
-        try
-        {
-            Assert.assertNotNull(result.syncOutput);
-            VOTableDocument vot = VOTableHandler.getVOTable(result.syncOutput);
+        Assert.assertNotNull(result.syncOutput);
+        try {
+            final Throwable resultError = result.throwable;
+            Assert.assertNotNull("Should contain throwable.", resultError);
+            VOTableDocument vot = VOTableHandler.getVOTable(resultError.getMessage().getBytes(StandardCharsets.UTF_8));
             log.info(result.name + ": found valid VOTable");
-            
+
             String queryStatus = VOTableHandler.getQueryStatus(vot);
             Assert.assertNotNull("QUERY_STATUS", queryStatus);
             Assert.assertEquals("ERROR", queryStatus);
-        }
-        catch(Exception ex)
-        {
-            log.error("unexpected exception", ex);
-            Assert.fail("unexpected exception: " + ex);
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException.getMessage(), ioException);
         }
     }
 }

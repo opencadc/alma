@@ -304,9 +304,10 @@ class TestUtil {
             str = TestUtil.followGetRedirect(get.getRedirectURL());
         } else {
             log.debug("throwable", get.getThrowable());
-            Assert.assertEquals("HTTP status code", expectedCode, get.getResponseCode());
+            Assert.assertEquals("HTTP status code from " + endpoint + " (" + Arrays.toString(parameters) + ")",
+                                expectedCode, get.getResponseCode());
             if (expectedCode < 400 && get.getThrowable() != null) {
-                Assert.fail("GET of " + url.toString() + " failed because " + get.getThrowable().getMessage());
+                Assert.fail("GET of " + url + " failed because " + get.getThrowable().getMessage());
             }
             str = out.toString();
         }

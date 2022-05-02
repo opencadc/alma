@@ -70,7 +70,7 @@ package org.opencadc.soda;
 
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vosi.AvailabilityPlugin;
-import ca.nrc.cadc.vosi.AvailabilityStatus;
+import ca.nrc.cadc.vosi.Availability;
 
 
 public class SodaAvailabilityPlugin implements AvailabilityPlugin {
@@ -96,9 +96,8 @@ public class SodaAvailabilityPlugin implements AvailabilityPlugin {
      * @return current status
      */
     @Override
-    public AvailabilityStatus getStatus() {
-        return new AvailabilityStatus(true, null, null, null,
-                                      String.format("%s state: %s", applicationName, StringUtil.hasText(state) ?
+    public Availability getStatus() {
+        return new Availability(true, String.format("%s state: %s", applicationName, StringUtil.hasText(state) ?
                                                                                      state : "ACTIVE"));
     }
 

@@ -23,14 +23,6 @@
                 ca.nrc.cadc.uws
             </param-value>
         </init-param>
-<!--        <init-param>-->
-<!--            <param-name>logAccessGroup</param-name>-->
-<!--            <param-value>CADC</param-value>-->
-<!--        </init-param>-->
-        <!--<init-param>-->
-        <!--<param-name>groupAuthorizer</param-name>-->
-        <!--<param-value>ca.nrc.cadc.auth.CADCGroupAuthorizer</param-value>-->
-        <!--</init-param>-->
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -45,9 +37,11 @@
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <!-- The ALMAASyncPostAction enables the x-forward-xxx headers and redirects appropriately. -->
-<!--            <param-value>org.opencadc.tap.uws.ALMAAsyncPostAction</param-value>-->
             <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>delete</param-name>
@@ -74,8 +68,6 @@
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <!-- The ALMASyncPostAction enables the x-forward-xxx headers and redirects appropriately. -->
-<!--            <param-value>org.opencadc.tap.uws.ALMASyncPostAction</param-value>-->
             <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
         </init-param>
         <init-param>
@@ -90,12 +82,28 @@
 
     <servlet>
         <servlet-name>CapabilitiesServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.vosi.CapabilitiesServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>init</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>head</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapHeadAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
         <init-param>
             <param-name>input</param-name>
             <param-value>/capabilities.xml</param-value>
         </init-param>
-        <load-on-startup>3</load-on-startup>
+        <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet>

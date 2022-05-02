@@ -69,7 +69,6 @@ package org.opencadc.alma.data.fits;
 
 import ca.nrc.cadc.vosi.Availability;
 import ca.nrc.cadc.vosi.AvailabilityPlugin;
-import ca.nrc.cadc.vosi.AvailabilityStatus;
 
 import java.text.DecimalFormat;
 import java.util.Date;
@@ -117,19 +116,7 @@ public class ServiceAvailability implements AvailabilityPlugin {
      * @deprecated Use getAvailability() instead.
      */
     @Override
-    public AvailabilityStatus getStatus() {
-        final Availability availability = getAvailability();
-        return new AvailabilityStatus(availability.isAvailable(), UP_SINCE, null, null, availability.note);
-    }
-
-    /**
-     * Do a comprehensive check of the service and it's dependencies.
-     * <p>
-     * TODO - Check access to NGAS service?
-     *
-     * @return Information of the availability check.
-     */
-    public Availability getAvailability() {
+    public Availability getStatus() {
         final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
         return new Availability(true, (this.applicationName == null
                                        ? "Service" : this.applicationName) + " is accepting requests.  Up for "

@@ -157,6 +157,7 @@ public class AlmaProperties extends PropertiesReader {
         return lookupServiceURL(getSodaServiceURI(), Standards.SODA_SYNC_10);
     }
 
+
     public URL lookupDataPortalURL() throws IOException, ResourceNotFoundException {
         return lookupApplicationURL(getDataPortalServiceURI());
     }

@@ -73,14 +73,12 @@ import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.dali.tables.TableData;
 import ca.nrc.cadc.dali.tables.votable.VOTableDocument;
 import ca.nrc.cadc.dali.tables.votable.VOTableField;
-import ca.nrc.cadc.dali.tables.votable.VOTableInfo;
 import ca.nrc.cadc.dali.tables.votable.VOTableResource;
 import ca.nrc.cadc.dali.tables.votable.VOTableTable;
 import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.Log4jInit;
-import ca.nrc.cadc.util.StringUtil;
 
 import java.net.URI;
 import java.net.URL;
@@ -247,7 +245,6 @@ public class LinksTest {
             VOTableDocument getVotable =
                     TestUtil.get(anonURL, new String[] {"id=" + PUB_QUERY_URI1, "id=" + QUERY_URI2});
             VOTableResource gvr = getVotable.getResourceByType("results");
-
             VOTableTable gvtab = gvr.getTable();
 
             // Check the VOTable FIELD's.
@@ -333,7 +330,6 @@ public class LinksTest {
             // GET the query.
             VOTableDocument getVotable = TestUtil.get(anonURL, new String[] {"ID=" + NOT_FOUND_URI}, 200);
             VOTableResource gvr = getVotable.getResourceByType("results");
-
             VOTableTable gvtab = gvr.getTable();
 
             // Check the VOTable FIELD's.
