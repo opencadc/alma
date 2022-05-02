@@ -171,6 +171,7 @@ public class AlmaProperties extends PropertiesReader {
         return lookupServiceURL(getTapServiceURI(), Standards.TAP_10);
     }
 
+
     public URL lookupDataPortalURL() throws IOException, ResourceNotFoundException {
         return lookupApplicationURL(getDataPortalServiceURI());
     }

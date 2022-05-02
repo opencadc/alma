@@ -9,28 +9,15 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 1.8
-
-ext {
-    default_app_name = 'data'
-}
+sourceCompatibility = 11
 
 war {
-    if (project.hasProperty('alma_fits_app_name')) {
-        eachFile {
-            if (it.name.equals('capabilities.xml') || it.name.equals('service.yaml')) {
-                filter(ReplaceTokens, tokens: [app_name: project.alma_fits_app_name])
-            }
+    eachFile {
+        if (it.name.equals('capabilities.xml') || it.name.equals('service.yaml')) {
+            filter(ReplaceTokens, tokens: [app_name: 'data'])
         }
-        archiveName = project.alma_fits_app_name + '.war'
-    } else {
-        eachFile {
-            if (it.name.equals('capabilities.xml') || it.name.equals('service.yaml')) {
-                filter(ReplaceTokens, tokens: [app_name: project.default_app_name])
-            }
-        }
-        archiveName = project.default_app_name + '.war'
     }
+    archiveName = 'data.war'
 
     // Include the swagger-ui so that /fits provides the fits API documentation
     from('../') {
@@ -44,8 +31,8 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.apache.logging.log4j:log4j-core:[2.17.1,3.0)'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:[2.17.1,3.0)'
+    implementation 'org.apache.logging.log4j:log4j-core:[2.17.2,3.0)'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:[2.17.2,3.0)'
     implementation 'org.opencadc:cadc-access-control:[1.1.23, 1.2.0)'
     implementation 'org.opencadc:cadc-data-ops-fits:[0.2.4,)'
     implementation 'org.opencadc:cadc-dali:[1.2.10,)'

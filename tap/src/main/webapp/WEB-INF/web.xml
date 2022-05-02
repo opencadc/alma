@@ -42,6 +42,10 @@
             <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
         </init-param>
         <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
             <param-name>delete</param-name>
             <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
         </init-param>
