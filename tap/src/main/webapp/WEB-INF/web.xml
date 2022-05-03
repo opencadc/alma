@@ -68,27 +68,22 @@
     </servlet>
 
     <servlet>
-        <load-on-startup>3</load-on-startup>
         <servlet-name>CapabilitiesServlet</servlet-name>
         <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
-        <init-param>
-            <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
-        </init-param>
         <init-param>
             <param-name>init</param-name>
             <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
         </init-param>
         <init-param>
-            <param-name>post</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>head</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapHeadAction</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
-            <param-value>false</param-value>
-        </init-param>
-        <init-param>
-            <param-name>augmentSubject</param-name>
             <param-value>false</param-value>
         </init-param>
         <init-param>
