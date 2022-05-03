@@ -8,6 +8,6 @@ public class VosiCapabilitiesTest extends CapabilitiesTest
 {
     public VosiCapabilitiesTest()
     {
-        super(URI.create("ivo://cadc.nrc.ca/alma-sia"));
+        super(URI.create("ivo://almascience.org/sia"));
     }
 }
