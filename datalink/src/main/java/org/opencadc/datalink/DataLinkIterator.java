@@ -292,7 +292,9 @@ public class DataLinkIterator implements Iterator<DataLink> {
             dataLink.description = String.format("Download documentation for %s.", descriptionID);
         } else {
             // Assumes #this
-            dataLink.description = String.format("Download the dataset for %s.", descriptionID);
+            dataLink.description = String.format("Download dataset of type: %s, and class: %s.",
+                                                 subDirectory,
+                                                 (StringUtil.hasText(fileClass) ? fileClass : "N/A"));
         }
     }
 
