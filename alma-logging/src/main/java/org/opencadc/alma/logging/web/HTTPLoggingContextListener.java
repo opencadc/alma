@@ -69,9 +69,7 @@
 package org.opencadc.alma.logging.web;
 
 
-import ca.nrc.cadc.util.StringUtil;
-
-import java.net.MalformedURLException;
+import java.net.URL;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -88,6 +86,7 @@ import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.LoggerComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.logging.log4j.core.impl.ContextAnchor;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.logging.LoggingClient;
 import org.opencadc.alma.logging.log4j.AlmaPatternLayout;
 
@@ -98,7 +97,6 @@ import org.opencadc.alma.logging.log4j.AlmaPatternLayout;
  */
 public class HTTPLoggingContextListener implements ServletContextListener {
     private static final Logger LOGGER = LogManager.getLogger(HTTPLoggingContextListener.class);
-    private static final String LOG_CONTROL_URL_PROPERTY_NAME = "logServerURL";
     private static final String REMOTE_LOGGER_APPENDER_NAME = "alma-remote";
     private static final String ASYNC_LOGGER_APPENDER_NAME = "alma-async";
     private static final String LOGGER_LAYOUT_NAME = AlmaPatternLayout.LAYOUT_NAME;
@@ -120,18 +118,9 @@ public class HTTPLoggingContextListener implements ServletContextListener {
      */
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        final String loggingControlServiceURLString = System.getProperty(LOG_CONTROL_URL_PROPERTY_NAME);
-
-        try {
-            if (StringUtil.hasText(loggingControlServiceURLString)) {
-                initializeAppender(loggingControlServiceURLString);
-            } else {
-                throw new RuntimeException(
-                        "Missing init-param value - 'logControlURL': URL to the logging service.");
-            }
-        } catch (MalformedURLException malformedURLException) {
-            throw new IllegalArgumentException(malformedURLException.getMessage(), malformedURLException);
-        }
+        final AlmaProperties almaProperties = new AlmaProperties();
+        final URL loggingControlServiceURLString = almaProperties.getLoggingServiceURL();
+        initializeAppender(loggingControlServiceURLString);
     }
 
     /**
@@ -154,9 +143,8 @@ public class HTTPLoggingContextListener implements ServletContextListener {
      * Initialize an Asynchronous appender with the remote HTTP Post appender.
      *
      * @param loggingControlServiceURLString The endpoint of the logging service.
-     * @throws MalformedURLException If the provided URL string is not a URL.
      */
-    void initializeAppender(final String loggingControlServiceURLString) throws MalformedURLException {
+    void initializeAppender(final URL loggingControlServiceURLString) {
         LOGGER.info("initializeAppender()");
         final ConfigurationBuilder<BuiltConfiguration> configurationBuilder =
                 ConfigurationBuilderFactory.newConfigurationBuilder();
@@ -178,7 +166,7 @@ public class HTTPLoggingContextListener implements ServletContextListener {
                         .newAppender(REMOTE_LOGGER_APPENDER_NAME, "Http")
                         .add(layoutComponentBuilder)
                         .addAttribute("method", "POST")
-                        .addAttribute("url", loggingControlServiceURLString);
+                        .addAttribute("url", loggingControlServiceURLString.toExternalForm());
 
         final AppenderComponentBuilder asyncAppenderComponentBuilder =
                 configurationBuilder.newAppender(ASYNC_LOGGER_APPENDER_NAME, "Async")

@@ -95,10 +95,6 @@
             <param-value>false</param-value>
         </init-param>
         <init-param>
-            <param-name>authHeaders</param-name>
-            <param-value>false</param-value>
-        </init-param>
-        <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>ca.nrc.cadc.sia2.impl.QueryJobManager</param-value>
         </init-param>
