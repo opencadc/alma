@@ -41,22 +41,16 @@
 
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://java.sun.com/xml/ns/javaee"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         id="sia2" version="3.0">
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         id="sia2" version="3.1">
 
     <display-name>SIA</display-name>
-    <listener>
-<!--        &lt;!&ndash; Relies on the logServerURLProperty parameter being set above. &ndash;&gt;-->
-        <listener-class>org.opencadc.alma.logging.web.HTTPLoggingContextListener</listener-class>
-    </listener>
-<!--    &lt;!&ndash; End Register listener for remote logger. &ndash;&gt;-->
 
     <welcome-file-list>
         <welcome-file>/index.jsp</welcome-file>
     </welcome-file-list>
 
     <servlet>
-        <load-on-startup>1</load-on-startup>
         <servlet-name>logControl</servlet-name>
         <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
         <init-param>
@@ -72,6 +66,14 @@
                 ca.nrc.cadc.vosi
             </param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <!-- Initialize the remote logging AFTER the main logging, otherwise it will be cleared. -->
+    <servlet>
+        <servlet-name>remoteLogger</servlet-name>
+        <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
+        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <servlet>

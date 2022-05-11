@@ -7,12 +7,6 @@
 
     <display-name>TAP ObsCore</display-name>
 
-    <listener>
-        <!-- Relies on the logServerURL parameter being set above. -->
-        <listener-class>org.opencadc.alma.logging.web.HTTPLoggingContextListener</listener-class>
-    </listener>
-    <!-- End Register listener for remote logger. -->
-
     <servlet>
         <servlet-name>logControl</servlet-name>
         <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
@@ -32,6 +26,13 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <!-- Initialize the remote logging AFTER the main logging, otherwise it will be cleared. -->
+    <servlet>
+        <servlet-name>remoteLogger</servlet-name>
+        <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
     <!-- synchronous access to JobManager service -->
     <servlet>
         <load-on-startup>2</load-on-startup>
@@ -44,10 +45,6 @@
         <init-param>
             <param-name>post</param-name>
             <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>ca.nrc.cadc.uws.web.SyncPostAction.execOnPOST</param-name>
-            <param-value>true</param-value>
         </init-param>
         <init-param>
             <param-name>delete</param-name>

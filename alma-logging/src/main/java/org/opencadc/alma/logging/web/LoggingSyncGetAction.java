@@ -71,15 +71,19 @@ package org.opencadc.alma.logging.web;
 import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.io.ByteCountOutputStream;
 import ca.nrc.cadc.rest.SyncOutput;
+import ca.nrc.cadc.uws.ErrorSummary;
+import ca.nrc.cadc.uws.Job;
+import ca.nrc.cadc.uws.web.JobCreator;
 import ca.nrc.cadc.uws.web.SyncGetAction;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencadc.alma.logging.LoggingClient;
 import org.opencadc.alma.logging.LoggingEvent;
 import org.opencadc.alma.logging.LoggingEventKey;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessControlException;
 
 
@@ -88,15 +92,14 @@ import java.security.AccessControlException;
  */
 public class LoggingSyncGetAction extends SyncGetAction {
     private static final Logger LOGGER = LogManager.getLogger(LoggingSyncGetAction.class);
-    private static final Logger REMOTE_LOGGER = LogManager.getLogger(LoggingClient.class.getName());
+    private static final Logger REMOTE_LOGGER = LogManager.getLogger(LoggingEvent.REMOTE_LOGGER_NAME);
 
     @Override
     public void doAction() throws Exception {
         super.init();
         final WebServiceMetaData webServiceMetaData = new WebServiceMetaData(getResource("/META-INF/MANIFEST.MF"));
         final SyncLoggerWrapper loggerWrapper =
-                new SyncLoggerWrapper(syncInput, UWSUtil.getJob(getJobID(), syncInput.getRequestPath(),
-                                                                this.jobManager),
+                new SyncLoggerWrapper(syncInput, UWSUtil.ensureJob(getJobID(), syncInput, jobManager),
                                       webServiceMetaData.getVersion(),
                                       webServiceMetaData.getTitle());
 
@@ -104,18 +107,28 @@ public class LoggingSyncGetAction extends SyncGetAction {
         loggingEvent.set(LoggingEventKey.USERNAME, logInfo.user);
 
         try {
-            super.doAction();
+            final Job job = execute();
+            final ErrorSummary errorSummary = job.getErrorSummary();
+            final ByteCountingSyncOutput byteCountingSyncOutput = (ByteCountingSyncOutput) this.syncOutput;
 
-            loggingEvent.set(LoggingEventKey.SIZE_BYTES_WIRE,
-                             ((ByteCountOutputStream) syncOutput.getOutputStream()).getByteCount());
+            if (errorSummary != null) {
+                loggingEvent.set(LoggingEventKey.ERROR_STRING, errorSummary.getSummaryMessage());
+                loggingEvent.set(LoggingEventKey.ERROR_CODE, byteCountingSyncOutput.getStatusCode());
+            } else {
+                loggingEvent.set(LoggingEventKey.SIZE_BYTES_WIRE,
+                                 ((ByteCountOutputStream) byteCountingSyncOutput.getOutputStream()).getByteCount());
+            }
 
             // Add others if necessary.
             addLoggingEntries(loggingEvent);
+
         } catch (Exception exception) {
+
             loggingEvent.set(LoggingEventKey.ERROR_STRING, exception.getMessage());
 
             final int code;
-            if (exception instanceof IllegalAccessException) {
+            if (exception instanceof IllegalAccessException
+                || exception instanceof IllegalArgumentException) {
                 code = HttpServletResponse.SC_BAD_REQUEST;
             } else if (exception instanceof NotAuthenticatedException) {
                 code = HttpServletResponse.SC_UNAUTHORIZED;
@@ -125,17 +138,50 @@ public class LoggingSyncGetAction extends SyncGetAction {
                 code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
             }
 
+            this.syncOutput.setCode(code);
+            final OutputStream outputStream = this.syncOutput.getOutputStream();
+            if (outputStream != null) {
+                outputStream.write(exception.getMessage().getBytes(StandardCharsets.UTF_8));
+                outputStream.flush();
+            }
             loggingEvent.set(LoggingEventKey.ERROR_CODE, code);
         }
 
         try {
-            REMOTE_LOGGER.log(Level.ALL, loggingEvent.stopTimer());
+            REMOTE_LOGGER.log(Level.INFO, loggingEvent.stopTimer());
         } catch (IllegalStateException illegalStateException) {
             LOGGER.error(illegalStateException.getMessage(), illegalStateException);
             throw illegalStateException;
         }
     }
 
+    private Job execute() throws Exception {
+        LOGGER.debug("START: " + this.syncInput.getPath() + "[" + this.readable + "," + this.writable + "]");
+        if (!this.readable) {
+            throw new AccessControlException("System is offline for maintenance.");
+        } else {
+            final Job job;
+            boolean exec = false;
+            if (this.getJobID() == null) {
+                JobCreator jc = new JobCreator();
+                Job in = jc.create(this.syncInput);
+                job = this.jobManager.create(this.syncInput.getRequestPath(), in);
+                exec = true;
+            } else {
+                job = this.jobManager.get(this.syncInput.getRequestPath(), this.getJobID());
+            }
+
+            final String token = this.getJobField();
+            exec = exec || "run".equals(token);
+            if (exec) {
+                this.jobManager.execute(this.syncInput.getRequestPath(), job, this.syncOutput);
+            } else {
+                this.writeJob(job);
+            }
+
+            return job;
+        }
+    }
 
     /**
      * Classes that extend this will likely want to add further keys that do not apply to all services.  Override this

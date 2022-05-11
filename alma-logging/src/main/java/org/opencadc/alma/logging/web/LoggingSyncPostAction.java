@@ -71,11 +71,12 @@ package org.opencadc.alma.logging.web;
 import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.io.ByteCountOutputStream;
 import ca.nrc.cadc.rest.SyncOutput;
+import ca.nrc.cadc.uws.ErrorSummary;
+import ca.nrc.cadc.uws.Job;
 import ca.nrc.cadc.uws.web.SyncPostAction;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencadc.alma.logging.LoggingClient;
 import org.opencadc.alma.logging.LoggingEvent;
 import org.opencadc.alma.logging.LoggingEventKey;
 
@@ -88,16 +89,15 @@ import java.security.AccessControlException;
  */
 public class LoggingSyncPostAction extends SyncPostAction {
     private static final Logger LOGGER = LogManager.getLogger(LoggingSyncGetAction.class);
-    private static final Logger REMOTE_LOGGER = LogManager.getLogger(LoggingClient.class.getName());
+    private static final Logger REMOTE_LOGGER = LogManager.getLogger(LoggingEvent.REMOTE_LOGGER_NAME);
 
     @Override
     public void doAction() throws Exception {
         super.init();
-        if (isLoggable()) {
+        if (isExecutable()) {
             final WebServiceMetaData webServiceMetaData = new WebServiceMetaData(getResource("/META-INF/MANIFEST.MF"));
             final SyncLoggerWrapper loggerWrapper =
-                    new SyncLoggerWrapper(syncInput, UWSUtil.getJob(getJobID(), syncInput.getRequestPath(),
-                                                                    this.jobManager),
+                    new SyncLoggerWrapper(syncInput, UWSUtil.ensureJob(getJobID(), syncInput, jobManager),
                                           webServiceMetaData.getVersion(),
                                           webServiceMetaData.getTitle());
 
@@ -105,7 +105,17 @@ public class LoggingSyncPostAction extends SyncPostAction {
             loggingEvent.set(LoggingEventKey.USERNAME, logInfo.user);
 
             try {
-                super.doAction();
+                final Job job = execute();
+                final ErrorSummary errorSummary = job.getErrorSummary();
+                final ByteCountingSyncOutput byteCountingSyncOutput = (ByteCountingSyncOutput) this.syncOutput;
+
+                if (errorSummary != null) {
+                    loggingEvent.set(LoggingEventKey.ERROR_STRING, errorSummary.getSummaryMessage());
+                    loggingEvent.set(LoggingEventKey.ERROR_CODE, byteCountingSyncOutput.getStatusCode());
+                } else {
+                    loggingEvent.set(LoggingEventKey.SIZE_BYTES_WIRE,
+                                     ((ByteCountOutputStream) byteCountingSyncOutput.getOutputStream()).getByteCount());
+                }
 
                 loggingEvent.set(LoggingEventKey.SIZE_BYTES_WIRE,
                                  ((ByteCountOutputStream) syncOutput.getOutputStream()).getByteCount());
@@ -116,7 +126,8 @@ public class LoggingSyncPostAction extends SyncPostAction {
                 loggingEvent.set(LoggingEventKey.ERROR_STRING, exception.getMessage());
 
                 final int code;
-                if (exception instanceof IllegalAccessException) {
+                if (exception instanceof IllegalAccessException
+                    || exception instanceof IllegalArgumentException) {
                     code = HttpServletResponse.SC_BAD_REQUEST;
                 } else if (exception instanceof NotAuthenticatedException) {
                     code = HttpServletResponse.SC_UNAUTHORIZED;
@@ -126,11 +137,12 @@ public class LoggingSyncPostAction extends SyncPostAction {
                     code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
                 }
 
+                this.syncOutput.setCode(code);
                 loggingEvent.set(LoggingEventKey.ERROR_CODE, code);
             }
 
             try {
-                REMOTE_LOGGER.log(Level.ALL, loggingEvent.stopTimer());
+                REMOTE_LOGGER.log(Level.INFO, loggingEvent.stopTimer());
             } catch (IllegalStateException illegalStateException) {
                 LOGGER.error(illegalStateException.getMessage(), illegalStateException);
                 throw illegalStateException;
@@ -140,15 +152,47 @@ public class LoggingSyncPostAction extends SyncPostAction {
         }
     }
 
-    boolean isLoggable() {
-        final String sval = initParams.get(SyncPostAction.class.getName() + ".execOnPOST");
-        return "true".equals(sval);
+    boolean isExecutable() {
+        return "true".equals(initParams.get(SyncPostAction.class.getName() + ".execOnPOST"));
+    }
+
+    private Job execute() throws Exception {
+        LOGGER.debug("START: " + this.syncInput.getPath() + "[" + this.readable + "," + this.writable + "]");
+        String cause;
+        if (!this.writable) {
+            cause = "System is offline for maintenance";
+            if (this.readable) {
+                cause = "System is in read-only mode for maintenance";
+            }
+
+            throw new AccessControlException("cannot create job: " + cause);
+        } else {
+            final boolean exec = isExecutable();
+            final String jobID = this.getJobID();
+            if (jobID == null) {
+                final Job job = UWSUtil.createJob(this.syncInput, this.jobManager);
+                this.logInfo.setJobID(job.getID());
+                if (exec) {
+                    this.jobManager.execute(this.syncInput.getRequestPath(), job, this.syncOutput);
+                } else {
+                    final String redirectURL = this.getJobListURL() + "/" + job.getID() + "/" + "run";
+                    LOGGER.debug("redirect: " + redirectURL);
+                    this.syncOutput.setHeader("Location", redirectURL);
+                    this.syncOutput.setCode(303);
+                }
+
+                return job;
+            } else {
+                throw new UnsupportedOperationException("POST to sync job creation with extra path elements");
+            }
+        }
     }
 
     /**
      * Classes that extend this will likely want to add further keys that do not apply to all services.  Override this
      * method to do that.
-     * @param ignore  The LoggingEvent to set entries on.  Not used by default.
+     *
+     * @param ignore The LoggingEvent to set entries on.  Not used by default.
      */
     public void addLoggingEntries(final LoggingEvent ignore) {
 
@@ -156,7 +200,8 @@ public class LoggingSyncPostAction extends SyncPostAction {
 
     /**
      * Intercept here to add a byte counting output stream.
-     * @param syncOutput    The SyncOutput being set by the parent.
+     *
+     * @param syncOutput The SyncOutput being set by the parent.
      */
     @Override
     public void setSyncOutput(SyncOutput syncOutput) {

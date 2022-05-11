@@ -2,15 +2,10 @@
 
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://java.sun.com/xml/ns/javaee"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         id="data" version="3.0">
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         id="data" version="3.1">
 
     <display-name>Data Retrieval Service</display-name>
-    <listener>
-        <!-- Relies on the logServerURLProperty parameter being set above. -->
-        <listener-class>org.opencadc.alma.logging.web.HTTPLoggingContextListener</listener-class>
-    </listener>
-    <!-- End Register listener for remote logger. -->
 
     <servlet>
         <servlet-name>logControl</servlet-name>
@@ -32,20 +27,35 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <!-- Initialize the remote logging AFTER the main logging, otherwise it will be cleared. -->
+    <servlet>
+        <servlet-name>remoteLogger</servlet-name>
+        <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
     <servlet>
         <servlet-name>DataServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
-            <param-value>org.opencadc.alma.data.fits.FITSAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <param-value>org.opencadc.alma.data.fits.FITSAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
             <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
+            <param-value>org.opencadc.alma.data.ws.DataJobManager</param-value>
         </init-param>
         <load-on-startup>2</load-on-startup>
     </servlet>

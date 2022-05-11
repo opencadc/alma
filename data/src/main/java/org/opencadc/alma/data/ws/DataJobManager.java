@@ -1,9 +1,10 @@
+
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2022.                            (c) 2022.
+ *  (c) 2019.                            (c) 2019.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,14 +67,32 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.logging;
+package org.opencadc.alma.data.ws;
 
-/**
- * Simple identifying interface.  This is the name to use when retrieving the Logger to use for remote logging.
- *
- * <code>
- *     final Logger LOGGER = LogManager.getLogger(LoggingClient.class.getName());
- * </code>
- */
-public interface LoggingClient {
+import ca.nrc.cadc.uws.server.JobExecutor;
+import ca.nrc.cadc.uws.server.MemoryJobPersistence;
+import ca.nrc.cadc.uws.server.SimpleJobManager;
+import ca.nrc.cadc.uws.server.ThreadPoolExecutor;
+import org.opencadc.alma.data.DataJobRunner;
+
+
+public class DataJobManager extends SimpleJobManager {
+    private static final long MAX_EXEC_DURATION = 4 * 3600L;    // 4 hours to dump a catalog to VOSpace
+    private static final long MAX_DESTRUCTION = 7 * 24 * 60 * 60L; // 1 week
+    private static final long MAX_QUOTE = 24 * 3600L;         // 24 hours since we have a ThreadPool with
+    private static final int THREAD_POOL_SIZE = 3;              // Async execution threads
+
+    public DataJobManager() {
+        super();
+
+        // Persist UWS jobs to memory by default.
+        final MemoryJobPersistence jobPersist = new MemoryJobPersistence();
+        final JobExecutor jobExec = new ThreadPoolExecutor(jobPersist, DataJobRunner.class, THREAD_POOL_SIZE);
+
+        super.setJobPersistence(jobPersist);
+        super.setJobExecutor(jobExec);
+        super.setMaxExecDuration(MAX_EXEC_DURATION);
+        super.setMaxDestruction(MAX_DESTRUCTION);
+        super.setMaxQuote(MAX_QUOTE);
+    }
 }

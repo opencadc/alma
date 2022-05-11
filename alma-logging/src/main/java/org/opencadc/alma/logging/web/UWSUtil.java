@@ -68,17 +68,40 @@
 
 package org.opencadc.alma.logging.web;
 
+import ca.nrc.cadc.rest.SyncInput;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.uws.Job;
 import ca.nrc.cadc.uws.server.JobManager;
+import ca.nrc.cadc.uws.web.JobCreator;
 
 public class UWSUtil {
-    public static Job getJob(final String jobID, final String requestPath, final JobManager jobManager)
+    /**
+     * Get the job associated with the given Job ID, or create one if not present.
+     * @param jobID         The optional job ID.
+     * @param syncInput     The SyncInput from the Action.
+     * @param jobManager    The JobManager.
+     * @return              A new Job, or the one associated with the given Job ID.  Never null.
+     * @throws Exception    If anything happens during acquisition or creation.
+     */
+    public static Job ensureJob(final String jobID, final SyncInput syncInput, final JobManager jobManager)
             throws Exception {
-        if (StringUtil.hasLength(jobID)) {
-            return jobManager.get(requestPath, jobID);
+        if (StringUtil.hasText(jobID)) {
+            return jobManager.get(syncInput.getRequestPath(), jobID);
         } else {
-            return null;
+            return UWSUtil.createJob(syncInput, jobManager);
         }
+    }
+
+    /**
+     * Create a new job.
+     * @param syncInput     The SyncInput from the Action.
+     * @param jobManager    The JobManager.     * @param jobManager
+     * @return              A new Job.  Never null.
+     * @throws Exception    If anything happens during creation.
+     */
+    public static Job createJob(final SyncInput syncInput, final JobManager jobManager) throws Exception {
+        final JobCreator jc = new JobCreator();
+        Job in = jc.create(syncInput);
+        return jobManager.create(syncInput.getRequestPath(), in);
     }
 }

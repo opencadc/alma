@@ -80,6 +80,9 @@ public class ByteCountingSyncOutput extends SyncOutput {
     private final SyncOutput syncOutput;
     private ByteCountOutputStream byteCountOutputStream;
 
+    // To be set by the setCode() method.  This is here to make it retrievable later.
+    private int statusCode;
+
     public ByteCountingSyncOutput(final SyncOutput syncOutput) {
         super(null);
 
@@ -117,7 +120,7 @@ public class ByteCountingSyncOutput extends SyncOutput {
      */
     @Override
     public void setResponseCode(int code) {
-        this.syncOutput.setCode(code);
+        this.setCode(code);
     }
 
     /**
@@ -127,6 +130,7 @@ public class ByteCountingSyncOutput extends SyncOutput {
      */
     @Override
     public void setCode(int code) {
+        this.statusCode = code;
         this.syncOutput.setCode(code);
     }
 
@@ -183,5 +187,9 @@ public class ByteCountingSyncOutput extends SyncOutput {
         }
 
         return this.byteCountOutputStream;
+    }
+
+    public int getStatusCode() {
+        return this.statusCode;
     }
 }

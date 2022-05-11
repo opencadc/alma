@@ -81,10 +81,11 @@ import java.util.Map;
  * Represents a logging entry for a request.
  */
 public class LoggingEvent {
-
     private static final String PROGRAM = "VO";
     private static final String ARCHIVE = "ALMA";
     private static final String MEDIUM = "HTTP";
+
+    public static final String REMOTE_LOGGER_NAME = "alma.remote.logger";
 
     private long startTimeMilliseconds;
     private long endTimeMilliseconds;
