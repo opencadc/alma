@@ -68,65 +68,29 @@
 
 package org.opencadc.alma.logging.formatting;
 
+
 import ca.nrc.cadc.date.DateUtil;
-import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
+import org.json.JSONObject;
 import org.opencadc.alma.logging.LoggingEventKey;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.Date;
 import java.util.Map;
 
-public class JSONFormatterTest {
-    @Test
-    public void asStringEmpty() {
-        final Map<LoggingEventKey, Object> loggingEventKeyObjectMap = new HashMap<>();
-        final JSONFormatter testSubject = new JSONFormatter();
-
-        JSONAssert.assertEquals("Wrong empty JSON.", "{}",
-                                testSubject.asString(loggingEventKeyObjectMap), true);
-    }
-
-    @Test
-    public void asStringRequired() {
-        final Map<LoggingEventKey, Object> loggingEventKeyObjectMap = new HashMap<>();
-        final JSONFormatter testSubject = new JSONFormatter();
-
-        Arrays.stream(LoggingEventKey.values())
-              .filter(LoggingEventKey::isRequired)
-              .forEach(key -> loggingEventKeyObjectMap.put(key, key.toString().toLowerCase(Locale.ROOT)));
-
-        JSONAssert.assertEquals("Wrong required JSON.",
-                                "{\"duration\": \"duration\", \"ip\": \"ip_address\", "
-                                + "\"program\": \"program\", \"query\": \"query\", \"userAgent\": \"user_agent\", "
-                                + "\"version\": \"version\"}",
-                                testSubject.asString(loggingEventKeyObjectMap), true);
-    }
-
-    @Test
-    public void asString() {
-        final Map<LoggingEventKey, Object> loggingEventKeyObjectMap = new HashMap<>();
-        final JSONFormatter testSubject = new JSONFormatter();
-        final Calendar calendar = Calendar.getInstance(DateUtil.UTC);
-
-        calendar.set(1977, Calendar.NOVEMBER, 25, 1, 13, 5);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        loggingEventKeyObjectMap.put(LoggingEventKey.DURATION, 88L);
-        loggingEventKeyObjectMap.put(LoggingEventKey.IP_ADDRESS, "123.456.789.1");
-        loggingEventKeyObjectMap.put(LoggingEventKey.VERSION, "4.4");
-        loggingEventKeyObjectMap.put(LoggingEventKey.PROGRAM, "CADC");
-        loggingEventKeyObjectMap.put(LoggingEventKey.QUERY, "https://site.com/ivoa/soda?CIRCLE=12.3+33.3+0.5");
-        loggingEventKeyObjectMap.put(LoggingEventKey.USER_AGENT, "Mozilla");
-        loggingEventKeyObjectMap.put(LoggingEventKey.START_DATE, calendar.getTime());
-
-        JSONAssert.assertEquals("Wrong required JSON.",
-                                "{\"duration\": 88, \"ip\": \"123.456.789.1\", \"program\": \"CADC\", "
-                                + "\"query\": \"https://site.com/ivoa/soda?CIRCLE=12.3+33.3+0.5\", "
-                                + "\"userAgent\": \"Mozilla\", \"version\": \"4.4\", \"startDate\": "
-                                + "\"1977-11-25T01:13:05.000Z\"}",
-                                testSubject.asString(loggingEventKeyObjectMap), true);
+/**
+ * Message formatter specific to the ALMA Logging Controller service.
+ */
+public class JSONFormatter {
+    public String asString(final Map<LoggingEventKey, Object> loggingEventKeyObjectMap) {
+        final JSONObject jsonObject = new JSONObject();
+        loggingEventKeyObjectMap.forEach((key, value) -> {
+            final Object putValue;
+            if (value instanceof Date) {
+                putValue = DateUtil.getDateFormat(DateUtil.ISO8601_DATE_FORMAT_MSZ, DateUtil.UTC).format((Date) value);
+            } else {
+                putValue = value;
+            }
+            jsonObject.put(key.getKeyLabel(), putValue);
+        });
+        return jsonObject.toString();
     }
 }
