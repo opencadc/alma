@@ -69,8 +69,8 @@
 package org.opencadc.soda;
 
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vosi.AvailabilityPlugin;
 import ca.nrc.cadc.vosi.Availability;
+import ca.nrc.cadc.vosi.AvailabilityPlugin;
 
 
 public class SodaAvailabilityPlugin implements AvailabilityPlugin {
