@@ -12,7 +12,6 @@
     </welcome-file-list>
 
     <servlet>
-        <load-on-startup>1</load-on-startup>
         <servlet-name>logControl</servlet-name>
         <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
         <init-param>
