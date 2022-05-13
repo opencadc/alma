@@ -12,14 +12,12 @@ repositories {
 sourceCompatibility = 11
 version = "1.2.5"
 
-
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
             filter(ReplaceTokens, tokens: [app_name: 'soda', version: version])
         }
     }
-
     archiveName = 'soda.war'
 
     manifest {
@@ -39,16 +37,14 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.apache.logging.log4j:log4j-core:[2.17.2,3.0)'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:[2.17.2,3.0)'
-    implementation 'org.opencadc:alma-lib:[1.3.4,2.0)'
+    implementation 'org.opencadc:alma-lib:[1.3.5,2.0)'
     implementation 'org.opencadc:cadc-dali:[1.2.10,2.0)'
-    implementation 'org.opencadc:cadc-log:[1.1.2,2.0)'
+    implementation 'org.opencadc:cadc-log:[1.1.5,2.0)'
     implementation 'org.opencadc:cadc-soda-server:[1.2.1,1.3.0)'
     implementation 'org.opencadc:cadc-vosi:[1.4.3,1.5.0)'
 
     testImplementation 'junit:junit:[4.12,5.0)'
-    testImplementation 'org.mockito:mockito-core:[3.1,4.0)'
+    testImplementation 'org.mockito:mockito-core:[3.9,4.0)'
     testImplementation 'org.opencadc:cadc-test-uws:[1.2.2,)'
     testImplementation 'org.opencadc:cadc-test-vosi:[1.0.2,)'
 }
