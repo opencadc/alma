@@ -19,9 +19,6 @@ jobs:
     - name: build, test, and install alma-lib
       run: cd alma-lib && gradle --info clean build test publishToMavenLocal
 
-    - name: build, test, and install alma-logging
-      run: cd alma-logging && gradle --info clean build test publishToMavenLocal
-
     # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
     - name: install WCSLIB (libwcs5-15)
       run: |
