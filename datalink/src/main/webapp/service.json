@@ -3,7 +3,7 @@
     "info": {
         "title": "IVOA DataLink",
         "description": "Service for Data Access\n\n This service implements the IVOA DataLink-1.0 service specification. To use this service, the caller must use a dataset identifier found through some means (for example, querying the ALMA TAP ObsCore Service). The DataLink service provides a drill-down mechanism to access the data files and associated resources.\n",
-        "version": "1.0.0"
+        "version": "@version@"
     },
     "schemes": [
         "https"

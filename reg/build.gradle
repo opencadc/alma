@@ -9,13 +9,12 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 11
-version = '1.0.2'
+apply from: '../properties.gradle'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'reg'])
+            filter(ReplaceTokens, tokens: [app_name: 'reg', version: version])
         }
     }
     archiveName = 'reg.war'

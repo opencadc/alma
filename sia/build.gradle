@@ -9,13 +9,12 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 11
-version = '1.0.5'
+apply from: '../properties.gradle'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'sia2'])
+            filter(ReplaceTokens, tokens: [app_name: 'sia2', version: version])
         }
     }
     archiveName = 'sia2.war'
@@ -37,14 +36,13 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.opencadc:alma-lib:[1.3.4,2.0)'
+    implementation 'org.opencadc:alma-lib:[1.3.5,2.0)'
     implementation 'org.opencadc:cadc-cdp:[1.2.3,2.0)'
     implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
     implementation 'org.opencadc:cadc-sia:[1.1.9,2.0)'
     implementation 'org.opencadc:cadc-tap:[1.0,2.0)'
     implementation 'org.opencadc:cadc-util:[1.6.0,2.0)'
     implementation 'org.opencadc:cadc-uws-server:[1.2.5,2.0)'
-    implementation 'ca.nrc.cadc:uws-util:[1.0,2.0)'
 
     runtimeOnly 'org.opencadc:cadc-vosi:[1.3.4,2.0)'
     runtimeOnly 'org.opencadc:cadc-registry:[1.5.9,2.0)'

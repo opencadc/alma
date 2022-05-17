@@ -1,9 +1,9 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.1",
-    "title": "ObsCore TAP (Table Access Protocol) web service",
-    "description": "The ObsCore (TAP) web service.\n<a href=\"http://www.ivoa.net/documents/TAP/\" target=\"_blank\">IVOA TAP Specification</a>\n\nThe synchronous and asynchronous service endpoints conform the the IVOA UWS (Universal Worker Service) Framework.\n<a href=\"http://www.ivoa.net/documents/UWS/\" target=\"_blank\">IVOA UWS Specification</a>\n\nThis service implements the ObsCore data model.  The main tables are:\n- ivoa.ObsCore: supports <a href=\"http://www.ivoa.net/documents/ObsCore/index.html\" target=\"_blank\">ObsCore-1.1</a> physical model from the ObsTAP project\n### Downloading Data\nThe planeURI column in the caom2.Plane table can be used to query the related DataLink service to get details about files that can be downloaded and related services that can operate on a product.\nThe obs_publisher_did column in the ivoa.ObsCore table contains the same identifiers for use with a DataLink service.\n### Unsupported ADQL Constructs\nThe following ADQL Functions are not currently supported: ALL and DISTINCT within an aggregate function (AVG, COUNT, MIN, MAX, COUNT) PI RAND TRUNCATE\n"
+        "version": "@version@",
+        "title": "ObsCore TAP (Table Access Protocol) web service",
+        "description": "The ObsCore (TAP) web service.\n<a href=\"http://www.ivoa.net/documents/TAP/\" target=\"_blank\">IVOA TAP Specification</a>\n\nThe synchronous and asynchronous service endpoints conform the the IVOA UWS (Universal Worker Service) Framework.\n<a href=\"http://www.ivoa.net/documents/UWS/\" target=\"_blank\">IVOA UWS Specification</a>\n\nThis service implements the ObsCore data model.  The main tables are:\n- ivoa.ObsCore: supports <a href=\"http://www.ivoa.net/documents/ObsCore/index.html\" target=\"_blank\">ObsCore-1.1</a> physical model from the ObsTAP project\n### Downloading Data\nThe planeURI column in the caom2.Plane table can be used to query the related DataLink service to get details about files that can be downloaded and related services that can operate on a product.\nThe obs_publisher_did column in the ivoa.ObsCore table contains the same identifiers for use with a DataLink service.\n### Unsupported ADQL Constructs\nThe following ADQL Functions are not currently supported: ALL and DISTINCT within an aggregate function (AVG, COUNT, MIN, MAX, COUNT) PI RAND TRUNCATE\n"
     },
     "schemes": [
         "https"
