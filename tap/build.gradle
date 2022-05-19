@@ -10,15 +10,20 @@ repositories {
 }
 
 sourceCompatibility = 11
+version = '1.1.24'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'tap'])
+            filter(ReplaceTokens, tokens: [app_name: 'tap', version: version])
         }
     }
-
     archiveName = 'tap.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "Table Access Protocol"
+    }
 
     // Include the swagger-ui so that /tap provides the TAP API documentation
     from('../') {

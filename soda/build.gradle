@@ -10,14 +10,20 @@ repositories {
 }
 
 sourceCompatibility = 11
+version = '1.2.5'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'soda'])
+            filter(ReplaceTokens, tokens: [app_name: 'soda', version: version])
         }
     }
     archiveName = 'soda.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "Server-side Operations for Data Access"
+    }
 
     // Include the swagger-ui so that /soda provides the soda API documentation
     from('../') {

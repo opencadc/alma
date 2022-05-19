@@ -17,9 +17,10 @@ jobs:
         java-version: 1.11
 
     - name: build, test, and install alma-lib
-      run: cd alma-lib && gradle --info clean build test publishToMavenLocal
+      run: gradle --info -b alma-lib/build.gradle clean build test publishToMavenLocal
 
-    # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
+    # This will install WCSLib 5.15 to include WCS cutouts.  This is a very old version, but it's what is deployed on
+    # the NGAS nodes.
     - name: install WCSLIB (libwcs5-15)
       run: |
         sudo apt-get update && sudo apt-get install -y curl gcc make \
@@ -30,29 +31,20 @@ jobs:
         && ./configure --prefix=/usr \
         && make && sudo make install
 
-    - name: temporarily pull DAL PR 67
-      run: |
-        git clone https://github.com/opencadc/dal.git \
-        && cd dal \
-        && git fetch origin pull/67/head:github-pr-67 \
-        && git checkout github-pr-67 \
-        && cd cadc-data-ops-fits \
-        && ../gradlew -i clean build install
-
     - name: build and test data
-      run: cd data && gradle --info clean build test
+      run: gradle --info -b data/build.gradle clean build test
       
     - name: build and test datalink
-      run: cd datalink && gradle --info clean build test
+      run: gradle --info -b datalink/build.gradle clean build test
 
     - name: build and test tap
-      run: cd tap && gradle --info clean build test
+      run: gradle --info -b tap/build.gradle clean build test
 
     - name: build and test reg
-      run: cd reg && gradle --info clean build test
+      run: gradle --info -b reg/build.gradle clean build test
 
-    - name: build and test sia
-      run: cd sia && gradle --info clean build test
+    - name: build and test sia2
+      run: gradle --info -b sia/build.gradle clean build test
 
     - name: build and test soda
-      run: cd soda && gradle --info clean build test
+      run: gradle --info -b soda/build.gradle clean build test
