@@ -5,46 +5,76 @@ on:
   push:
 
 jobs:
-  build:
-
+  install-alma-lib:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.11
       uses: actions/setup-java@v1
       with:
         java-version: 1.11
-
+    # Install alma-lib
     - name: build, test, and install alma-lib
       run: gradle --info -b alma-lib/build.gradle clean build test publishToMavenLocal
+    # Upload alma-lib artifact
+    - uses: actions/upload-artifact@v2
+      with:
+        name: alma-lib
+        path: /root/.m2/repository/org/opencadc/alma-lib
 
-    # This will install WCSLib 5.15 to include WCS cutouts.  This is a very old version, but it's what is deployed on
-    # the NGAS nodes.
-    - name: install WCSLIB (libwcs5-15)
-      run: |
-        sudo apt-get update && sudo apt-get install -y curl gcc make \
-        && curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2 \
-        && cd /tmp/ \
-        && tar jxvf wcslib.tar.bz2 \
-        && cd wcslib-5.15 \
-        && ./configure --prefix=/usr \
-        && make && sudo make install
-
+  build-data:
+    needs: install-alma-lib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
+    - uses: actions/download-artifact@v2
+      with:
+        name: alma-lib
     - name: build and test data
       run: gradle --info -b data/build.gradle clean build test
 
-    - name: build and test datalink
-      run: gradle --info -b datalink/build.gradle clean build test
-
-    - name: build and test tap
-      run: gradle --info -b tap/build.gradle clean build test
-
-    - name: build and test reg
-      run: gradle --info -b reg/build.gradle clean build test
-
-    - name: build and test sia2
-      run: gradle --info -b sia/build.gradle clean build test
-
-    - name: build and test soda
-      run: gradle --info -b soda/build.gradle clean build test
+#  build:
+#    runs-on: ubuntu-latest
+#    steps:
+#    - uses: actions/checkout@v2
+#    - name: Set up JDK 1.11
+#      uses: actions/setup-java@v1
+#      with:
+#        java-version: 1.11
+#
+#    - name: build, test, and install alma-lib
+#      run: gradle --info -b alma-lib/build.gradle clean build test publishToMavenLocal
+#
+#    # This will install WCSLib 5.15 to include WCS cutouts.  This is a very old version, but it's what is deployed on
+#    # the NGAS nodes.
+#    - name: install WCSLIB (libwcs5-15)
+#      run: |
+#        sudo apt-get update && sudo apt-get install -y curl gcc make \
+#        && curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2 \
+#        && cd /tmp/ \
+#        && tar jxvf wcslib.tar.bz2 \
+#        && cd wcslib-5.15 \
+#        && ./configure --prefix=/usr \
+#        && make && sudo make install
+#
+#    - name: build and test data
+#      run: gradle --info -b data/build.gradle clean build test
+#
+#    - name: build and test datalink
+#      run: gradle --info -b datalink/build.gradle clean build test
+#
+#    - name: build and test tap
+#      run: gradle --info -b tap/build.gradle clean build test
+#
+#    - name: build and test reg
+#      run: gradle --info -b reg/build.gradle clean build test
+#
+#    - name: build and test sia2
+#      run: gradle --info -b sia/build.gradle clean build test
+#
+#    - name: build and test soda
+#      run: gradle --info -b soda/build.gradle clean build test
