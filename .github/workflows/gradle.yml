@@ -21,7 +21,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: alma-lib
-          path: /root/.m2/repository/org/opencadc/alma-lib
+          path: /home/runner/.m2/repository/org/opencadc/alma-lib
 
   build-data:
     needs: install-alma-lib
