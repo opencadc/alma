@@ -23,7 +23,7 @@ jobs:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
 
-  build-data:
+  build-datalink:
     needs: install-alma-lib
     runs-on: ubuntu-latest
     steps:
@@ -36,8 +36,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: alma-lib
-      - name: build and test data
-        run: gradle --info -b data/build.gradle clean build test
+          path: /home/runner/.m2/repository/org/opencadc/alma-lib
+      - name: build and test datalink
+        run: gradle --info -b datalink/build.gradle clean build test
 
 #  build:
 #    runs-on: ubuntu-latest
