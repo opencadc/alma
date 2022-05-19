@@ -33,7 +33,7 @@ jobs:
 
     - name: build and test data
       run: gradle --info -b data/build.gradle clean build test
-      
+
     - name: build and test datalink
       run: gradle --info -b datalink/build.gradle clean build test
 
