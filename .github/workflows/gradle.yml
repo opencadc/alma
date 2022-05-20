@@ -4,6 +4,9 @@ on:
   pull_request:
   push:
 
+env:
+  CI_REGISTRY_ORGANIZATION: opencadc
+
 jobs:
 
   #
@@ -176,7 +179,6 @@ jobs:
     needs: build-datalink
     env:
       name: datalink
-      module: datalink
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -187,15 +189,86 @@ jobs:
           name: datalink-artifact
           path: datalink/build/libs/datalink.war
       - name: Docker build
-        run: docker build --no-cache --pull --network host -t ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:`git log -1 --pretty=%H` -f ${module}/Dockerfile ${module}/
+        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H` -f ${name}/Dockerfile ${name}/
       - name: Docker push
-        run: docker push ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:`git log -1 --pretty=%H`
+        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H`
+
+  package-data:
+    needs: build-data
+    env:
+      name: data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker Hub login
+        run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login --username "${{ secrets.CI_REGISTRY_USER }}" --password-stdin ${{ secrets.CI_REGISTRY }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: data-artifact
+          path: data/build/libs/data.war
+      - name: Docker build
+        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H` -f ${name}/Dockerfile ${name}/
+      - name: Docker push
+        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H`
+
+  package-sia:
+    needs: build-sia
+    env:
+      name: sia
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker Hub login
+        run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login --username "${{ secrets.CI_REGISTRY_USER }}" --password-stdin ${{ secrets.CI_REGISTRY }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: sia-artifact
+          path: sia/build/libs/sia2.war
+      - name: Docker build
+        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H` -f ${name}/Dockerfile ${name}/
+      - name: Docker push
+        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H`
+
+  package-tap:
+    needs: build-tap
+    env:
+      name: tap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker Hub login
+        run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login --username "${{ secrets.CI_REGISTRY_USER }}" --password-stdin ${{ secrets.CI_REGISTRY }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: tap-artifact
+          path: tap/build/libs/tap.war
+      - name: Docker build
+        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H` -f ${name}/Dockerfile ${name}/
+      - name: Docker push
+        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H`
+
+  package-soda:
+    needs: build-soda
+    env:
+      name: soda
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker Hub login
+        run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login --username "${{ secrets.CI_REGISTRY_USER }}" --password-stdin ${{ secrets.CI_REGISTRY }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: soda-artifact
+          path: soda/build/libs/soda.war
+      - name: Docker build
+        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H` -f ${name}/Dockerfile ${name}/
+      - name: Docker push
+        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H`
 
   package-reg:
     needs: build-reg
     env:
       name: reg
-      module: reg
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -206,9 +279,9 @@ jobs:
           name: reg-artifact
           path: reg/build/libs/reg.war
       - name: Docker build
-        run: docker build --no-cache --pull --network host -t ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:`git log -1 --pretty=%H` -f ${module}/Dockerfile ${module}/
+        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H` -f ${name}/Dockerfile ${name}/
       - name: Docker push
-        run: docker push ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:`git log -1 --pretty=%H`
+        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:`git log -1 --pretty=%H`
 
   #
   # End Package Jobs
