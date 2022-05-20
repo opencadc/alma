@@ -143,6 +143,7 @@ jobs:
   #
 
   package-datalink:
+    needs: build-datalink
     env:
       name: datalink
       module: datalink
