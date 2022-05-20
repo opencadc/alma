@@ -150,13 +150,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Docker Hub login
-        run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.CI_REGISTRY_USER }}" --password-stdin ${{ secrets.CI_REGISTRY }}
+        run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login --username "${{ secrets.CI_REGISTRY_USER }}" --password-stdin ${{ secrets.CI_REGISTRY }}
       - name: Set VERSION variable
         run: export VERSION=`git log -1 --pretty=%H`
       - name: Docker build
         run: docker build --no-cache --pull --network host -t ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
       - name: Docker push
-        run: docker push ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:${VERSION} 
+        run: docker push ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:${VERSION}
 
   #
   # End Package Jobs
