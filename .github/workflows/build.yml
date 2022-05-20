@@ -55,6 +55,7 @@ jobs:
       artifact-name: soda
 
   build-reg:
+    needs: install-alma-lib
     uses: ./.github/workflows/gradle.yml
     with:
       name: reg
