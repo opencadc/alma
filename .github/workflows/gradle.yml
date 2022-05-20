@@ -163,7 +163,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: reg-artifact
-          path: ./reg/build/libs/reg.war
+          path: reg/build/libs/reg.war
   #
   # End Build jobs
   #
@@ -185,7 +185,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: datalink-artifact
-          path: ./build/libs/datalink.war
+          path: datalink/build/libs/datalink.war
       - name: Docker build
         run: docker build --no-cache --pull --network host -t ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:`git log -1 --pretty=%H` -f ${module}/Dockerfile ${module}/
       - name: Docker push
@@ -204,7 +204,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: reg-artifact
-          path: ./build/libs/reg.war
+          path: reg/build/libs/reg.war
       - name: Docker build
         run: docker build --no-cache --pull --network host -t ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:`git log -1 --pretty=%H` -f ${module}/Dockerfile ${module}/
       - name: Docker push
