@@ -1,0 +1,35 @@
+name: Reusable Docker workflow
+
+env:
+  CI_REGISTRY_ORGANIZATION: opencadc
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      artifact-name:
+        required: true
+        type: string
+    secrets:
+      CI_REGISTRY_USER:
+        required: true
+      CI_REGISTRY_PASSWORD:
+        required: true
+
+jobs:
+  docker-build-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker Hub login
+        run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login --username "${{ secrets.CI_REGISTRY_USER }}" --password-stdin
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.name }}-artifact
+          path: ${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war
+      - name: Docker build
+        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:`git log -1 --pretty=%H` -f ${{ inputs.name }}/Dockerfile ${{ inputs.name }}/
+      - name: Docker push
+        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:`git log -1 --pretty=%H`
