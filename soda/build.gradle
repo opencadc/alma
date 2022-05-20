@@ -12,6 +12,9 @@ repositories {
 sourceCompatibility = 11
 version = '1.2.5'
 
+// Added AFTER the version is declared.
+apply from: '../properties.gradle'
+
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
