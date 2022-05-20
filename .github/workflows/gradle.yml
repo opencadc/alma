@@ -142,8 +142,10 @@ jobs:
   # Package jobs
   #
 
-  # This is NOT a job and will be ignored by GitLab-CI
-  shared_hidden_key: &shared_package  # This is an anchor
+  package-datalink:
+    env:
+      name: datalink
+      module: datalink
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -154,13 +156,7 @@ jobs:
       - name: Docker build
         run: docker build --no-cache --pull --network host -t ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
       - name: Docker push
-        run: docker push ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:${VERSION}
-
-  package-datalink:
-    env:
-      name: datalink
-      module: datalink
-    <<: *shared_package  # This is a reference to the anchor above.
+        run: docker push ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:${VERSION} 
 
   #
   # End Package Jobs
