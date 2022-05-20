@@ -1,32 +1,20 @@
-name: Java+Docker CI
+name: Reusable Docker workflow
+
+env:
+  CI_REGISTRY_ORGANIZATION: opencadc
 
 on:
-  pull_request:
-  push:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      artifact-name:
+        required: true
+        type: string
 
 jobs:
-  #
-  # Build jobs
-  #
-  install-alma-lib:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
-      # Install alma-lib
-      - name: build, test, and install alma-lib
-        run: pwd && whoami && gradle --info -b alma-lib/build.gradle clean build test publishToMavenLocal
-      # Upload alma-lib artifact
-      - uses: actions/upload-artifact@v2
-        with:
-          name: alma-lib
-          path: /home/runner/.m2/repository/org/opencadc/alma-lib
-
-  build-datalink:
+  gradle-build:
     needs: install-alma-lib
     runs-on: ubuntu-latest
     steps:
@@ -40,185 +28,10 @@ jobs:
         with:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - name: build and test datalink
-        run: gradle --info -b datalink/build.gradle clean build test
+      - name: build and test ${{ inputs.name }}
+        run: gradle --info -b ${{ inputs.name }}/build.gradle clean build test
       # Upload WAR artifact
       - uses: actions/upload-artifact@v2
         with:
-          name: datalink-artifact
-          path: ./datalink/build/libs/datalink.war
-
-  build-data:
-    needs: install-alma-lib
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
-      # This will install WCSLib 5.15 to include WCS cutouts.  This is a very old version, but it's what is deployed on
-      # the NGAS nodes.
-      - name: install WCSLIB (libwcs5-15)
-        run: |
-          sudo apt-get update && sudo apt-get install -y curl gcc make \
-          && curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2 \
-          && cd /tmp/ \
-          && tar jxvf wcslib.tar.bz2 \
-          && cd wcslib-5.15 \
-          && ./configure --prefix=/usr \
-          && make && sudo make install
-      - uses: actions/download-artifact@v2
-        with:
-          name: alma-lib
-          path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - name: build and test data
-        run: gradle --info -b data/build.gradle clean build test
-      # Upload WAR artifact
-      - uses: actions/upload-artifact@v2
-        with:
-          name: data-artifact
-          path: data/build/libs/data.war
-
-  build-sia:
-    needs: install-alma-lib
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
-      - uses: actions/download-artifact@v2
-        with:
-          name: alma-lib
-          path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - name: build and test sia2
-        run: gradle --info -b sia/build.gradle clean build test
-      # Upload WAR artifact
-      - uses: actions/upload-artifact@v2
-        with:
-          name: sia-artifact
-          path: sia/build/libs/sia2.war
-
-  build-tap:
-    needs: install-alma-lib
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
-      - uses: actions/download-artifact@v2
-        with:
-          name: alma-lib
-          path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - name: build and test tap
-        run: gradle --info -b tap/build.gradle clean build test
-      # Upload WAR artifact
-      - uses: actions/upload-artifact@v2
-        with:
-          name: tap-artifact
-          path: tap/build/libs/tap.war
-
-  build-soda:
-    needs: install-alma-lib
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
-      - uses: actions/download-artifact@v2
-        with:
-          name: alma-lib
-          path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - name: build and test soda
-        run: gradle --info -b soda/build.gradle clean build test
-      # Upload WAR artifact
-      - uses: actions/upload-artifact@v2
-        with:
-          name: soda-artifact
-          path: soda/build/libs/soda.war
-
-  build-reg:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
-      - name: build and test reg
-        run: gradle --info -b reg/build.gradle clean build test
-      # Upload WAR artifact
-      - uses: actions/upload-artifact@v2
-        with:
-          name: reg-artifact
-          path: reg/build/libs/reg.war
-  #
-  # End Build jobs
-  #
-
-  #
-  # Package jobs
-  #
-
-  package-datalink:
-    needs: build-datalink
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      name: datalink
-      artifact-name: datalink
-
-  package-data:
-    needs: build-data
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      name: data
-      artifact-name: data
-
-  package-sia:
-    needs: build-sia
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      name: sia
-      artifact-name: sia2
-
-  package-tap:
-    needs: build-tap
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      name: tap
-      artifact-name: tap
-
-  package-soda:
-    needs: build-soda
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      name: soda
-      artifact-name: soda
-
-  package-reg:
-    needs: build-reg
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      name: reg
-      artifact-name: reg
-
-  #
-  # End Package Jobs
-  #
+          name: ${{ inputs.name }}-artifact
+          path: ./${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war
