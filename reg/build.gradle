@@ -9,7 +9,6 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 11
 version = '1.0.3'
 
 // Added AFTER the version is declared.

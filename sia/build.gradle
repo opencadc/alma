@@ -12,7 +12,6 @@ repositories {
     }
 }
 
-sourceCompatibility = 11
 version = '1.0.5'
 
 // Added AFTER the version is declared.

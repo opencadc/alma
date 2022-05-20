@@ -1,3 +1,5 @@
+sourceCompatibility = 11
+
 task printVersion {
     doLast {
         println version
