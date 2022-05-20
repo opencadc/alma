@@ -43,6 +43,11 @@ jobs:
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test datalink
         run: gradle --info -b datalink/build.gradle clean build test
+      # Upload WAR artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: datalink-artifact
+          path: datalink/build/libs/datalink.war
 
   build-data:
     needs: install-alma-lib
@@ -71,6 +76,11 @@ jobs:
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test data
         run: gradle --info -b data/build.gradle clean build test
+      # Upload WAR artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: data-artifact
+          path: data/build/libs/data.war
 
   build-sia:
     needs: install-alma-lib
@@ -88,6 +98,11 @@ jobs:
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test sia2
         run: gradle --info -b sia/build.gradle clean build test
+      # Upload WAR artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: sia-artifact
+          path: sia/build/libs/sia2.war
 
   build-tap:
     needs: install-alma-lib
@@ -105,6 +120,11 @@ jobs:
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test tap
         run: gradle --info -b tap/build.gradle clean build test
+      # Upload WAR artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tap-artifact
+          path: tap/build/libs/tap.war
 
   build-soda:
     needs: install-alma-lib
@@ -122,6 +142,11 @@ jobs:
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test soda
         run: gradle --info -b soda/build.gradle clean build test
+      # Upload WAR artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: soda-artifact
+          path: soda/build/libs/soda.war
 
   build-reg:
     runs-on: ubuntu-latest
@@ -134,6 +159,11 @@ jobs:
           java-version: 11
       - name: build and test reg
         run: gradle --info -b reg/build.gradle clean build test
+      # Upload WAR artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: reg-artifact
+          path: reg/build/libs/reg.war
   #
   # End Build jobs
   #
@@ -154,6 +184,10 @@ jobs:
         run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login --username "${{ secrets.CI_REGISTRY_USER }}" --password-stdin ${{ secrets.CI_REGISTRY }}
       - name: Set VERSION variable
         run: export VERSION=`git log -1 --pretty=%H`
+      - uses: actions/download-artifact@v2
+        with:
+          name: datalink-artifact
+          path: build/libs/datalink.war
       - name: Docker build
         run: docker build --no-cache --pull --network host -t ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
       - name: Docker push
