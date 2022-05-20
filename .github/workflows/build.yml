@@ -27,30 +27,35 @@ jobs:
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
 
   build-datalink:
+    needs: install-alma-lib
     uses: ./.github/workflows/gradle.yml
     with:
       name: datalink
       artifact-name: datalink
 
   build-sia:
+    needs: install-alma-lib
     uses: ./.github/workflows/gradle.yml
     with:
       name: sia
       artifact-name: sia2
 
   build-tap:
+    needs: install-alma-lib
     uses: ./.github/workflows/gradle.yml
     with:
       name: tap
       artifact-name: tap
 
   build-soda:
+    needs: install-alma-lib
     uses: ./.github/workflows/gradle.yml
     with:
       name: soda
       artifact-name: soda
 
   build-reg:
+    needs: install-alma-lib
     uses: ./.github/workflows/gradle.yml
     with:
       name: reg

@@ -15,7 +15,6 @@ on:
 
 jobs:
   gradle-build:
-    needs: install-alma-lib
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
