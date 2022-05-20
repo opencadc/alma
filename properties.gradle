@@ -1,0 +1,5 @@
+task printVersion {
+    doLast {
+        println version
+    }
+}

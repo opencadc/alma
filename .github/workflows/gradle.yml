@@ -173,42 +173,42 @@ jobs:
 
   package-datalink:
     needs: build-datalink
-    uses: ./docker.yml
+    uses: ./.github/workflows/docker.yml
     with:
       name: datalink
       artifact-name: datalink
 
   package-data:
     needs: build-data
-    uses: ./docker.yml
+    uses: ./.github/workflows/docker.yml
     with:
       name: data
       artifact-name: data
 
   package-sia:
     needs: build-sia
-    uses: ./docker.yml
+    uses: ./.github/workflows/docker.yml
     with:
       name: sia
       artifact-name: sia2
 
   package-tap:
     needs: build-tap
-    uses: ./docker.yml
+    uses: ./.github/workflows/docker.yml
     with:
       name: tap
       artifact-name: tap
 
   package-soda:
     needs: build-soda
-    uses: ./docker.yml
+    uses: ./.github/workflows/docker.yml
     with:
       name: soda
       artifact-name: soda
 
   package-reg:
     needs: build-reg
-    uses: ./docker.yml
+    uses: ./.github/workflows/docker.yml
     with:
       name: reg
       artifact-name: reg
