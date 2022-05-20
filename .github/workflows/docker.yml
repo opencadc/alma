@@ -30,6 +30,6 @@ jobs:
           name: ${{ inputs.name }}-artifact
           path: ${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war
       - name: Docker build
-        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:`git log -1 --pretty=%H` -f ${{ inputs.name }}/Dockerfile ${{ inputs.name }}/
+        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:`./gradlew -b ${{ inputs.name }}/build.gradle -q printVersion`-SNAPSHOT -f ${{ inputs.name }}/Dockerfile ${{ inputs.name }}/
       - name: Docker push
-        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:`git log -1 --pretty=%H`
+        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:`./gradlew -b ${{ inputs.name }}/build.gradle -q printVersion`-SNAPSHOT
