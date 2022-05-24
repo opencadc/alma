@@ -23,7 +23,7 @@ on:
 
 jobs:
   docker-build-publish:
-#    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       -
@@ -35,12 +35,12 @@ jobs:
       -
         name: Set up Docker BuildX
         uses: docker/setup-buildx-action@v2
-#      -
-#        name: Login to DockerHub
-#        uses: docker/login-action@v2
-#        with:
-#          username: ${{ secrets.CI_REGISTRY_USER }}
-#          password: ${{ secrets.CI_REGISTRY_PASSWORD }}
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.CI_REGISTRY_USER }}
+          password: ${{ secrets.CI_REGISTRY_PASSWORD }}
       -
         name: Download the WAR file to be put into the Docker image
         uses: actions/download-artifact@v2
@@ -57,20 +57,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ${{ inputs.name }}
-          push: false
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.DOCKER_TAG }}
-
-#  docker-build-publish:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Docker Hub login
-#        run: echo "${{ secrets.CI_REGISTRY_PASSWORD }}" | docker login --username "${{ secrets.CI_REGISTRY_USER }}" --password-stdin
-#      - uses: actions/download-artifact@v2
-#        with:
-#          name: ${{ inputs.name }}-artifact
-#          path: ${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war
-#      - name: Docker build
-#        run: docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)-SNAPSHOT" -f ${{ inputs.name }}/Dockerfile ${{ inputs.name }}/
-#      - name: Docker push
-#        run: docker push ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)-SNAPSHOT"
