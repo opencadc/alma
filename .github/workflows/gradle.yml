@@ -1,8 +1,5 @@
 name: Reusable Docker workflow
 
-env:
-  CI_REGISTRY_ORGANIZATION: opencadc
-
 on:
   workflow_call:
     inputs:

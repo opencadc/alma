@@ -1,8 +1,7 @@
-name: Java+Gradle CI
+name: Java+Docker CI
 
 on:
-  pull_request:
-  push:
+  deployment:
 
 jobs:
   #
@@ -96,3 +95,57 @@ jobs:
   #
   # End Build jobs
   #
+
+  #
+  # Package jobs
+  #
+  package-datalink:
+    needs: build-datalink
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      name: datalink
+      artifact-name: datalink
+
+  package-sia:
+    needs: build-sia
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      name: sia
+      artifact-name: sia2
+
+  package-tap:
+    needs: build-tap
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      name: tap
+      artifact-name: tap
+
+  package-soda:
+    needs: build-soda
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      name: soda
+      artifact-name: soda
+
+  package-reg:
+    needs: build-reg
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      name: reg
+      artifact-name: reg
+
+  package-data:
+    needs: build-data
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      name: data
+      artifact-name: data
+#
+# End Package Jobs
+#
