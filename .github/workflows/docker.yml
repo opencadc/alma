@@ -12,6 +12,9 @@ on:
       artifact-name:
         required: true
         type: string
+      tag:
+        required: true
+        type: string
     secrets:
       CI_REGISTRY_USER:
         required: true
@@ -45,12 +48,17 @@ jobs:
           name: ${{ inputs.name }}-artifact
           path: ${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war
       -
+        name: Set Docker tag
+        run: |
+          TAG=${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)-SNAPSHOT"
+          echo "::set-env name=DOCKER_TAG::env value $TAG"
+      -
         name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: ${{ inputs.name }}
           push: false
-          tags: ${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)-SNAPSHOT"
+          tags: ${{ env.DOCKER_TAG }}
 
 #  docker-build-publish:
 #    runs-on: ubuntu-latest
