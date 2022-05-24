@@ -51,7 +51,7 @@ jobs:
         name: Set Docker tag
         run: |
           TAG=${CI_REGISTRY_ORGANIZATION}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)-SNAPSHOT"
-          echo "::set-env name=DOCKER_TAG::env value $TAG"
+          echo "::set-env name=DOCKER_TAG::$TAG"
       -
         name: Build and push
         uses: docker/build-push-action@v3
