@@ -74,9 +74,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Test;
-import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.HierarchyItem;
 
 import java.io.File;
 import java.io.FileInputStream;

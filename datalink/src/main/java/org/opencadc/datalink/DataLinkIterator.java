@@ -77,12 +77,13 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.HierarchyItem;
 
 import ca.nrc.cadc.util.StringUtil;
 
@@ -229,6 +230,8 @@ public class DataLinkIterator implements Iterator<DataLink> {
                 dataLink.contentLength = determineSizeInBytes(hierarchyItem);
                 dataLink.contentType = determineContentType(hierarchyItem);
                 dataLink.readable = hierarchyItem.isReadable();
+                dataLink.description = getDescription(dataLink, hierarchyItem.getSubDirectory(),
+                                                      hierarchyItem.getFileClass());
 
                 dataLinkTerms.forEach(dataLink::addSemantics);
             }
@@ -298,6 +301,32 @@ public class DataLinkIterator implements Iterator<DataLink> {
         }
 
         return contentType;
+    }
+
+    private String getDescription(final DataLink dataLink, final String subDirectory, final String fileClass) {
+        final StringBuilder descriptionID = new StringBuilder();
+
+        if (StringUtil.hasText(subDirectory)) {
+            descriptionID.append(subDirectory).append("/");
+        }
+
+        descriptionID.append(dataLink.getID());
+
+        if (StringUtil.hasText(fileClass)) {
+            descriptionID.append("|").append(fileClass);
+        }
+
+        final String description;
+        if (dataLink.getSemantics().contains(DataLink.Term.PKG)) {
+            description = String.format("Download all data associated with %s.", descriptionID);
+        } else if (dataLink.getID().toLowerCase(Locale.ROOT).contains("readme")) {
+            description = String.format("Download documentation for %s.", descriptionID);
+        } else {
+            // Assumes #this
+            description = String.format("Download the dataset for %s.", descriptionID);
+        }
+
+        return description;
     }
 
     private String getIdentifier(final HierarchyItem hierarchyItem) {

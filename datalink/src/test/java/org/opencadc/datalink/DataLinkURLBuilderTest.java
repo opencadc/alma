@@ -70,17 +70,12 @@
 package org.opencadc.datalink;
 
 
-import ca.nrc.cadc.auth.AuthMethod;
-import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.PropertiesReader;
 
 import org.junit.Test;
 import org.junit.Assert;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.HierarchyItem;
 
-import java.net.URI;
 import java.net.URL;
 
 import static org.mockito.Mockito.*;

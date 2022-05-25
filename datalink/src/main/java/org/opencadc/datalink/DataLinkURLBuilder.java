@@ -72,7 +72,6 @@ package org.opencadc.datalink;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import org.apache.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.deliverable.HierarchyItem;
 import ca.nrc.cadc.util.StringUtil;
 
 import java.io.IOException;
