@@ -70,8 +70,8 @@ CREATE OR REPLACE FORCE VIEW obscore (
     CASE WHEN science.product_type = 'MOUS' THEN 2
          WHEN science.product_type = 'GOUS' THEN 3
          ELSE null END,
-    'ALMA',
-    science.asa_ous_id,
+    'ALMA/' || REGEXP_REPLACE(LTRIM(RTRIM(science.band_list)), '\s', '/'),
+    energy.asa_energy_id,
     'ADS/JAO.ALMA#' || asap.code,
     'https://almascience.org/datalink/sync?ID=' || science.member_ouss_id,
     'application/x-votable+xml; content=datalink',
