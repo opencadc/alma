@@ -32,9 +32,10 @@ publishing {
     }
 }
 
-sourceCompatibility = 11
 group = 'org.opencadc'
 version = '1.4.0'
+
+apply from: '../properties.gradle'
 
 dependencies {
     implementation 'org.apache.logging.log4j:log4j-core:[2.17.2,3.0)'

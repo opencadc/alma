@@ -9,16 +9,23 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 11
-version = '1.0.2'
+version = '1.0.3'
+
+// Added AFTER the version is declared.
+apply from: '../properties.gradle'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'reg'])
+            filter(ReplaceTokens, tokens: [app_name: 'reg', version: version])
         }
     }
     archiveName = 'reg.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "Registry"
+    }
 
     // Include the swagger-ui so that /reg provides the Reg API documentation
     from('../') {

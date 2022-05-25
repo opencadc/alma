@@ -9,16 +9,23 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 11
 version = '1.4.0'
+
+// Added AFTER the version is declared.
+apply from: '../properties.gradle'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'datalink'])
+            filter(ReplaceTokens, tokens: [app_name: 'datalink', version: version])
         }
     }
     archiveName = 'datalink.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "DataLink"
+    }
 
     // Include the swagger-ui so that /datalink provides the DataLink API documentation
     from('../') {

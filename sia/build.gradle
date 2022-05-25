@@ -7,21 +7,25 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
-    maven {
-        url = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
-    }
 }
 
-sourceCompatibility = 11
 version = '1.0.5'
+
+// Added AFTER the version is declared.
+apply from: '../properties.gradle'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'sia2'])
+            filter(ReplaceTokens, tokens: [app_name: 'sia2', version: version])
         }
     }
     archiveName = 'sia2.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "Simple Image Access Version 2.0"
+    }
 
     // Include the swagger-ui so that /sia2 provides the Sia API documentation
     from('../') {
@@ -42,7 +46,6 @@ dependencies {
     implementation 'org.opencadc:cadc-tap:[1.0,2.0)'
     implementation 'org.opencadc:cadc-util:[1.6.0,2.0)'
     implementation 'org.opencadc:cadc-uws-server:[1.2.5,2.0)'
-    implementation 'ca.nrc.cadc:uws-util:[1.0,2.0)'
 
     runtimeOnly 'org.opencadc:cadc-vosi:[1.3.4,2.0)'
     runtimeOnly 'org.opencadc:cadc-registry:[1.5.9,2.0)'

@@ -9,15 +9,23 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 11
+version = '1.1.1'
+
+// Added AFTER the version is declared.
+apply from: '../properties.gradle'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.yaml')) {
-            filter(ReplaceTokens, tokens: [app_name: 'data'])
+            filter(ReplaceTokens, tokens: [app_name: 'data', version: version])
         }
     }
     archiveName = 'data.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "Data"
+    }
 
     // Include the swagger-ui so that /fits provides the fits API documentation
     from('../') {
