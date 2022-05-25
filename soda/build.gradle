@@ -19,6 +19,8 @@ war {
     }
     archiveName = 'soda.war'
 
+    archiveName = 'soda.war'
+
     // Include the swagger-ui so that /soda provides the soda API documentation
     from('../') {
         include 'swagger-ui/'

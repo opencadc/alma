@@ -1,8 +1,8 @@
 {
-    "id": "uid___A002_Xb8e115_X2839",
-    "name": "2016.1.00007.S_uid___A002_Xb8e115_X2839.asdm.sdm.tar",
-    "type": "ASDM",
-    "sizeInBytes": 1652833280,
+    "id": null,
+    "name": "2016.1.00007.S_uid___A001_X879_X8f1_auxiliary.tar",
+    "type": "PIPELINE_AUXILIARY_TARFILE",
+    "sizeInBytes": 1358019584,
     "permission": "ALLOWED",
     "children": [],
     "allMousUids": []

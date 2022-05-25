@@ -118,7 +118,8 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
             throw new IllegalArgumentException("No dataset IDs provided.  Use ID=uid://XXX");
         } else {
             final DataLinkQuery dataLinkQuery = createDataLinkQuery();
-            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), dataLinkQuery);
+            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), dataLinkQuery,
+                                        almaProperties);
         }
     }
 

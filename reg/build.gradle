@@ -10,7 +10,6 @@ repositories {
 }
 
 sourceCompatibility = 11
-group = 'org.opencadc'
 version = '1.0.2'
 
 war {

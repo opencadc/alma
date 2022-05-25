@@ -23,6 +23,7 @@
             <param-value>
                 ca.nrc.cadc.datalink
                 org.opencadc.datalink
+                org.opencadc.alma
                 alma
             </param-value>
         </init-param>

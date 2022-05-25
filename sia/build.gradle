@@ -13,7 +13,6 @@ repositories {
 }
 
 sourceCompatibility = 11
-group = 'ca.nrc.cadc'
 version = '1.0.5'
 
 war {

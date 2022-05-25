@@ -1,4 +1,4 @@
-ALMA DataLink (1.1.0)
+ALMA DataLink (1.4.0)
 ================
 
 Current implementation can be found at the CADC here:
@@ -13,19 +13,9 @@ Build
 Building the service creates a WAR artifact. From the root fo the
 ``alma.git/datalink`` folder, run:
 
-``gradle --info clean build``
+``gradle --info clean build test``
 
-to create the ``build/libs/datalink##%VERSION%.war`` file, where the
-``%VERSION%`` will be replaced with the actual version number declared
-in the `build.gradle`_ file.
-
-Alternatively, there is an ``alma_datalink_app_name`` parameter that will replace the name of the output file.
-
-``gradle -info -Palma_datalink_app_name=my_alma_datalink clean build``
-
-will create the ``build/libs/my_alma_datalink##%VERSION%.war`` file.  This can also be set in a local ``gradle
-.properties``,
-or in your ``~/.gradle/gradle.properties`` file.
+to create the ``build/libs/datalink.war`` file.
 
 Deployment
 ----------
@@ -35,7 +25,7 @@ Docker
 
 This is a working prototype using a DataLink implementation.  An existing image can be found here:
 
-``docker pull opencadc/alma-datalink:1.1.0``
+``docker pull opencadc/alma-datalink:1.4.0``
 
 Building for Docker
 ~~~~~~~~~~~~~~~~~~~

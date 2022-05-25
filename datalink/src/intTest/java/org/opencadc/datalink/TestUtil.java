@@ -177,6 +177,8 @@ class TestUtil {
 
     static void checkContent(VOTableTable tab) throws Exception {
         Integer[] indices = TestUtil.getFieldIndexes(tab.getFields());
+        log.info(String.format("Checking content against %s", Arrays.toString(indices)));
+
         int uriCol = indices[0];
         int urlCol = indices[1];
         int srvCol = indices[2];
@@ -200,7 +202,6 @@ class TestUtil {
             } else if (srvO != null) {
                 Assert.assertNull(urlO);
                 Assert.assertNull(errO);
-                Assert.assertEquals(DataLink.Term.CUTOUT.getValue(), semO);
             } else {
                 Assert.assertNotNull(errO);
             }
