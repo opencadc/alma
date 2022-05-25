@@ -24,7 +24,7 @@ war {
 
     manifest {
         attributes "Implementation-Version": version
-        attributes "Implementation-Title": "Server-side Operations for Data Access"
+        attributes "Implementation-Title": "SODA"
     }
 
     // Include the swagger-ui so that /soda provides the soda API documentation

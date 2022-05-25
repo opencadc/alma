@@ -24,7 +24,7 @@ war {
 
     manifest {
         attributes "Implementation-Version": version
-        attributes "Implementation-Title": "Table Access Protocol"
+        attributes "Implementation-Title": "TAP"
     }
 
     // Include the swagger-ui so that /tap provides the TAP API documentation
