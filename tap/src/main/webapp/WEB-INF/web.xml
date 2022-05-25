@@ -2,8 +2,8 @@
 
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://java.sun.com/xml/ns/javaee"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         id="tap-obscore" version="3.0">
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         id="tap-obscore" version="3.1">
 
     <display-name>TAP ObsCore</display-name>
 
@@ -26,35 +26,11 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
-    <!-- asynchronous access to JobManager service -->
+    <!-- Initialize the remote logging AFTER the main logging, otherwise it will be cleared. -->
     <servlet>
+        <servlet-name>remoteLogger</servlet-name>
+        <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
         <load-on-startup>2</load-on-startup>
-        <servlet-name>AsyncServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
-        <init-param>
-            <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.uws.web.GetAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>post</param-name>
-            <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>authHeaders</param-name>
-            <param-value>false</param-value>
-        </init-param>
-        <init-param>
-            <param-name>delete</param-name>
-            <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>authHeaders</param-name>
-            <param-value>false</param-value>
-        </init-param>
-        <init-param>
-            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
-            <param-value>org.opencadc.tap.ws.QueryJobManager</param-value>
-        </init-param>
     </servlet>
 
     <!-- synchronous access to JobManager service -->
@@ -64,11 +40,19 @@
         <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>delete</param-name>
+            <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
@@ -124,16 +108,6 @@
         <servlet-class>org.opencadc.tap.impl.ALMATableServlet</servlet-class>
         <load-on-startup>3</load-on-startup>
     </servlet>
-
-    <!-- the TAP Endpoints -->
-    <servlet-mapping>
-        <servlet-name>AsyncServlet</servlet-name>
-        <url-pattern>/async/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>AsyncServlet</servlet-name>
-        <url-pattern>/auth-async/*</url-pattern>
-    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>SyncServlet</servlet-name>

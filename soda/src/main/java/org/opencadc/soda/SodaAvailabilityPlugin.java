@@ -97,8 +97,8 @@ public class SodaAvailabilityPlugin implements AvailabilityPlugin {
      */
     @Override
     public Availability getStatus() {
-        return new Availability(true, String.format("%s state: %s", applicationName, StringUtil.hasText(state) ?
-                                                                                     state : "ACTIVE"));
+        return new Availability(true, String.format("%s state: %s", applicationName,
+                                                    StringUtil.hasText(state) ? state : "ACTIVE"));
     }
 
     /**

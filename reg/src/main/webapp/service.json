@@ -3,7 +3,7 @@
   "info": {
     "title": "CADC Registry",
     "description": "TODO\n",
-    "version": "1.0.0"
+    "version": "@version@"
   },
   "schemes": [
     "https"

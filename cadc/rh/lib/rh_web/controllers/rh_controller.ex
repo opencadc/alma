@@ -14,7 +14,7 @@ defmodule RhWeb.RhController do
     IO.puts("Visiting #{url}")
     
     # 15 second timeout should (hopefully) be plenty.
-    {:ok, response} = HTTPoison.get(url, [], [recv_timeout: 45000])
+    {:ok, response} = HTTPoison.get(url, [], [recv_timeout: 25000])
 
     headers = response.headers
               |> Enum.into(%{})

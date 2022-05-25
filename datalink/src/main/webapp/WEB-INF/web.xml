@@ -2,8 +2,8 @@
 
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://java.sun.com/xml/ns/javaee"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         id="datalink" version="3.0">
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         id="datalink" version="3.1">
 
     <display-name>DataLink</display-name>
 
@@ -23,11 +23,16 @@
             <param-value>
                 ca.nrc.cadc.datalink
                 org.opencadc.datalink
-                org.opencadc.alma
-                alma
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <!-- Initialize the remote logging AFTER the main logging, otherwise it will be cleared. -->
+    <servlet>
+        <servlet-name>remoteLogger</servlet-name>
+        <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
+        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <servlet>
@@ -36,11 +41,15 @@
         <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
@@ -117,11 +126,6 @@
         <url-pattern>/sync/*</url-pattern>
     </servlet-mapping>
 
-<!--    <servlet-mapping>-->
-<!--        <servlet-name>DataLinkServlet</servlet-name>-->
-<!--        <url-pattern>/auth-datalink/*</url-pattern>-->
-<!--    </servlet-mapping>-->
-
     <servlet>
         <servlet-name>doc</servlet-name>
         <jsp-file>/index.jsp</jsp-file>
@@ -146,34 +150,4 @@
         <description>Public security role</description>
         <role-name>public</role-name>
     </security-role>
-
-<!--    <security-constraint>-->
-<!--        <web-resource-collection>-->
-<!--            <web-resource-name>auth</web-resource-name>-->
-<!--            <description/>-->
-<!--            <url-pattern>/auth-cutout/*</url-pattern>-->
-<!--            <url-pattern>/auth-datalink/*</url-pattern>-->
-<!--            <url-pattern>/auth-meta/*</url-pattern>-->
-<!--            <url-pattern>/auth-pkg/*</url-pattern>-->
-<!--            <url-pattern>/auth-sync/*</url-pattern>-->
-<!--            <url-pattern>/auth-async/*</url-pattern>-->
-<!--            <url-pattern>/logControl/*</url-pattern>-->
-<!--            <http-method>GET</http-method>-->
-<!--            <http-method>POST</http-method>-->
-<!--            <http-method>HEAD</http-method>-->
-<!--            <http-method>PUT</http-method>-->
-<!--            <http-method>OPTIONS</http-method>-->
-<!--            <http-method>TRACE</http-method>-->
-<!--            <http-method>DELETE</http-method>-->
-<!--        </web-resource-collection>-->
-<!--        <auth-constraint>-->
-<!--            <description>force authentication for all requests</description>-->
-<!--            <role-name>public</role-name>-->
-<!--        </auth-constraint>-->
-<!--    </security-constraint>-->
-
-<!--    <login-config>-->
-<!--        <auth-method>BASIC</auth-method>-->
-<!--        <realm-name>Canadian Astronomy Data Centre</realm-name>-->
-<!--    </login-config>-->
 </web-app>

@@ -1,9 +1,9 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "2",
         "title": "SIA (Simple Image Access) web service",
-        "description": "The SIA (Simple Image Access) web service.\n\n\nSIA services for the Common Archive Observation Model (CAOM).\n\n\n<a href=\"http://www.ivoa.net/Documents/SIA/20091116/\">IVOA SIA v1</a>\n\n\n<a href=\"http://www.ivoa.net/Documents/SIA/\">IVOA SIA v2</a>\n\n\n\n\nThe SIA-2.0 query endpoint implements all the query parameters described in the latest SIA-2.0 specification: POS, BAND, TIME, POL, FOV, SPATRES, EXPTIME, ID, COLLECTION, FACILITY, INSTRUMENT, DPTYPE, CALIB, TARGET, TIMERES, SPECRP, FORMAT.\n"
+        "description": "The SIA (Simple Image Access) web service.\n\n\nSIA services for the Common Archive Observation Model (CAOM).\n\n\n<a href=\"http://www.ivoa.net/Documents/SIA/20091116/\">IVOA SIA v1</a>\n\n\n<a href=\"http://www.ivoa.net/Documents/SIA/\">IVOA SIA v2</a>\n\n\n\n\nThe SIA-2.0 query endpoint implements all the query parameters described in the latest SIA-2.0 specification: POS, BAND, TIME, POL, FOV, SPATRES, EXPTIME, ID, COLLECTION, FACILITY, INSTRUMENT, DPTYPE, CALIB, TARGET, TIMERES, SPECRP, FORMAT.\n",
+        "version": "@version@"
     },
     "basePath": "/@app_name@",
     "paths": {

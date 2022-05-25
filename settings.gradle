@@ -1,2 +1,2 @@
 rootProject.name = 'alma'
-include('alma-lib', 'data', 'datalink', 'reg', 'sia', 'soda', 'tap')
+include('alma-lib', 'alma-logging', 'data', 'datalink', 'reg', 'sia', 'soda', 'tap')
