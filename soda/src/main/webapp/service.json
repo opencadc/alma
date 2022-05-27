@@ -3,29 +3,81 @@
     "info": {
         "title": "IVOA SODA",
         "description": "Service for Data Access\n\n This service implements the IVOA SODA-1.0 service specification. To use this service, the caller must use a dataset identifier found through some means (for example, querying the ALMA TAP ObsCore Service). The SODA service provides a drill-down mechanism to access the data files and associated resources.\n",
-        "version": "1.0.0"
+        "version": "@version@"
     },
     "schemes": [
         "https"
     ],
     "basePath": "/@app_name@",
     "paths": {
-        "/": {
+        "/sync": {
             "get": {
                 "summary": "IVOA SODA v1.0",
                 "tags": [
-                    "SODA"
+                    "IVOA SODA service"
                 ],
-                "description": "The linking of data discovery metadata to access to the data itself, further\ndetailed metadata, related resources, and to services that perform operations of \nthe data.\n",
+                "description": "Synchronous SODA service for cutouts. Synchronously queries an IVOA ObsCore TAP service using the input ID as an obs_id identifier. The artifact metadata is used to convert the SODA cutout specification (parameters) into cfitsio-style pixel cutouts and then generate URL(s) to a separate web service that accepts and processes such requests.\n",
                 "parameters": [
                     {
                         "name": "ID",
                         "in": "query",
-                        "collectionFormat": "multi",
-                        "description": "MOUS ID from a data discovery service.",
+                        "description": "IVOA artifact URI from a data discovery service.",
                         "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "SUB",
+                        "in": "query",
+                        "description": "SUB-region of a FITS file image.  Multiple SUB parameters are allowed and will generate MEF output in file order. Examples: entire extensions (SUB=[1]&SUB=[SCI,2]), or more general purpose (SUB=[SCI,3][400:500]).",
+                        "required": false,
                         "type": "string",
-                        "format": "uri"
+                        "collectionFormat": "multi"
+                    },
+                    {
+                        "name": "POS",
+                        "in": "query",
+                        "description": "The positional regions to be extracted from the data.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "CIRCLE",
+                        "in": "query",
+                        "description": "The spatial region using the CIRCLE xtype defined in DALI.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "POLYGON",
+                        "in": "query",
+                        "description": "The spatial region using the POLYGON xtype defined in DALI.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "BAND",
+                        "in": "query",
+                        "description": "The wavelength interval(s) using the INTERVAL xtype defined in DALI.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "TIME",
+                        "in": "query",
+                        "description": "The time interval(s) using the INTERVAL xtype defined in DALI.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "POL",
+                        "in": "query",
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "The polarization state(s) (Stokes), supports multiple values.",
+                        "required": false
                     },
                     {
                         "name": "RUNID",
@@ -35,9 +87,9 @@
                         "type": "string"
                     },
                     {
-                        "name": "REQUEST",
+                        "name": "LABEL",
                         "in": "query",
-                        "description": "get download links only (REQUEST=downloads-only) ",
+                        "description": "The prefix of the file name to be returned. For example, if LABEL=label1, then the returned file name would be label1__file.fits.\n",
                         "required": false,
                         "type": "string"
                     }
@@ -47,16 +99,13 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A VOTable with one row per link (downloadable item or resource).",
-                        "schema": {
-                            "$ref": "#/definitions/SuccessVOTable"
-                        }
+                        "description": "Successful response"
                     },
                     "400": {
-                        "description": "(bad request) with a VOTable and an INFO element with an error message.\n",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorVOTable"
-                        }
+                        "description": "(bad request) with a VOTable and an INFO element with an error message.\n"
+                    },
+                    "404": {
+                        "description": "Not found"
                     },
                     "500": {
                         "description": "Internal server error"
@@ -65,10 +114,114 @@
                         "description": "Service too busy"
                     },
                     "default": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
+                        "description": "Unexpected error"
+                    }
+                }
+            },
+            "post": {
+                "summary": "IVOA SODA v1.0",
+                "tags": [
+                    "IVOA SODA service"
+                ],
+                "description": "Synchronous SODA service for cutouts. Synchronously queries an IVOA ObsCore TAP service using the input ID as an obs_id identifier. The artifact metadata is used to convert the SODA cutout specification (parameters) into cfitsio-style pixel cutouts and then generate URL(s) to a separate web service that accepts and processes such requests.\n",
+                "parameters": [
+                    {
+                        "name": "ID",
+                        "in": "query",
+                        "description": "ALMA obs_id from a data discovery service.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "SUB",
+                        "in": "query",
+                        "description": "SUB-region of a FITS file image.  Multiple SUB parameters are allowed and will generate MEF output in file order. Examples: entire extensions (SUB=[1]&SUB=[SCI,2]), or more general purpose (SUB=[SCI,3][400:500]).",
+                        "required": false,
+                        "type": "string",
+                        "collectionFormat": "multi"
+                    },
+                    {
+                        "name": "POS",
+                        "in": "query",
+                        "description": "The positional regions to be extracted from the data.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "CIRCLE",
+                        "in": "query",
+                        "description": "The spatial region using the CIRCLE xtype defined in DALI.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "POLYGON",
+                        "in": "query",
+                        "description": "The spatial region using the POLYGON xtype defined in DALI.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "BAND",
+                        "in": "query",
+                        "description": "The wavelength interval(s).",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "TIME",
+                        "in": "query",
+                        "description": "The time interval(s).",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "POL",
+                        "in": "query",
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "The polarization state(s) (Stokes), supports multiple values.",
+                        "required": false
+                    },
+                    {
+                        "name": "RUNID",
+                        "in": "query",
+                        "description": "Arbitrary string (maximum length 64) that is attached to any logging of this request.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "LABEL",
+                        "in": "query",
+                        "description": "The prefix of the file name to be returned. For example, if LABEL=label1, then the returned file name would be label1__file.fits.\n",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/fits"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    },
+                    "400": {
+                        "description": "(bad request) with a VOTable and an INFO element with an error message.\n"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "503": {
+                        "description": "Service too busy"
+                    },
+                    "default": {
+                        "description": "Unexpected error"
                     }
                 }
             }

@@ -66,18 +66,18 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.data.fits;
+package org.opencadc.alma.data;
 
-import ca.nrc.cadc.log.WebServiceLogInfo;
-import ca.nrc.cadc.rest.SyncInput;
 import ca.nrc.cadc.rest.SyncOutput;
+import ca.nrc.cadc.uws.Job;
+import ca.nrc.cadc.uws.Parameter;
 import nom.tam.fits.Header;
 import nom.tam.fits.ImageData;
 import nom.tam.fits.ImageHDU;
 import nom.tam.util.RandomAccessDataObject;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
+import org.opencadc.alma.logging.web.WebServiceMetaData;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.soda.SodaParamValidator;
 
@@ -85,40 +85,29 @@ import static org.mockito.Mockito.*;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FITSActionTest {
-    final HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-    final HttpServletResponse mockResponse = mock(HttpServletResponse.class);
+public class DataJobRunnerTest {
 
     @Test
-    public void testVerifyArgumentsMissingFile() throws Exception {
-        final FITSAction testSubject = new FITSAction();
+    public void testVerifyArgumentsMissingFile() {
+        final DataJobRunner testSubject = new DataJobRunner();
 
         final Map<String, String[]> inputParameters = new HashMap<>();
         inputParameters.put("cutout", new String[]{"[0][80:500]", "[10]"});
 
-        when(mockRequest.getMethod()).thenReturn("GET");
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            when(mockRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-        }
-        when(mockRequest.getRequestURL()).thenReturn(new StringBuffer("https://almascience.org/data/fits"));
-        when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(inputParameters.keySet()));
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            when(mockRequest.getParameterValues(entry.getKey())).thenReturn(entry.getValue());
-        }
-
-        final SyncInput syncInput = new SyncInput(mockRequest, null);
-        syncInput.init();
-        testSubject.setSyncInput(syncInput);
+        final Job testJob = new Job();
+        final List<Parameter> parameterList = new ArrayList<>();
+        inputParameters.forEach((k, v) -> Arrays.stream(v).forEach(paramValue -> parameterList.add(
+                new Parameter(k, paramValue))));
+        testJob.setParameterList(parameterList);
+        testSubject.setJob(testJob);
         try {
             testSubject.verifyArguments();
             Assert.fail("Should throw IllegalArgumentException");
@@ -126,40 +115,22 @@ public class FITSActionTest {
             final String message = e.getMessage();
             Assert.assertTrue("Wrong message: " + message, message.contains("Usage"));
         }
-
-        verify(mockRequest).getMethod();
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            verify(mockRequest).getHeaderNames();
-        }
-        verify(mockRequest).getRequestURL();
-        verify(mockRequest).getParameterNames();
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            verify(mockRequest).getParameterValues(entry.getKey());
-        }
     }
 
     @Test
-    public void testVerifyArgumentsMultipleFiles() throws Exception {
-        final FITSAction testSubject = new FITSAction();
+    public void testVerifyArgumentsMultipleFiles() {
+        final DataJobRunner testSubject = new DataJobRunner();
         final Map<String, String[]> inputParameters = new HashMap<>();
 
         inputParameters.put("SUB", new String[]{"[SCI,10]"});
         inputParameters.put("file", new String[]{"/my/file/1", "/my/file/2"});
 
-        when(mockRequest.getMethod()).thenReturn("GET");
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            when(mockRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-        }
-        when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(inputParameters.keySet()));
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            when(mockRequest.getParameterValues(entry.getKey())).thenReturn(entry.getValue());
-        }
-
-        final SyncInput syncInput = new SyncInput(mockRequest, null);
-        syncInput.init();
-        testSubject.setSyncInput(syncInput);
+        final Job testJob = new Job();
+        final List<Parameter> parameterList = new ArrayList<>();
+        inputParameters.forEach((k, v) -> Arrays.stream(v).forEach(paramValue -> parameterList.add(
+                new Parameter(k, paramValue))));
+        testJob.setParameterList(parameterList);
+        testSubject.setJob(testJob);
         try {
             testSubject.verifyArguments();
             Assert.fail("Should throw IllegalArgumentException");
@@ -167,21 +138,11 @@ public class FITSActionTest {
             final String message = e.getMessage();
             Assert.assertEquals("Wrong message: " + message, "Only one file parameter can be provided.", message);
         }
-
-        verify(mockRequest).getMethod();
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            verify(mockRequest).getHeaderNames();
-        }
-        verify(mockRequest).getParameterNames();
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            verify(mockRequest).getParameterValues(entry.getKey());
-        }
     }
 
     @Test
-    public void testVerifyArgumentsComplete() throws Exception {
-        final FITSAction testSubject = new FITSAction();
+    public void testVerifyArgumentsComplete() {
+        final DataJobRunner testSubject = new DataJobRunner();
         final Map<String, String[]> inputParameters = new HashMap<>();
 
         inputParameters.put("SUB", new String[]{"[SCI,10]"});
@@ -189,38 +150,21 @@ public class FITSActionTest {
         // Same file twice should be reduced to the same file.
         inputParameters.put("file", new String[]{"/my/file/1", "/my/file/1"});
 
-        when(mockRequest.getMethod()).thenReturn("GET");
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            when(mockRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-        }
-        when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(inputParameters.keySet()));
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            when(mockRequest.getParameterValues(entry.getKey())).thenReturn(entry.getValue());
-        }
-
-        final SyncInput syncInput = new SyncInput(mockRequest, null);
-        syncInput.init();
-
-        testSubject.setSyncInput(syncInput);
+        final Job testJob = new Job();
+        final List<Parameter> parameterList = new ArrayList<>();
+        inputParameters.forEach((k, v) -> Arrays.stream(v).forEach(paramValue -> parameterList.add(
+                new Parameter(k, paramValue))));
+        testJob.setParameterList(parameterList);
+        testSubject.setJob(testJob);
         testSubject.verifyArguments();
-
-        verify(mockRequest).getMethod();
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            verify(mockRequest).getHeaderNames();
-        }
-        verify(mockRequest).getParameterNames();
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            verify(mockRequest).getParameterValues(entry.getKey());
-        }
     }
 
     @Test
     public void testDoActionHeaders() throws Exception {
         final FitsOperations mockFitsOperations = mock(FitsOperations.class);
         final RandomAccessDataObject mockRandomAccessDataObject = mock(RandomAccessDataObject.class);
-        final WebServiceLogInfo mockLogInfo = mock(WebServiceLogInfo.class);
+        final WebServiceMetaData mockWebServiceMetaData = mock(WebServiceMetaData.class);
+        final HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 
         final List<Header> headers = new ArrayList<>(3);
 
@@ -228,7 +172,7 @@ public class FITSActionTest {
         headers.add(ImageHDU.manufactureHeader(new ImageData(new int[120][1100])));
         headers.add(ImageHDU.manufactureHeader(new ImageData(new int[220][2100])));
 
-        final FITSAction testSubject = new FITSAction() {
+        final DataJobRunner testSubject = new DataJobRunner() {
             @Override
             FitsOperations getOperator(RandomAccessDataObject randomAccessDataObject) {
                 return mockFitsOperations;
@@ -240,8 +184,6 @@ public class FITSActionTest {
             }
         };
 
-        testSubject.setLogInfo(mockLogInfo);
-
         final Map<String, String[]> inputParameters = new HashMap<>();
 
         inputParameters.put(SodaParamValidator.META, new String[]{Boolean.toString(true)});
@@ -249,38 +191,26 @@ public class FITSActionTest {
         // Same file twice should be reduced to the same file.
         inputParameters.put("file", new String[]{"/archive/hst/hst-mef.fits"});
 
-        when(mockRequest.getMethod()).thenReturn("GET");
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            when(mockRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-        }
-        when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(inputParameters.keySet()));
-
-        for (final Map.Entry<String, String[]> entry : inputParameters.entrySet()) {
-            when(mockRequest.getParameterValues(entry.getKey())).thenReturn(entry.getValue());
-        }
-
         final TestServletOutputStream testServletOutputStream = new TestServletOutputStream();
         when(mockResponse.getOutputStream()).thenReturn(testServletOutputStream);
 
         when(mockFitsOperations.getHeaders()).thenReturn(headers);
 
-        final SyncInput syncInput = new SyncInput(mockRequest, null);
-        syncInput.init();
+        when(mockWebServiceMetaData.getTitle()).thenReturn("Test Application");
+        when(mockWebServiceMetaData.getVersion()).thenReturn("3.4.0");
+
+        final Job testJob = new Job();
+        final List<Parameter> parameterList = new ArrayList<>();
+        inputParameters.forEach((k, v) -> Arrays.stream(v).forEach(paramValue -> parameterList.add(
+                new Parameter(k, paramValue))));
+        testJob.setParameterList(parameterList);
+        testSubject.setJob(testJob);
 
         final SyncOutput syncOutput = new SyncOutput(mockResponse);
-        testSubject.setSyncInput(syncInput);
         testSubject.setSyncOutput(syncOutput);
-        testSubject.doAction();
+        testSubject.run();
 
-        verify(mockRequest).getMethod();
-        if (Logger.getLogger(SyncInput.class).isDebugEnabled()) {
-            verify(mockRequest).getHeaderNames();
-        }
-        verify(mockRequest).getParameterNames();
         verify(mockResponse).getOutputStream();
-
-        // Nothing actually counted.
-        verify(mockLogInfo).setBytes(0L);
     }
 
     static final class TestServletOutputStream extends ServletOutputStream {

@@ -19,10 +19,6 @@
     <interface xsi:type="vs:ParamHTTP" role="std">
       <accessURL use="base">https://replace.me.com/@app_name@/sync</accessURL>
     </interface>
-<!--    <interface xsi:type="vs:ParamHTTP">-->
-<!--      <accessURL use="base">https://replace.me.com/@app_name@/auth-datalink</accessURL>-->
-<!--      <securityMethod standardID="ivo://ivoa.net/sso#BasicAA" />-->
-<!--    </interface>-->
     <interface xsi:type="vs:ParamHTTP">
       <accessURL use="base">https://replace.me.com/@app_name@/sync</accessURL>
       <securityMethod standardID="ivo://ivoa.net/sso#cookie" />

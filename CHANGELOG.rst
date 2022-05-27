@@ -1,6 +1,12 @@
 ALMA IVOA Service Stack
 =======================
 
+2022.02.21
+----------
+
+- DataLink service now restricts to a single semantic
+- DataLink uses the latest vocabulary
+
 2020.01.27
 ----------
 

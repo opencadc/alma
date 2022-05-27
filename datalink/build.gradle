@@ -9,17 +9,23 @@ repositories {
     mavenLocal()
 }
 
-group = 'org.opencadc'
-sourceCompatibility = 11
-version = '1.3.2'
+version = '2.0.0'
+
+// Added AFTER the version is declared.
+apply from: '../properties.gradle'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'datalink'])
+            filter(ReplaceTokens, tokens: [app_name: 'datalink', version: version])
         }
     }
     archiveName = 'datalink.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "DataLink"
+    }
 
     // Include the swagger-ui so that /datalink provides the DataLink API documentation
     from('../') {
@@ -34,8 +40,8 @@ configurations {
 
 dependencies {
     implementation 'org.json:json:20220320'
-    implementation 'org.opencadc:alma-lib:[1.3.4,2.0)'
-    implementation 'org.opencadc:cadc-datalink-server:[1.0.2,1.1.0)'
+    implementation 'org.opencadc:alma-lib:[1.4.0,1.5.0)'
+    implementation 'org.opencadc:cadc-datalink-server:[1.1.2,1.3.0)'
     implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
     implementation 'org.opencadc:cadc-util:[1.6.0,2.0)'
     implementation 'org.opencadc:cadc-vosi:[1.3.4,2.0)'

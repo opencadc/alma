@@ -66,7 +66,7 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.deliverable;
+package org.opencadc.datalink;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -91,6 +91,8 @@ public class HierarchyItem {
     private final Type type;
     private final long sizeInBytes;
     private final boolean readable;
+    private final String fileClass;
+    private final String subDirectory;
     private final HierarchyItem[] childrenArray;
     private final AlmaUID[] mousIDArray;
 
@@ -122,6 +124,11 @@ public class HierarchyItem {
                                  Type.valueOf(document.get("type").toString()),
                                  document.getLong("sizeInBytes"),
                                  document.get("permission").toString().equals("ALLOWED"),
+
+                                 // fileClass and subDirectory are recent additions and may not yet be supported.
+                                 document.has("fileClass") ? document.get("fileClass").toString() : "",
+                                 document.has("subDirectory") ? document.get("subDirectory").toString() : "",
+
                                  childrenList.toArray(new HierarchyItem[0]),
                                  mousIDList.toArray(new AlmaUID[0]));
     }
@@ -139,13 +146,15 @@ public class HierarchyItem {
      * @param mousIDArray   The Array of MOUS IDs associated.
      */
     public HierarchyItem(AlmaUID uid, String id, String name, Type type, long sizeInBytes, boolean readable,
-                         HierarchyItem[] childrenArray, AlmaUID[] mousIDArray) {
+                         String fileClass, String subDirectory, HierarchyItem[] childrenArray, AlmaUID[] mousIDArray) {
         this.uid = uid;
         this.id = id;
         this.name = name;
         this.type = type;
         this.sizeInBytes = sizeInBytes;
         this.readable = readable;
+        this.fileClass = fileClass;
+        this.subDirectory = subDirectory;
         this.childrenArray = childrenArray;
         this.mousIDArray = mousIDArray;
     }
@@ -188,6 +197,14 @@ public class HierarchyItem {
 
     public boolean isReadable() {
         return readable;
+    }
+
+    public String getFileClass() {
+        return fileClass;
+    }
+
+    public String getSubDirectory() {
+        return subDirectory;
     }
 
     public boolean hasChildren() {
@@ -252,7 +269,10 @@ public class HierarchyItem {
                + "\"name\": \"" + this.name + "\","
                + "\"type\": \"" + this.type.name() + "\","
                + "\"sizeInBytes\": \"" + this.sizeInBytes + "\","
-               + "\"readable\": " + this.readable
+               + "\"readable\": " + this.readable + "\","
+               + "\"fileClass\": " + this.fileClass + "\","
+               + "\"subDirectory\": " + this.subDirectory + "\","
+               + "\"children\": " + Arrays.toString(this.childrenArray)
                + "}";
     }
 
@@ -270,15 +290,15 @@ public class HierarchyItem {
         SGOUS("Science Goal OUS"),
         GOUS("Group OUS"),
         MOUS("Member OUS"),
-        // following two are not _actually_ things which we deliver, abnd hence not a deliverable in that sense. They
+        // following two are not _actually_ things which we deliver, and hence not a deliverable in that sense. They
         // are used for displaying information
         // in the RequestHandler regarding the SB and SOURCE names for each MOUS.
         SCHEDBLOCK("SchedBlock"),
         SOURCE("Source"),
         // the order of the enums here determines the order of children in the DeliverableInfo class. README should
-        // come before PIIPELINE files
+        // come before PIPELINE files
         PIPELINE_AUXILIARY_README("Auxiliary/Readme"),
-        // An on-the-fly tarfile which is created from actual, individual files contained in NGAS. This entity
+        // An on-the-fly tar file which is created from actual, individual files contained in NGAS. This entity
         // doesn't physically
         // exist anywhere, rather it consists of lots of (real, actually existing)....
         PIPELINE_PRODUCT_TARFILE("Product"),
@@ -360,9 +380,7 @@ public class HierarchyItem {
                    || this == PIPELINE_AUXILIARY
                    || this == PIPELINE_AUXILIARY_SCRIPT
                    || this == PIPELINE_AUXILIARY_QA
-                   || this == PIPELINE_AUXILIARY_LOG
-                   || this == PIPELINE_AUXILIARY_CALIBRATION
-                   || this == PIPELINE_AUXILIARY_README;
+                   || this == PIPELINE_AUXILIARY_CALIBRATION;
         }
 
         /**
@@ -377,6 +395,10 @@ public class HierarchyItem {
                    || (this.isAuxiliary() && this != PIPELINE_AUXILIARY_TARFILE)
                    || this == EXTERNAL
                    || this == ADMIT;
+        }
+
+        public boolean isDocumentation() {
+            return this == PIPELINE_AUXILIARY_LOG || this == PIPELINE_AUXILIARY_README;
         }
     }
 }

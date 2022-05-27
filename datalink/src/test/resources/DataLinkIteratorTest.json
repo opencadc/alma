@@ -2,21 +2,22 @@
 	"id": null,
 	"name": "uid://A001/X879/X8f1",
 	"type": "MOUS",
-	"sizeInBytes": 0,
+	"sizeInBytes": -1,
 	"permission": "ALLOWED",
+	"dateIngested": "2020-07-17",
 	"children": [
 		{
 			"id": null,
 			"name": "AFGL3068_a_06_TP",
 			"type": "SCHEDBLOCK",
-			"sizeInBytes": 0,
+			"sizeInBytes": -1,
 			"permission": "ALLOWED",
 			"children": [
 				{
 					"id": null,
 					"name": "AFGL3068",
 					"type": "SOURCE",
-					"sizeInBytes": 0,
+					"sizeInBytes": -1,
 					"permission": "ALLOWED",
 					"children": [],
 					"allMousUids": []
@@ -25,10 +26,65 @@
 			"allMousUids": []
 		},
 		{
-			"id": "2016.1.00007.S_uid___A001_X879_X8f1_001_of_001.tar",
+			"id": "member.uid___A001_X879_X8f1.README.txt",
+			"name": "member.uid___A001_X879_X8f1.README.txt",
+			"type": "PIPELINE_AUXILIARY_README",
+			"sizeInBytes": 14284,
+			"permission": "ALLOWED",
+			"children": [],
+			"allMousUids": []
+		},
+		{
+			"id": null,
 			"name": "2016.1.00007.S_uid___A001_X879_X8f1_001_of_001.tar",
-			"type": "PIPELINE_PRODUCT",
-			"sizeInBytes": 1392629760,
+			"type": "PIPELINE_PRODUCT_TARFILE",
+			"sizeInBytes": 34588672,
+			"permission": "ALLOWED",
+			"children": [
+				{
+					"id": "member.uid___A001_X879_X8f1.AFGL3068.spw17.I.sd.im.fits",
+					"name": "member.uid___A001_X879_X8f1.AFGL3068.spw17.I.sd.im.fits",
+					"type": "PIPELINE_PRODUCT",
+					"sizeInBytes": 1059840,
+					"permission": "ALLOWED",
+					"children": [],
+					"allMousUids": []
+				},
+				{
+					"id": "member.uid___A001_X879_X8f1.AFGL3068.spw19.I.sd.im.fits",
+					"name": "member.uid___A001_X879_X8f1.AFGL3068.spw19.I.sd.im.fits",
+					"type": "PIPELINE_PRODUCT",
+					"sizeInBytes": 16787520,
+					"permission": "ALLOWED",
+					"children": [],
+					"allMousUids": []
+				},
+				{
+					"id": "member.uid___A001_X879_X8f1.AFGL3068.spw21.I.sd.im.fits",
+					"name": "member.uid___A001_X879_X8f1.AFGL3068.spw21.I.sd.im.fits",
+					"type": "PIPELINE_PRODUCT",
+					"sizeInBytes": 993600,
+					"permission": "ALLOWED",
+					"children": [],
+					"allMousUids": []
+				},
+				{
+					"id": "member.uid___A001_X879_X8f1.AFGL3068.spw23.I.sd.im.fits",
+					"name": "member.uid___A001_X879_X8f1.AFGL3068.spw23.I.sd.im.fits",
+					"type": "PIPELINE_PRODUCT",
+					"sizeInBytes": 15739200,
+					"permission": "ALLOWED",
+					"children": [],
+					"allMousUids": []
+				}
+			],
+			"allMousUids": []
+		},
+		{
+			"id": null,
+			"name": "2016.1.00007.S_uid___A001_X879_X8f1_auxiliary.tar",
+			"type": "PIPELINE_AUXILIARY_TARFILE",
+			"sizeInBytes": 1358019584,
 			"permission": "ALLOWED",
 			"children": [],
 			"allMousUids": []
@@ -37,7 +93,7 @@
 			"id": "uid___A002_Xb8e115_X1f82",
 			"name": "2016.1.00007.S_uid___A002_Xb8e115_X1f82.asdm.sdm.tar",
 			"type": "ASDM",
-			"sizeInBytes": 1653287936,
+			"sizeInBytes": 1653710848,
 			"permission": "ALLOWED",
 			"children": [],
 			"allMousUids": []
@@ -46,7 +102,7 @@
 			"id": "uid___A002_Xb8e115_X2839",
 			"name": "2016.1.00007.S_uid___A002_Xb8e115_X2839.asdm.sdm.tar",
 			"type": "ASDM",
-			"sizeInBytes": 1652833280,
+			"sizeInBytes": 1653257216,
 			"permission": "ALLOWED",
 			"children": [],
 			"allMousUids": []
@@ -55,7 +111,7 @@
 			"id": "uid___A002_Xb8e115_Xed6",
 			"name": "2016.1.00007.S_uid___A002_Xb8e115_Xed6.asdm.sdm.tar",
 			"type": "ASDM",
-			"sizeInBytes": 1653063680,
+			"sizeInBytes": 1653488640,
 			"permission": "ALLOWED",
 			"children": [],
 			"allMousUids": []
@@ -64,7 +120,7 @@
 			"id": "uid___A002_Xb8e961_Xe8",
 			"name": "2016.1.00007.S_uid___A002_Xb8e961_Xe8.asdm.sdm.tar",
 			"type": "ASDM",
-			"sizeInBytes": 1290231808,
+			"sizeInBytes": 1290569728,
 			"permission": "ALLOWED",
 			"children": [],
 			"allMousUids": []
@@ -73,7 +129,7 @@
 			"id": "uid___A002_Xb8f857_X684",
 			"name": "2016.1.00007.S_uid___A002_Xb8f857_X684.asdm.sdm.tar",
 			"type": "ASDM",
-			"sizeInBytes": 1652815872,
+			"sizeInBytes": 1653243904,
 			"permission": "ALLOWED",
 			"children": [],
 			"allMousUids": []
@@ -82,7 +138,7 @@
 			"id": "uid___A002_Xb8fee5_X17c6",
 			"name": "2016.1.00007.S_uid___A002_Xb8fee5_X17c6.asdm.sdm.tar",
 			"type": "ASDM",
-			"sizeInBytes": 1653105664,
+			"sizeInBytes": 1653528576,
 			"permission": "ALLOWED",
 			"children": [],
 			"allMousUids": []
@@ -91,7 +147,7 @@
 			"id": "uid___A002_Xb8fee5_Xeef",
 			"name": "2016.1.00007.S_uid___A002_Xb8fee5_Xeef.asdm.sdm.tar",
 			"type": "ASDM",
-			"sizeInBytes": 1653179392,
+			"sizeInBytes": 1653603328,
 			"permission": "ALLOWED",
 			"children": [],
 			"allMousUids": []

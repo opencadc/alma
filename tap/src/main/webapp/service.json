@@ -1,104 +1,15 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.1",
-    "title": "ObsCore TAP (Table Access Protocol) web service",
-    "description": "The ObsCore (TAP) web service.\n<a href=\"http://www.ivoa.net/documents/TAP/\" target=\"_blank\">IVOA TAP Specification</a>\n\nThe synchronous and asynchronous service endpoints conform the the IVOA UWS (Universal Worker Service) Framework.\n<a href=\"http://www.ivoa.net/documents/UWS/\" target=\"_blank\">IVOA UWS Specification</a>\n\nThis service implements the ObsCore data model.  The main tables are:\n- ivoa.ObsCore: supports <a href=\"http://www.ivoa.net/documents/ObsCore/index.html\" target=\"_blank\">ObsCore-1.1</a> physical model from the ObsTAP project\n### Downloading Data\nThe planeURI column in the caom2.Plane table can be used to query the related DataLink service to get details about files that can be downloaded and related services that can operate on a product.\nThe obs_publisher_did column in the ivoa.ObsCore table contains the same identifiers for use with a DataLink service.\n### Unsupported ADQL Constructs\nThe following ADQL Functions are not currently supported: ALL and DISTINCT within an aggregate function (AVG, COUNT, MIN, MAX, COUNT) PI RAND TRUNCATE\n"
+        "version": "@version@",
+        "title": "ObsCore TAP (Table Access Protocol) web service",
+        "description": "The ObsCore (TAP) web service.\n<a href=\"http://www.ivoa.net/documents/TAP/\" target=\"_blank\">IVOA TAP Specification</a>\n\nThe synchronous and asynchronous service endpoints conform the the IVOA UWS (Universal Worker Service) Framework.\n<a href=\"http://www.ivoa.net/documents/UWS/\" target=\"_blank\">IVOA UWS Specification</a>\n\nThis service implements the ObsCore data model.  The main tables are:\n- ivoa.ObsCore: supports <a href=\"http://www.ivoa.net/documents/ObsCore/index.html\" target=\"_blank\">ObsCore-1.1</a> physical model from the ObsTAP project\n### Downloading Data\nThe planeURI column in the caom2.Plane table can be used to query the related DataLink service to get details about files that can be downloaded and related services that can operate on a product.\nThe obs_publisher_did column in the ivoa.ObsCore table contains the same identifiers for use with a DataLink service.\n### Unsupported ADQL Constructs\nThe following ADQL Functions are not currently supported: ALL and DISTINCT within an aggregate function (AVG, COUNT, MIN, MAX, COUNT) PI RAND TRUNCATE\n"
     },
     "schemes": [
         "https"
     ],
     "basePath": "/@app_name@",
     "paths": {
-        "/async": {
-            "post": {
-                "summary": "IVOA TAP v1.1",
-                "tags": [
-                    "TAP"
-                ],
-                "description": "TAP asynchonous query endpoint (create UWS Job)\n",
-                "parameters": [
-                    {
-                        "name": "LANG",
-                        "in": "query",
-                        "description": "specify the query language used in the QUERY parameter",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "QUERY",
-                        "in": "query",
-                        "description": "specify the query",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "FORMAT",
-                        "in": "query",
-                        "description": "supported for backwards compatibility to 1.0 (see: RESPONSEFORMAT)",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "RESPONSEFORMAT",
-                        "in": "query",
-                        "description": "select output table format",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "MAXREC",
-                        "in": "query",
-                        "description": "request a specific limit on number of rows to return",
-                        "required": false,
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    {
-                        "name": "DEST",
-                        "in": "query",
-                        "description": "specify destination where output should be written (VOSpace URI)",
-                        "required": false,
-                        "type": "string",
-                        "format": "uri"
-                    },
-                    {
-                        "name": "UPLOAD",
-                        "in": "query",
-                        "collectionFormat": "multi",
-                        "description": "specify name,location pair for a table to be uploaded and used in the query",
-                        "required": false,
-                        "type": "string"
-                    }
-                ],
-                "produces": [
-                    "text/xml"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful response"
-                    },
-                    "401": {
-                        "description": "Unauthorized - User not authenticated"
-                    },
-                    "404": {
-                        "description": "Not Found - User not found"
-                    },
-                    "500": {
-                        "description": "Internal error"
-                    },
-                    "503": {
-                        "description": "Service busy"
-                    },
-                    "default": {
-                        "description": "Unexpeced error",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    }
-                }
-            }
-        },
         "/sync": {
             "get": {
                 "summary": "IVOA TAP v1.1",

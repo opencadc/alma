@@ -89,14 +89,15 @@ import ca.nrc.cadc.uws.server.JobUpdater;
 import ca.nrc.cadc.uws.util.JobLogInfo;
 import org.apache.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
+import org.opencadc.alma.logging.web.ByteCountingSyncOutput;
 import org.opencadc.soda.server.AlmaStreamingSodaPlugin;
 import org.opencadc.soda.server.Cutout;
-import org.opencadc.soda.server.StreamingSodaPlugin;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -149,7 +150,9 @@ public class AlmaSodaJobRunner implements JobRunner {
      */
     @Override
     public void setSyncOutput(final SyncOutput output) {
-        this.syncOutput = output;
+        if (output != null) {
+            this.syncOutput = new ByteCountingSyncOutput(output);
+        }
     }
 
     /**
@@ -256,7 +259,7 @@ public class AlmaSodaJobRunner implements JobRunner {
                 subCut.add(new Cutout());
             }
 
-            final StreamingSodaPlugin sodaPlugin = getSodaPlugin();
+            final AlmaStreamingSodaPlugin sodaPlugin = getSodaPlugin();
             final List<Result> jobResults = new ArrayList<>();
             int serialNum = 1;
             for (final URI id : ids) {
@@ -275,13 +278,19 @@ public class AlmaSodaJobRunner implements JobRunner {
                                 cut.time = time.time;
                                 cut.pol = polCut.pol;
                                 cut.pixelCutouts = sub.pixelCutouts;
-                                syncOutput.setHeader(CONTENT_DISPOSITION, "inline; filename=\""
-                                                                          + cutoutFileNameFormat.format(cut) + "\"");
-                                syncOutput.setHeader(HttpTransfer.CONTENT_TYPE.toLowerCase(Locale.ROOT),
-                                                     "application/fits");
-                                sodaPlugin.write(id, cut, extraParams, this.syncOutput);
+                                if (syncOutput != null) {
+                                    syncOutput.setHeader(CONTENT_DISPOSITION, "inline; filename=\""
+                                                                              + cutoutFileNameFormat.format(cut)
+                                                                              + "\"");
+                                    syncOutput.setHeader(HttpTransfer.CONTENT_TYPE.toLowerCase(Locale.ROOT),
+                                                         "application/fits");
+                                    sodaPlugin.write(id, cut, extraParams, this.syncOutput);
+                                } else {
+                                    final URL redirectURL = sodaPlugin.toURL(serialNum, id, cut, extraParams);
+                                    jobResults.add(new Result(RESULT_OK + "-" + serialNum++,
+                                                              redirectURL.toURI()));
+                                }
                                 LOGGER.debug("wrote cutout URL");
-                                jobResults.add(new Result(RESULT_OK + "-" + serialNum++, id));
                             }
                         }
                     }
@@ -368,7 +377,7 @@ public class AlmaSodaJobRunner implements JobRunner {
         }
     }
 
-    public StreamingSodaPlugin getSodaPlugin() {
+    public AlmaStreamingSodaPlugin getSodaPlugin() {
         return new AlmaStreamingSodaPlugin(createSodaQuery());
     }
 

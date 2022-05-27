@@ -9,16 +9,23 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = 11
+version = '2.0.0'
+
+// Added AFTER the version is declared.
+apply from: '../properties.gradle'
 
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'tap'])
+            filter(ReplaceTokens, tokens: [app_name: 'tap', version: version])
         }
     }
-
     archiveName = 'tap.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "TAP"
+    }
 
     // Include the swagger-ui so that /tap provides the TAP API documentation
     from('../') {
@@ -33,11 +40,13 @@ configurations {
 
 dependencies {
     implementation 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
-    implementation 'org.opencadc:cadc-adql:[1.1,2.0)'
+    implementation 'org.opencadc:alma-lib:[1.4.0,2.0)'
+    implementation 'org.opencadc:cadc-adql:[1.1,)'
     implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
     implementation 'org.opencadc:cadc-tap-server:[1.1.19,2.0)'
-    implementation 'org.opencadc:cadc-tap-server-oracle:[1.2.9,1.3.0)'
-    implementation 'org.opencadc:cadc-vosi:[1.3.4,2.0)'
+    implementation 'org.opencadc:cadc-tap-server-oracle:[1.2.8,1.3.0)'
+    implementation 'org.opencadc:cadc-util:[1.6,1.7.0)'
+    implementation 'org.opencadc:cadc-vosi:[1.4.3,2.0)'
 
     runtimeOnly 'org.opencadc:cadc-registry:[1.5.9,2.0)'
 

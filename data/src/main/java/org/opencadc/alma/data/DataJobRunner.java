@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2020.                            (c) 2020.
+ *  (c) 2022.                            (c) 2022.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,25 +66,31 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.data.fits;
+package org.opencadc.alma.data;
 
 import ca.nrc.cadc.dali.Circle;
 import ca.nrc.cadc.dali.Interval;
 import ca.nrc.cadc.dali.Polygon;
 import ca.nrc.cadc.dali.Shape;
 import ca.nrc.cadc.io.ByteCountOutputStream;
-import ca.nrc.cadc.io.WriteException;
 import ca.nrc.cadc.net.ResourceNotFoundException;
+import ca.nrc.cadc.rest.SyncOutput;
+import ca.nrc.cadc.uws.Job;
+import ca.nrc.cadc.uws.Parameter;
+import ca.nrc.cadc.uws.ParameterUtil;
+import ca.nrc.cadc.uws.server.JobRunner;
+import ca.nrc.cadc.uws.server.JobUpdater;
 import nom.tam.util.RandomAccessDataObject;
 import nom.tam.util.RandomAccessFileExt;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.opencadc.alma.data.BaseAction;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.opencadc.alma.logging.web.ByteCountingSyncOutput;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.fits.NoOverlapException;
 import org.opencadc.soda.SodaParamValidator;
 import org.opencadc.soda.server.Cutout;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -93,17 +99,54 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
-/**
- * Base action for all FITS files obtained from this SODA service.
- */
-public class FITSAction extends BaseAction {
-    private final Logger LOGGER = LogManager.getLogger(FITSAction.class);
+public class DataJobRunner implements JobRunner {
+    private static final Logger LOGGER = LogManager.getLogger(DataJobRunner.class);
     private static final SodaParamValidator SODA_PARAM_VALIDATOR = new SodaParamValidator();
 
+    protected SyncOutput syncOutput;
+    protected Job job;
+
+    @Override
+    public void setJobUpdater(JobUpdater jobUpdater) {
+        // Not supported
+    }
+
+    @Override
+    public void setJob(Job job) {
+        this.job = job;
+    }
+
+    @Override
+    public void setSyncOutput(SyncOutput output) {
+        if (output != null) {
+            this.syncOutput = new ByteCountingSyncOutput(output);
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            verifyArguments();
+
+            // The caller will close this stream.
+            final ByteCountOutputStream byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
+            write(byteCountOutputStream);
+            byteCountOutputStream.flush();
+        } catch (NoOverlapException | ResourceNotFoundException exception) {
+            throw new IllegalArgumentException(exception.getMessage(), exception);
+        } catch (IOException e) {
+            // error on client write
+            String msg = "write output error";
+            LOGGER.debug(msg, e);
+            if (e.getMessage() != null) {
+                msg += ": " + e.getMessage();
+            }
+            throw new IllegalArgumentException(msg, e);
+        }
+    }
 
     void throwUsageError() {
-        final String requestURI = syncInput.getRequestURI();
+        final String requestURI = this.job.getRequestPath();
         throw new IllegalArgumentException(
                 String.format("\nUsage: \n"
                               + "%s?file=[ABSOLUTE_FILE_PATH]\n"
@@ -119,7 +162,8 @@ public class FITSAction extends BaseAction {
     }
 
     final void verifyArguments() {
-        final Set<String> requestedFilePaths = new HashSet<>(getParametersNullSafe("file"));
+        final Set<String> requestedFilePaths =
+                new HashSet<>(ParameterUtil.findParameterValues("file", job.getParameterList()));
         final boolean hasFile = !requestedFilePaths.isEmpty();
 
         if (!hasFile) {
@@ -129,31 +173,11 @@ public class FITSAction extends BaseAction {
         }
     }
 
-    @Override
-    public void doAction() throws Exception {
-        verifyArguments();
+    protected File getFile() {
+        final String requestedFilePath = ParameterUtil.findParameterValue("file", job.getParameterList());
+        LOGGER.debug("Searching for file " + requestedFilePath);
 
-        ByteCountOutputStream byteCountOutputStream = null;
-        try {
-            // The caller will close this stream.
-            byteCountOutputStream = new ByteCountOutputStream(syncOutput.getOutputStream());
-            write(byteCountOutputStream);
-            byteCountOutputStream.flush();
-        } catch (NoOverlapException noOverlapException) {
-            throw new IllegalArgumentException(noOverlapException.getMessage());
-        } catch (WriteException e) {
-            // error on client write
-            String msg = "write output error";
-            LOGGER.debug(msg, e);
-            if (e.getMessage() != null) {
-                msg += ": " + e.getMessage();
-            }
-            throw new IllegalArgumentException(msg, e);
-        } finally {
-            if (byteCountOutputStream != null) {
-                this.logInfo.setBytes(byteCountOutputStream.getByteCount());
-            }
-        }
+        return new File(requestedFilePath);
     }
 
     void write(final ByteCountOutputStream byteCountOutputStream) throws ResourceNotFoundException, IOException,
@@ -293,14 +317,15 @@ public class FITSAction extends BaseAction {
         final boolean requestedMeta;
 
         public SodaCutout() {
-            this.requestedSubs = syncInput.getParameters(SodaParamValidator.SUB);
-            this.requestedCircles = syncInput.getParameters(SodaParamValidator.CIRCLE);
-            this.requestedPolygons = syncInput.getParameters(SodaParamValidator.POLYGON);
-            this.requestedPOSs = syncInput.getParameters(SodaParamValidator.POS);
-            this.requestedBands = syncInput.getParameters(SodaParamValidator.BAND);
-            this.requestedTimes = syncInput.getParameters(SodaParamValidator.TIME);
-            this.requestedPOLs = syncInput.getParameters(SodaParamValidator.POL);
-            this.requestedMeta = "true".equals(syncInput.getParameter(SodaParamValidator.META));
+            final List<Parameter> parameters = job.getParameterList();
+            this.requestedSubs = ParameterUtil.findParameterValues(SodaParamValidator.SUB, parameters);
+            this.requestedCircles = ParameterUtil.findParameterValues(SodaParamValidator.CIRCLE, parameters);
+            this.requestedPolygons = ParameterUtil.findParameterValues(SodaParamValidator.POLYGON, parameters);
+            this.requestedPOSs = ParameterUtil.findParameterValues(SodaParamValidator.POS, parameters);
+            this.requestedBands = ParameterUtil.findParameterValues(SodaParamValidator.BAND, parameters);
+            this.requestedTimes = ParameterUtil.findParameterValues(SodaParamValidator.TIME, parameters);
+            this.requestedPOLs = ParameterUtil.findParameterValues(SodaParamValidator.POL, parameters);
+            this.requestedMeta = "true".equals(ParameterUtil.findParameterValue(SodaParamValidator.META, parameters));
         }
 
         boolean hasSUB() {
