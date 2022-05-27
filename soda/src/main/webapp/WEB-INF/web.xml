@@ -2,13 +2,12 @@
 
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://java.sun.com/xml/ns/javaee"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         id="soda" version="3.0">
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         id="soda" version="3.1">
 
     <display-name>SODA</display-name>
 
     <servlet>
-        <load-on-startup>1</load-on-startup>
         <servlet-name>logControl</servlet-name>
         <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
         <init-param>
@@ -26,6 +25,13 @@
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <!-- Initialize the remote logging AFTER the main logging, otherwise it will be cleared. -->
+    <servlet>
+        <servlet-name>remoteLogger</servlet-name>
+        <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
+        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <servlet>
@@ -72,46 +78,24 @@
         <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
+            <param-value>org.opencadc.alma.logging.SODALoggingSyncGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>authHeaders</param-name>
-            <param-value>false</param-value>
+            <param-value>org.opencadc.alma.logging.SODALoggingSyncPostAction</param-value>
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>org.opencadc.soda.ws.SodaJobManager</param-value>
         </init-param>
-    </servlet>
-
-    <servlet>
-        <servlet-name>AsyncSodaServlet</servlet-name>
-        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
-            <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.uws.web.GetAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>post</param-name>
-            <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
-        </init-param>
-        <init-param>
-            <param-name>delete</param-name>
-            <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
             <param-value>false</param-value>
         </init-param>
-        <init-param>
-            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
-            <param-value>org.opencadc.soda.ws.SodaJobManager</param-value>
-        </init-param>
-        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <servlet>
@@ -121,6 +105,10 @@
         <init-param>
             <param-name>get</param-name>
             <param-value>org.opencadc.soda.ws.EchoAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>authHeaders</param-name>
@@ -153,16 +141,6 @@
     <servlet-mapping>
         <servlet-name>SyncSodaServlet</servlet-name>
         <url-pattern>/sync/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>AsyncSodaServlet</servlet-name>
-        <url-pattern>/async</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>AsyncSodaServlet</servlet-name>
-        <url-pattern>/async/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

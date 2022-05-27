@@ -89,9 +89,10 @@ public class ALMADataLinkSource implements DataLinkSource {
         this.downloadOnly = downloadOnly;
     }
 
-    public ALMADataLinkSource(DataLinkIterator dataLinkIterator) {
+    public ALMADataLinkSource(final DataLinkIterator dataLinkIterator) {
         this(dataLinkIterator, 1000, true);
     }
+
 
     @Override
     public void setDownloadOnly(boolean b) {

@@ -69,10 +69,8 @@
 
 package org.opencadc.soda.server;
 
-import ca.nrc.cadc.net.ResourceAlreadyExistsException;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.net.HttpGet;
-import ca.nrc.cadc.net.TransientException;
 import ca.nrc.cadc.rest.SyncOutput;
 
 import java.io.IOException;

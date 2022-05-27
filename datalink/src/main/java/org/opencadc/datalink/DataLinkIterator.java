@@ -70,19 +70,24 @@
 package org.opencadc.datalink;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
+import ca.nrc.cadc.reg.Standards;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaUID;
-import org.opencadc.alma.deliverable.HierarchyItem;
 
 import ca.nrc.cadc.util.StringUtil;
 
@@ -95,20 +100,21 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private static final Logger LOGGER = LogManager.getLogger(DataLinkIterator.class);
 
     private static final String DEFAULT_UNKNOWN_CONTENT_TYPE = "application/octet-stream";
-    private static final String VOTABLE_CONTENT_TYPE = "application/x-votable+xml;content=datalink";
     private static final String FITS_CONTENT_TYPE = "image/fits";
 
     private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
     private final DataLinkURLBuilder dataLinkURLBuilder;
     private final Iterator<String> datasetIDIterator;
     private final DataLinkQuery dataLinkQuery;
+    private final AlmaProperties almaProperties;
 
 
     DataLinkIterator(final DataLinkURLBuilder dataLinkURLBuilder, final Iterator<String> datasetIDIterator,
-                     final DataLinkQuery dataLinkQuery) {
+                     final DataLinkQuery dataLinkQuery, final AlmaProperties almaProperties) {
         this.dataLinkURLBuilder = dataLinkURLBuilder;
         this.datasetIDIterator = datasetIDIterator;
         this.dataLinkQuery = dataLinkQuery;
+        this.almaProperties = almaProperties;
     }
 
     @Override
@@ -136,7 +142,12 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private void visitSubDeliverables(final HierarchyItem hierarchyItem) {
         Arrays.stream(hierarchyItem.getChildrenArray()).filter(h -> {
             final HierarchyItem.Type type = h.getType();
-            return type.isLeaf() || type.isOus() || type.isTarfile() || type.isAuxiliary();
+            final boolean isAccepted = type.isLeaf() || type.isOus() || type.isTarfile() || type.isAuxiliary()
+                                       || type.isDocumentation();
+            if (LOGGER.isDebugEnabled() && !isAccepted) {
+                LOGGER.debug(String.format("Rejecting %s.", h.getUidString()));
+            }
+            return isAccepted;
         }).forEach(h -> dataLinkQueue.addAll(createDataLinks(h)));
     }
 
@@ -161,29 +172,47 @@ public class DataLinkIterator implements Iterator<DataLink> {
         final List<DataLink> dataLinkCollection = new ArrayList<>();
         final HierarchyItem.Type deliverableType = hierarchyItem.getType();
 
-        dataLinkCollection.add(createDataLink(hierarchyItem));
+        if (!hierarchyItem.fileExists()) {
+            dataLinkCollection.add(createNotFoundDataLink(hierarchyItem));
+        } else {
+            final DataLink.Term dataLinkTerm = determineSemantic(hierarchyItem);
+            final DataLink dataLink = createDataLink(hierarchyItem, dataLinkTerm);
+            dataLinkCollection.add(dataLink);
 
-        switch (deliverableType) {
-            case PIPELINE_AUXILIARY_TARFILE:
+            try {
                 if (hierarchyItem.hasChildren()) {
-                    dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.AUXILIARY));
+                    final DataLink recursiveDataLink = new DataLink(hierarchyItem.getUidString(), dataLinkTerm);
+                    final ServiceDescriptor serviceDescriptor =
+                            new ServiceDescriptor(createRecursiveURL(hierarchyItem));
+                    final String[] pathSegments = dataLink.accessURL.getPath().split("/");
+                    // Use just the filename.
+                    serviceDescriptor.id = String.format("DataLink.%s", pathSegments[pathSegments.length - 1]);
+                    serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
+
+                    recursiveDataLink.descriptor = serviceDescriptor;
+                    recursiveDataLink.serviceDef = serviceDescriptor.id;
+                    recursiveDataLink.contentType = "text/xml";
+
+                    setDescription(dataLink, null, null);
+
+                    dataLinkCollection.add(recursiveDataLink);
                 }
-                break;
-            case PIPELINE_PRODUCT_TARFILE:
-                if (hierarchyItem.hasChildren()) {
-                    dataLinkCollection.add(createRecursiveDataLink(hierarchyItem, DataLink.Term.THIS));
-                }
-                break;
-            case PIPELINE_PRODUCT:
-                if (getIdentifier(hierarchyItem).endsWith(".fits")) {
-                    dataLinkCollection.add(createCutoutDataLink(hierarchyItem));
-                } else {
-                    LOGGER.debug(String.format("No cutout available for %s.", hierarchyItem.getNullSafeId()));
-                }
-                break;
-            default:
-                LOGGER.debug(String.format("Nothing to add for %s.", hierarchyItem.getNullSafeId()));
-                break;
+            } catch (MalformedURLException e) {
+                LOGGER.error("Access URL creation failed.", e);
+                dataLink.errorMessage = String.format("Unable to create Service Descriptor URL for %s/%s|%s.",
+                                                      hierarchyItem.getSubDirectory(), hierarchyItem.getNullSafeId(),
+                                                      hierarchyItem.getFileClass());
+            }
+        }
+
+        if (deliverableType == HierarchyItem.Type.PIPELINE_PRODUCT) {
+            if (getIdentifier(hierarchyItem).endsWith(".fits")) {
+                dataLinkCollection.add(createCutoutDataLink(hierarchyItem));
+            } else {
+                LOGGER.debug(String.format("No cutout available for %s.", hierarchyItem.getNullSafeId()));
+            }
+        } else {
+            LOGGER.debug(String.format("Nothing to add for %s.", hierarchyItem.getNullSafeId()));
         }
 
         return dataLinkCollection;
@@ -192,83 +221,103 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private DataLink createNotFoundDataLink(final HierarchyItem hierarchyItem) {
         final DataLink errorDataLink = new DataLink(hierarchyItem.getUidString(), DataLink.Term.ERROR);
         errorDataLink.errorMessage = String.format("NotFoundFault: %s", hierarchyItem.getNullSafeId());
+        errorDataLink.contentType = "text/plain";
+        errorDataLink.contentLength = (long) errorDataLink.errorMessage.getBytes(StandardCharsets.UTF_8).length;
+        errorDataLink.description = "Indicates an error was found while generating this document.";
 
         return errorDataLink;
     }
 
-    private DataLink createDataLink(final HierarchyItem hierarchyItem) {
-        final List<DataLink.Term> dataLinkTerms = determineTerms(hierarchyItem);
-        final DataLink.Term primarySemantic = dataLinkTerms.get(0);
-
-        // Already got it.
-        dataLinkTerms.remove(0);
+    private DataLink createDataLink(final HierarchyItem hierarchyItem, final DataLink.Term semantic) {
         final DataLink dataLink;
 
-        if (primarySemantic == DataLink.Term.DATALINK) {
-            dataLink = createRecursiveDataLink(hierarchyItem, null);
+        //
+        // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This
+        // TODO: makes that assumption.  If a UID that does not exist is passed in, the DataPacker will still
+        // TODO: return a result, so we'll hide it here if the size is less than zero bytes.
+        //
+        // jenkinsd 2019.07.11
+        //
+        if (!hierarchyItem.fileExists()) {
+            dataLink = createNotFoundDataLink(hierarchyItem);
         } else {
-            //
-            // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This
-            // TODO: makes that assumption.  If a UID that does not exist is passed in, the DataPacker will still
-            // TODO: return a result, so we'll hide it here if the size is less than zero bytes.
-            //
-            // jenkinsd 2019.07.11
-            //
-            if (!hierarchyItem.fileExists()) {
-                dataLink = createNotFoundDataLink(hierarchyItem);
-            } else {
-                dataLink = new DataLink(hierarchyItem.getUidString(), primarySemantic);
-                try {
-                    dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(hierarchyItem);
-                } catch (MalformedURLException e) {
-                    LOGGER.warn("Access URL creation failed.", e);
-                    dataLink.errorMessage = String.format("Unable to create access URL for %s.",
-                                                          hierarchyItem.getNullSafeId());
-                }
-
+            dataLink = new DataLink(hierarchyItem.getUidString(), semantic);
+            try {
+                dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(hierarchyItem);
                 dataLink.contentLength = determineSizeInBytes(hierarchyItem);
                 dataLink.contentType = determineContentType(hierarchyItem);
                 dataLink.readable = hierarchyItem.isReadable();
+                dataLink.description = getDescription(dataLink, hierarchyItem.getSubDirectory(),
+                                                      hierarchyItem.getFileClass());
 
-                dataLinkTerms.forEach(dataLink::addSemantics);
+                final String subDirectory = hierarchyItem.getSubDirectory();
+                final String fileClass = hierarchyItem.getFileClass();
+
+                setDescription(dataLink, subDirectory, fileClass);
+            } catch (MalformedURLException e) {
+                LOGGER.error("Access URL creation failed.", e);
+                dataLink.errorMessage = String.format("Unable to create access URL for %s/%s|%s.",
+                                                      hierarchyItem.getSubDirectory(), hierarchyItem.getNullSafeId(),
+                                                      hierarchyItem.getFileClass());
             }
         }
 
         return dataLink;
     }
 
-    private DataLink createRecursiveDataLink(final HierarchyItem hierarchyItem, final DataLink.Term dataLinkTerm) {
-        final DataLink dataLink = new DataLink(hierarchyItem.getUidString(), DataLink.Term.DATALINK);
+    private void setDescription(final DataLink dataLink, final String subDirectory, final String fileClass) {
+        final StringBuilder descriptionID = new StringBuilder();
 
-        if (dataLinkTerm != null) {
-            dataLink.addSemantics(dataLinkTerm);
+        if (StringUtil.hasText(subDirectory)) {
+            descriptionID.append(subDirectory).append("/");
         }
 
-        try {
-            dataLink.accessURL = createRecursiveURL(hierarchyItem);
-        } catch (MalformedURLException e) {
-            LOGGER.warn("Recursive URL creation failed.", e);
-            dataLink.errorMessage = String.format("Unable to create recursive URL for %s.",
-                                                  hierarchyItem.getNullSafeId());
+        descriptionID.append(dataLink.getID());
+
+        if (StringUtil.hasText(fileClass)) {
+            descriptionID.append("|").append(fileClass);
         }
 
-        dataLink.contentType = VOTABLE_CONTENT_TYPE;
+        if (dataLink.getSemantics().contains(DataLink.Term.PACKAGE)) {
+            final String appendage;
+            if (dataLink.descriptor == null) {
+                appendage = "";
+            } else {
+                appendage = ", or follow the service_def field value to access files directly";
+            }
 
-        return dataLink;
+            dataLink.description = String.format("Download all data associated with %s%s.", descriptionID,
+                                                 appendage);
+        } else if (dataLink.getSemantics().contains(DataLink.Term.DOCUMENTATION)) {
+            dataLink.description = String.format("Download documentation for %s.", descriptionID);
+        } else {
+            // Assumes #this
+            dataLink.description = String.format("Download dataset of type: %s, and class: %s.",
+                                                 subDirectory,
+                                                 (StringUtil.hasText(fileClass) ? fileClass : "N/A"));
+        }
     }
 
     private DataLink createCutoutDataLink(final HierarchyItem hierarchyItem) {
         final DataLink dataLink = new DataLink(hierarchyItem.getUidString(), DataLink.Term.CUTOUT);
 
         try {
-            dataLink.accessURL = createCutoutURL(hierarchyItem);
+            final URL accessURL = createCutoutURL(hierarchyItem);
+            final String[] pathSegments = accessURL.getPath().split("/");
+            final ServiceDescriptor serviceDescriptor = new ServiceDescriptor(accessURL);
+            serviceDescriptor.id = String.format("SODA.%s", pathSegments[pathSegments.length - 1]);
+            serviceDescriptor.standardID = Standards.SODA_SYNC_10;
+            serviceDescriptor.resourceIdentifier = almaProperties.getSodaServiceURI();
+
+            dataLink.contentType = FITS_CONTENT_TYPE;
+            dataLink.descriptor = serviceDescriptor;
+            dataLink.serviceDef = serviceDescriptor.id;
+            dataLink.description = String.format("Synchronous SODA sub-image of %s.", hierarchyItem.getUidString());
         } catch (MalformedURLException e) {
             LOGGER.warn("Cutout URL creation failed.", e);
             dataLink.errorMessage = String.format("Unable to create Cutout URL for %s.",
                                                   hierarchyItem.getUidString());
         }
-
-        dataLink.contentType = FITS_CONTENT_TYPE;
 
         return dataLink;
     }
@@ -300,33 +349,59 @@ public class DataLinkIterator implements Iterator<DataLink> {
         return contentType;
     }
 
+    private String getDescription(final DataLink dataLink, final String subDirectory, final String fileClass) {
+        final StringBuilder descriptionID = new StringBuilder();
+
+        if (StringUtil.hasText(subDirectory)) {
+            descriptionID.append(subDirectory).append("/");
+        }
+
+        descriptionID.append(dataLink.getID());
+
+        if (StringUtil.hasText(fileClass)) {
+            descriptionID.append("|").append(fileClass);
+        }
+
+        final String description;
+        if (dataLink.getSemantics().contains(DataLink.Term.PKG)) {
+            description = String.format("Download all data associated with %s.", descriptionID);
+        } else if (dataLink.getID().toLowerCase(Locale.ROOT).contains("readme")) {
+            description = String.format("Download documentation for %s.", descriptionID);
+        } else {
+            // Assumes #this
+            description = String.format("Download the dataset for %s.", descriptionID);
+        }
+
+        return description;
+    }
+
     private String getIdentifier(final HierarchyItem hierarchyItem) {
         return hierarchyItem == null ? null : (hierarchyItem.getType() == HierarchyItem.Type.ASDM
                                                ? hierarchyItem.getName()
                                                : hierarchyItem.getNullSafeId());
     }
 
-    private List<DataLink.Term> determineTerms(final HierarchyItem hierarchyItem) {
-        final List<DataLink.Term> dataLinkTermCollection = new ArrayList<>();
+    private DataLink.Term determineSemantic(final HierarchyItem hierarchyItem) {
         final HierarchyItem.Type deliverableType = hierarchyItem.getType();
-
-        if (isPackageFile(hierarchyItem)) {
-            dataLinkTermCollection.add(DataLink.Term.PKG);
-        }
+        final DataLink.Term semantic;
 
         if (deliverableType.isAuxiliary()) {
-            dataLinkTermCollection.add(DataLink.Term.AUXILIARY);
-        }
-
-        if (deliverableType == HierarchyItem.Type.PIPELINE_AUXILIARY_CALIBRATION) {
-            dataLinkTermCollection.add(DataLink.Term.CALIBRATION);
+            semantic = DataLink.Term.AUXILIARY;
+        } else if (deliverableType == HierarchyItem.Type.PIPELINE_AUXILIARY_CALIBRATION) {
+            semantic = DataLink.Term.CALIBRATION;
         } else if (deliverableType == HierarchyItem.Type.ASDM) {
-            dataLinkTermCollection.add(DataLink.Term.PROGENITOR);
-        } else if (!deliverableType.isAuxiliary()) {
-            dataLinkTermCollection.add(DataLink.Term.THIS);
+            semantic = DataLink.Term.PROGENITOR;
+        } else if (deliverableType.isDocumentation()) {
+            semantic = DataLink.Term.DOCUMENTATION;
+        } else if (isPackageFile(hierarchyItem)
+                   && hierarchyItem.getType() != HierarchyItem.Type.PIPELINE_PRODUCT_TARFILE) {
+            // Special case as the PIPELINE_PRODUCT_TARFILE is actually #this.
+            semantic = DataLink.Term.PACKAGE;
+        } else {
+            semantic = DataLink.Term.THIS;
         }
 
-        return dataLinkTermCollection;
+        return semantic;
     }
 
     private boolean isPackageFile(final HierarchyItem hierarchyItem) {
