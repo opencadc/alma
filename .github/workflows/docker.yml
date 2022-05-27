@@ -1,0 +1,61 @@
+name: Reusable Docker workflow
+
+env:
+  # Allow the set-env command below
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      artifact-name:
+        required: true
+        type: string
+    secrets:
+      CI_REGISTRY_USER:
+        required: true
+      CI_REGISTRY_PASSWORD:
+        required: true
+      CI_REGISTRY_ORGANIZATION:
+        required: true
+
+jobs:
+  docker-build-publish:
+    if: github.ref == 'refs/heads/master' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      -
+        name: Set up Docker BuildX
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.CI_REGISTRY_USER }}
+          password: ${{ secrets.CI_REGISTRY_PASSWORD }}
+      -
+        name: Download the WAR file to be put into the Docker image
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.name }}-artifact
+          path: ${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war
+      -
+        name: Set Docker tag
+        run: |
+          TAG=${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)"
+          echo "::set-env name=DOCKER_TAG::$TAG"
+      -
+        name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ inputs.name }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.DOCKER_TAG }}

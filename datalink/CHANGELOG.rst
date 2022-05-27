@@ -1,5 +1,12 @@
-ALMA DataLink Service (1.1.0)
+ALMA DataLink Service (1.4.0)
 =============================
+
+2022.02.21 - 1.4.0 - opencadc/alma-datalink:1.4.0
+-------------------------------------------------
+
+- Use latest DataLink vocabulary (https://www.ivoa.net/rdf/datalink/core)
+- Populate `description` field
+- Restrict semantics to a single value
 
 2020.05.26 - 1.1.0 (Released) - opencadc/alma-datalink:1.1.0
 ------------------------------------------------------------

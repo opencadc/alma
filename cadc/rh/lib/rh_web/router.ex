@@ -12,5 +12,6 @@ defmodule RhWeb.Router do
   scope "/rh", RhWeb do
     pipe_through :api
     get "/data/:uid/location", RhController, :get
+    get "/ous/expand/:uid/downwards", RhController, :expand
   end
 end

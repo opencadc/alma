@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2011.                            (c) 2011.
+ *  (c) 2022.                            (c) 2022.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,45 +62,51 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *  $Revision: 5 $
  *
  ************************************************************************
  */
 
-package org.opencadc.tap.integration;
+package org.opencadc.alma.logging;
+
+import java.util.Arrays;
 
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import ca.nrc.cadc.tap.integration.TapAsyncErrorTest;
-import ca.nrc.cadc.util.FileUtil;
-import ca.nrc.cadc.util.Log4jInit;
+public enum LoggingEventKey {
+    DURATION("duration", true),
+    ERROR_CODE("errorCode", false),
+    ERROR_STRING("errorString", false),
+    IP_ADDRESS("ip", true),
+    PROGRAM("program", true),
+    QUERY("query", true),
+    RESOURCE_NAME("resourceName", false),
+    SIZE_BYTES_UNCOMPRESSED("sizeBytesUncompressed", false),
+    SIZE_BYTES_WIRE("sizeBytesWire", false),
+    START_DATE("startDate", false),
+    USER_AGENT("userAgent", true),
+    USERNAME("username", false),
+    VERSION("version", true),
+    FILE_ID("fileId", false),
+    ARCHIVE("archive", false),
+    MEDIUM("medium", false);
 
-import java.io.File;
-import java.net.URI;
+    private final String keyLabel;
+    private final boolean required;
 
-
-/**
- * @author pdowler
- */
-public class ObsCoreTapAsyncErrorTest extends TapAsyncErrorTest {
-    private static final Logger log = Logger.getLogger(ObsCoreTapAsyncErrorTest.class);
-
-    private static final long TIMEOUT = 60 * 1000L;
-
-    static {
-        Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
-        Log4jInit.setLevel("ca.nrc.cadc.conformance.uws2", Level.INFO);
+    LoggingEventKey(String keyLabel, boolean required) {
+        this.keyLabel = keyLabel;
+        this.required = required;
     }
 
-    public ObsCoreTapAsyncErrorTest() {
-        super(URI.create("ivo://almascience.org/tap"));
+    public String getKeyLabel() {
+        return keyLabel;
+    }
 
-        File testFile = FileUtil.getFileFromResource("AsyncErrorTest-NO-LANG.properties",
-                                                     ObsCoreTapAsyncErrorTest.class);
-        if (testFile.exists()) {
-            File testDir = testFile.getParentFile();
-            super.setPropertiesDir(testDir, "AsyncErrorTest");
-        }
+    public boolean isRequired() {
+        return required;
+    }
+
+    public static LoggingEventKey[] requiredValues() {
+        return Arrays.stream(LoggingEventKey.values()).filter(LoggingEventKey::isRequired)
+                     .toArray(LoggingEventKey[]::new);
     }
 }

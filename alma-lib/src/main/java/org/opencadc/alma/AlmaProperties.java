@@ -98,6 +98,7 @@ public class AlmaProperties extends PropertiesReader {
     static final String ALMA_TAP_SERVICE_URI = "almaTAPServiceURI";
     static final String ALMA_TAP_TEMP_STORAGE_DIR = "almaTAPTempStorageDir";
     static final String ALMA_DATAPROTAL_SERVICE_URI = "almaDataPortalServiceURI";
+    static final String ALMA_LOGGING_SERVICE_URL = "almaLoggingServiceURL";
 
 
     public AlmaProperties() {
@@ -141,6 +142,15 @@ public class AlmaProperties extends PropertiesReader {
 
     public URI getDataPortalServiceURI() {
         return ensureRequiredURI(ALMA_DATAPROTAL_SERVICE_URI);
+    }
+
+    public URL getLoggingServiceURL() {
+        try {
+            return ensureRequiredURI(ALMA_LOGGING_SERVICE_URL).toURL();
+        } catch (MalformedURLException malformedURLException) {
+            throw new IllegalStateException(String.format("Property %s is not a properly formatted URL.",
+                                                          ALMA_LOGGING_SERVICE_URL));
+        }
     }
 
     URI ensureRequiredURI(final String key) {

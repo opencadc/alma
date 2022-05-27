@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2011.                            (c) 2011.
+ *  (c) 2022.                            (c) 2022.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,64 +62,52 @@
  *  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
  *                                       <http://www.gnu.org/licenses/>.
  *
- *  $Revision: 5 $
  *
  ************************************************************************
  */
 
-package org.opencadc.tap.integration;
+package org.opencadc.alma.logging.log4j;
 
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.config.plugins.Plugin;
+import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.layout.AbstractStringLayout;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.junit.Assert;
-import ca.nrc.cadc.conformance.uws2.JobResultWrapper;
-import ca.nrc.cadc.tap.integration.TapAsyncQueryTest;
-import ca.nrc.cadc.util.FileUtil;
-import ca.nrc.cadc.util.Log4jInit;
-import ca.nrc.cadc.uws.ExecutionPhase;
-import ca.nrc.cadc.uws.Result;
-
-import java.io.File;
-import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 /**
- * @author pdowler
+ * Simple JSON message pass through layout.
  */
-public class ObsCoreTapAsyncQueryTest extends TapAsyncQueryTest {
-    private static final Logger log = Logger.getLogger(ObsCoreTapAsyncQueryTest.class);
+@Plugin(name = "AlmaLayout", category = "Core", elementType = "layout", printObject = true)
+public class AlmaPatternLayout extends AbstractStringLayout {
 
-    private static final long TIMEOUT = 60 * 1000L;
+    public static final String LAYOUT_NAME = "AlmaLayout";
 
-    static {
-        Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
-        Log4jInit.setLevel("ca.nrc.cadc.conformance.uws2", Level.INFO);
+    public AlmaPatternLayout() {
+        super(StandardCharsets.UTF_8);
     }
 
-    public ObsCoreTapAsyncQueryTest() {
-        super(URI.create("ivo://almascience.org/tap"));
-
-        File testFile = FileUtil.getFileFromResource("AsyncResultTest-ivoa.ObsCore.properties",
-                                                     ObsCoreTapAsyncQueryTest.class);
-        if (testFile.exists()) {
-            File testDir = testFile.getParentFile();
-            super.setPropertiesDir(testDir, "AsyncResultTest");
-        }
+    @PluginFactory
+    public static AlmaPatternLayout createLayout() {
+        return new AlmaPatternLayout();
     }
 
+    /**
+     * Formats the event as an Object that can be serialized.
+     *
+     * @param event The Logging Event.
+     * @return The formatted event.
+     */
     @Override
-    protected void validateResponse(JobResultWrapper result) {
-        Assert.assertEquals(ExecutionPhase.COMPLETED, result.job.getExecutionPhase());
+    public String toSerializable(LogEvent event) {
+        return event.getMessage().getFormattedMessage();
+    }
 
-        //Result r = result.job.getResultsList().get(0);
-        Result r = null;
-        for (Result jr : result.job.getResultsList()) {
-            if ("result".equals(jr.getName())) {
-                r = jr;
-                break;
-            }
-        }
-
-        Assert.assertNotNull("found result", r);
+    /**
+     * Returns the content type output by this layout. This is a JSON layout.
+     */
+    @Override
+    public String getContentType() {
+        return "application/json";
     }
 }

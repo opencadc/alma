@@ -4,7 +4,6 @@
     - apk --no-cache add git
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
-    #    - export VERSION=`cat ${module}/VERSION`
     - export VERSION=`git log -1 --pretty=%H`
     - docker build --no-cache --pull --network host -t ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION} -f ${module}/Dockerfile ${module}/
     - docker push ${CI_REGISTRY_ORGANIZATION}/alma-${name}:${VERSION}
