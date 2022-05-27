@@ -50,7 +50,7 @@ jobs:
       -
         name: Set Docker tag
         run: |
-          TAG=${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)-SNAPSHOT"
+          TAG=${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)"
           echo "::set-env name=DOCKER_TAG::$TAG"
       -
         name: Build and push
