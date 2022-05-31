@@ -95,7 +95,7 @@ public class AlmaProperties extends PropertiesReader {
     static final String ALMA_FILE_SODA_SERVICE_PORT = "almaFileSodaServicePort";
     static final String ALMA_DATALINK_SERVICE_URI = "almaDataLinkServiceURI";
     static final String ALMA_SODA_SERVICE_URI = "almaSODAServiceURI";
-    static final String ALMA_DATAPROTAL_SERVICE_URI = "almaDataPortalServiceURI";
+    static final String ALMA_DATAPORTAL_SERVICE_URI = "almaDataPortalServiceURI";
     static final String ALMA_LOGGING_SERVICE_URL = "almaLoggingServiceURL";
 
 
@@ -131,7 +131,7 @@ public class AlmaProperties extends PropertiesReader {
     }
 
     public URI getDataPortalServiceURI() {
-        return ensureRequiredURI(ALMA_DATAPROTAL_SERVICE_URI);
+        return ensureRequiredURI(ALMA_DATAPORTAL_SERVICE_URI);
     }
 
     public URL getLoggingServiceURL() {
@@ -167,7 +167,6 @@ public class AlmaProperties extends PropertiesReader {
         return lookupServiceURL(getSodaServiceURI(), Standards.SODA_SYNC_10);
     }
 
-
     public URL lookupDataPortalURL() throws IOException, ResourceNotFoundException {
         return lookupApplicationURL(getDataPortalServiceURI());
     }
@@ -189,12 +188,7 @@ public class AlmaProperties extends PropertiesReader {
     }
 
     URL lookupApplicationURL(final URI serviceURI) throws IOException, ResourceNotFoundException {
-        return createApplicationsRegistryClient().getAccessURL(serviceURI);
-    }
-
-    RegistryClient createApplicationsRegistryClient() throws MalformedURLException {
-        // The hostname here doesn't matter as it gets mangled post construction.
-        return new RegistryClient(new URL("https://www.almascience.org/reg/applications"));
+        return createRegistryClient().getAccessURL(serviceURI);
     }
 
     RegistryClient createRegistryClient() {

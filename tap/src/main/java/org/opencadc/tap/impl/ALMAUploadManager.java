@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2021.                            (c) 2021.
+ *  (c) 2022.                            (c) 2022.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,15 +66,49 @@
  ************************************************************************
  */
 
-package org.opencadc.tap.uws;
+package org.opencadc.tap.impl;
 
-import ca.nrc.cadc.uws.web.PostAction;
+import ca.nrc.cadc.tap.BasicUploadManager;
+import ca.nrc.cadc.tap.db.TapConstants;
+import ca.nrc.cadc.tap.schema.ColumnDesc;
+import ca.nrc.cadc.tap.schema.TableDesc;
+import ca.nrc.cadc.tap.schema.TapDataType;
+import org.apache.log4j.Logger;
+
+import java.util.Arrays;
+import java.util.List;
 
 
-public class ALMAAsyncPostAction extends PostAction {
+public class ALMAUploadManager extends BasicUploadManager {
+    private static final Logger LOGGER = Logger.getLogger(ALMAUploadManager.class);
+
+    // TAP-1.0 xtypes that can just be dropped from ColumnDesc
+    private static final List<String> OLD_XTYPES = Arrays.asList(
+            TapConstants.TAP10_CHAR, TapConstants.TAP10_VARCHAR,
+            TapConstants.TAP10_DOUBLE, TapConstants.TAP10_REAL,
+            TapConstants.TAP10_BIGINT, TapConstants.TAP10_INTEGER,
+            TapConstants.TAP10_SMALLINT);
+
+    public ALMAUploadManager() {
+        super(10000);
+    }
+
     @Override
-    protected String getJobListURL() {
-        final ALMAPostURLBuilder almaPostURLBuilder = new ALMAPostURLBuilder(this.syncInput);
-        return almaPostURLBuilder.getJobListURL();
+    protected void sanitizeTable(TableDesc td) {
+        for (final ColumnDesc cd : td.getColumnDescs()) {
+            final TapDataType dataType = cd.getDatatype();
+            final String xtype = dataType.xtype;
+            if (TapConstants.TAP10_TIMESTAMP.equals(xtype)) {
+                LOGGER.warn("Found old timestamp (" + xtype + ").  DALI 1.1 replaces it with \"timestamp\".");
+            } else if (OLD_XTYPES.contains(xtype)) {
+                LOGGER.warn("Found old (TAP 1.0) xtype (" + xtype + ").  It can be omitted.");
+                dataType.xtype = null;
+            }
+
+            // Deprecated as of VOTable 1.3.  Remove arraysize if set to '1' for a char.
+            if ("1".equals(dataType.arraysize)) {
+                dataType.arraysize = null;
+            }
+        }
     }
 }

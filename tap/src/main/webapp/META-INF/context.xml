@@ -25,5 +25,22 @@
               testOnBorrow="true"
               validationQuery="SELECT 1 FROM DUAL"
     />
+
+    <Resource name="jdbc/tapadm"
+              auth="Container"
+              type="javax.sql.DataSource"
+              factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+              minEvictableIdleTimeMillis="30000"
+              maxActive="4" maxIdle="4" maxWait="20000"
+              username="${alma.tapuser.username}" password="${alma.tapuser.password}"
+              driverClassName="${alma.tapuser.driverClassName}"
+              url="${alma.tapuser.url}"
+              removeAbandoned="false"
+              removeAbandonedTimeout="600"
+              initSQL="ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS.FF3&quot;Z&quot;' NLS_DATE_FORMAT='YYYY-MM-DD&quot;T&quot;HH24:MI:SS&quot;Z&quot;' NLS_SORT=BINARY NLS_COMP=BINARY"
+              logAbandoned="true"
+              testOnBorrow="true"
+              validationQuery="SELECT 1 FROM DUAL"
+    />
     
 </Context>

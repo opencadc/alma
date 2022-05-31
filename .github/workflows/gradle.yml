@@ -1,4 +1,4 @@
-name: Reusable Docker workflow
+name: Reusable Java Gradle workflow
 
 on:
   workflow_call:

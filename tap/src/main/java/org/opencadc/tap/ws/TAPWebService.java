@@ -70,8 +70,8 @@
 package org.opencadc.tap.ws;
 
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vosi.AvailabilityPlugin;
 import ca.nrc.cadc.vosi.Availability;
+import ca.nrc.cadc.vosi.AvailabilityPlugin;
 import ca.nrc.cadc.vosi.avail.CheckDataSource;
 import ca.nrc.cadc.vosi.avail.CheckException;
 import org.apache.log4j.Logger;

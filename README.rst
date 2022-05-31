@@ -61,6 +61,7 @@ that will be looked up in the Registry to obtain an acutal URL.
   almaFileSodaServicePort=8080
   almaSODAServiceURI=ivo://almascience.org/soda
   almaDataPortalServiceURI=ivo://almascience.org/dataportal
+  almaLoggingServiceURL=https://example.org/logging/entry
 
 
   +-------------------------------+------------------------------------------+
@@ -77,12 +78,15 @@ that will be looked up in the Registry to obtain an acutal URL.
   +-------------------------------+------------------------------------------+
   | almaDataPortalServiceURI      | Data Portal service for DataLink entries |   
   +-------------------------------+------------------------------------------+
+  | almaLoggingServiceURL         | Full URL to the remote logging service to|
+  |                               | POST to                                  |
+  +-------------------------------+------------------------------------------+
 
 
 Services
 ~~~~~~~~
 
-reg (ivo://almascience.org/reg) opencadc/alma-reg:1.0.2
+reg (ivo://almascience.org/reg) opencadc/alma-reg:2.1.0
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The Registry service to distribute URLs for running services, namely the SIA and ObsCore services.
@@ -130,28 +134,28 @@ location service due to the complexity of have the service run on multiple nodes
 
 
 
-sia (ivo://almascience.org/sia) opencadc/alma-sia:1.0.4
+sia (ivo://almascience.org/sia) opencadc/alma-sia:2.1.0
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 SIA v2 service.  This uses the ObsCore (TAP) service as described by the registry.  See the ``SiaRunner.properties``
 file to specify the TAP URI to use.
 
-obscore (ivo://almascience.org/tap) opencadc/alma-tap:1.1.16
+obscore (ivo://almascience.org/tap) opencadc/alma-tap:2.1.0
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ObsCore (TAP) service to query the ALMA ObsCore database.  An existing Oracle instance is required.
 
-datalink (ivo://almascience.org/datalink) opencadc/alma-datalink:1.3.4
+datalink (ivo://almascience.org/datalink) opencadc/alma-datalink:2.1.0
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 DataLink service to expand an MOUS ID into download URLs
 
-data (ivo://almascience.org/data) opencadc/alma-data:1.0.0
+data (ivo://almascience.org/data) opencadc/alma-data:2.1.0
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Internal service to run on a storage (NGAS) node and execute the cutout code directly against files.  It is *mostly* SODA compliant.
 
-soda (ivo://almascience.org/soda) opencadc/alma-soda:1.2.0
+soda (ivo://almascience.org/soda) opencadc/alma-soda:2.1.0
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 IVOA SODA service.  This will use the ``reg`` service to locate the Request Handler service, and the back-end SODA service.
