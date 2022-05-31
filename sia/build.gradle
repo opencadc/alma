@@ -9,9 +9,6 @@ repositories {
     mavenLocal()
 }
 
-version = '2.0.0'
-
-// Added AFTER the version is declared.
 apply from: '../properties.gradle'
 
 war {
@@ -39,7 +36,7 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.opencadc:alma-lib:[1.4.0,2.0)'
+    implementation 'org.opencadc:alma-lib:' + version
     implementation 'org.opencadc:cadc-cdp:[1.2.3,2.0)'
     implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
     implementation 'org.opencadc:cadc-sia:[1.1.9,2.0)'
