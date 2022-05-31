@@ -40,7 +40,7 @@
       <securityMethod standardID="ivo://ivoa.net/sso#tls-with-certificate"/>
     </interface>
 
-    <dataModel ivo-id="ivo://ivoa.net/std/ObsCore/v1.1">ObsCore-1.1</dataModel>
+    <dataModel ivo-id="ivo://ivoa.net/std/ObsCore#core-1.1">ObsCore-1.1</dataModel>
 
     <language>
         <name>ADQL</name>

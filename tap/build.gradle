@@ -9,9 +9,6 @@ repositories {
     mavenLocal()
 }
 
-version = '2.0.0'
-
-// Added AFTER the version is declared.
 apply from: '../properties.gradle'
 
 war {
@@ -36,16 +33,24 @@ war {
 configurations {
     intTestImplementation.extendsFrom testImplementation
     intTestRuntime.extendsFrom testRuntime
+
+    // Ensure only local files are available to prevent collisions.
+    implementation.exclude group: 'uk.ac.starlink'
 }
 
 dependencies {
     implementation 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
-    implementation 'org.opencadc:alma-lib:[1.4.0,2.0)'
+    implementation 'org.opencadc:alma-lib:' + version
     implementation 'org.opencadc:cadc-adql:[1.1,)'
+    implementation 'org.opencadc:cadc-dali:[1.2.14,1.3.0)'
     implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
+    implementation 'org.opencadc:cadc-rest:[1.3.11,1.4.0)'
     implementation 'org.opencadc:cadc-tap-server:[1.1.19,2.0)'
-    implementation 'org.opencadc:cadc-tap-server-oracle:[1.2.8,1.3.0)'
-    implementation 'org.opencadc:cadc-util:[1.6,1.7.0)'
+    implementation 'org.opencadc:cadc-tap-server-oracle:[1.2.9,1.3.0)'
+    implementation 'org.opencadc:cadc-tap-tmp:[1.0.0,1.1.0)'
+    implementation 'org.opencadc:cadc-util:[1.6.1,1.7.0)'
+    implementation 'org.opencadc:cadc-uws:[1.0.5,1.1.0)'
+    implementation 'org.opencadc:cadc-uws-server:[1.2.14,1.3.0)'
     implementation 'org.opencadc:cadc-vosi:[1.4.3,2.0)'
 
     runtimeOnly 'org.opencadc:cadc-registry:[1.5.9,2.0)'

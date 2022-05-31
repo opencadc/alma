@@ -1,5 +1,8 @@
 sourceCompatibility = 11
 
+// Applies to all web applications and the alma-lib library.
+version = '2.1.0'
+
 task printVersion {
     doLast {
         println version

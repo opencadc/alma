@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2021.                            (c) 2021.
+ *  (c) 2022.                            (c) 2022.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,63 +66,35 @@
  ************************************************************************
  */
 
-package org.opencadc.tap.uws;
+package org.opencadc.tap.ws;
 
-import ca.nrc.cadc.rest.SyncInput;
-import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.uws.web.JobAction;
+import ca.nrc.cadc.db.DBUtil;
+import ca.nrc.cadc.tap.QueryRunner;
+import org.apache.log4j.Logger;
 
-import java.net.URI;
+import javax.sql.DataSource;
 
-public class ALMAPostURLBuilder {
-    static final String FORWARDED_HOST_PARAM_NAME = "x-forwarded-host";
-    static final String FORWARDED_PROTO_PARAM_NAME = "x-forwarded-proto";
-    static final String FORWARDED_PORT_PARAM_NAME = "x-forwarded-port";
+/**
+ * Simplified Query Runner to isolate to a single datasource.
+ */
+public class QueryRunnerImpl extends QueryRunner {
+    private static final Logger log = Logger.getLogger(QueryRunnerImpl.class);
 
-    private final SyncInput syncInput;
-
-    public ALMAPostURLBuilder(final SyncInput syncInput) {
-        this.syncInput = syncInput;
+    public QueryRunnerImpl() {
     }
 
-    String getJobListURL() {
-        final StringBuilder ret = new StringBuilder();
-
-        final String requestURIString = syncInput.getRequestURI();
-        final String forwardedRequestHost = getForwardedRequestHost();
-
-        if (StringUtil.hasText(forwardedRequestHost)) {
-            final URI requestURI = URI.create(requestURIString);
-            ret.append(forwardedRequestHost).append(requestURI.getPath());
-        } else {
-            ret.append(requestURIString);
-        }
-
-        final String path = syncInput.getPath();
-        if (path != null) {
-            return ret.toString().replace("/" + path, ""); // syncInput removes leading /
-        } else {
-            return ret.toString();
-        }
+    @Override
+    protected DataSource getUploadDataSource() throws Exception {
+        return getQueryDataSource();
     }
 
-    private String getForwardedRequestHost() {
-        final StringBuilder urlBuilder = new StringBuilder();
-        final String forwardedHost = this.syncInput.getHeader(FORWARDED_HOST_PARAM_NAME);
+    @Override
+    protected DataSource getTapSchemaDataSource() throws Exception {
+        return getQueryDataSource();
+    }
 
-        if (StringUtil.hasText(forwardedHost)) {
-            final String forwardedProto = this.syncInput.getHeader(FORWARDED_PROTO_PARAM_NAME);
-            final String forwardedPort = this.syncInput.getHeader(FORWARDED_PORT_PARAM_NAME);
-
-            final String proto = StringUtil.hasText(forwardedProto) ? forwardedProto : "http";
-
-            urlBuilder.append(proto).append("://").append(forwardedHost);
-
-            if (StringUtil.hasText(forwardedPort)) {
-                urlBuilder.append(":").append(forwardedPort);
-            }
-        }
-
-        return urlBuilder.toString();
+    @Override
+    protected DataSource getQueryDataSource() throws Exception {
+        return DBUtil.findJNDIDataSource("jdbc/tapuser");
     }
 }

@@ -2,7 +2,6 @@
 package org.opencadc.tap.ws;
 
 
-import ca.nrc.cadc.tap.QueryRunner;
 import ca.nrc.cadc.uws.server.JobExecutor;
 import ca.nrc.cadc.uws.server.MemoryJobPersistence;
 import ca.nrc.cadc.uws.server.SimpleJobManager;
@@ -23,10 +22,11 @@ public class QueryJobManager extends SimpleJobManager {
 
         // Persist UWS jobs to memory by default.
         final MemoryJobPersistence jobPersist = new MemoryJobPersistence();
+        jobPersist.setJobCleaner(5L * 60L * 1000L);
 
         // max threads: 6 == number of simultaneously running async queries (per
         // web server), plus sync queries, plus VOSI-tables queries
-        final JobExecutor jobExec = new ThreadPoolExecutor(jobPersist, QueryRunner.class, 6);
+        final JobExecutor jobExec = new ThreadPoolExecutor(jobPersist, QueryRunnerImpl.class, 6);
 
         super.setJobPersistence(jobPersist);
         super.setJobExecutor(jobExec);
