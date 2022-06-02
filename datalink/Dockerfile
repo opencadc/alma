@@ -23,5 +23,5 @@ RUN sed -i 's| \
      </Host>|' \
   conf/server.xml
 
-COPY *.properties /root/config/
+COPY *.properties config/
 COPY build/libs/*.war webapps/
