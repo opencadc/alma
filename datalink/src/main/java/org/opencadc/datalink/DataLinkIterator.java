@@ -70,7 +70,6 @@
 package org.opencadc.datalink;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -81,7 +80,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
-import java.util.stream.Collectors;
 
 import ca.nrc.cadc.reg.Standards;
 import org.apache.logging.log4j.LogManager;
@@ -191,7 +189,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
                     recursiveDataLink.descriptor = serviceDescriptor;
                     recursiveDataLink.serviceDef = serviceDescriptor.id;
-                    recursiveDataLink.contentType = "text/xml";
+                    recursiveDataLink.contentType = "application/x-votable+xml;content=datalink";
 
                     setDescription(dataLink, null, null);
 
@@ -363,7 +361,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
         }
 
         final String description;
-        if (dataLink.getSemantics().contains(DataLink.Term.PKG)) {
+        if (dataLink.getSemantics().contains(DataLink.Term.PACKAGE)) {
             description = String.format("Download all data associated with %s.", descriptionID);
         } else if (dataLink.getID().toLowerCase(Locale.ROOT).contains("readme")) {
             description = String.format("Download documentation for %s.", descriptionID);
