@@ -75,11 +75,14 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import ca.nrc.cadc.reg.Standards;
 import org.apache.logging.log4j.LogManager;
@@ -301,9 +304,14 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
         try {
             final URL accessURL = createCutoutURL(hierarchyItem);
-            final String[] pathSegments = accessURL.getPath().split("/");
             final ServiceDescriptor serviceDescriptor = new ServiceDescriptor(accessURL);
-            serviceDescriptor.id = String.format("SODA.%s", pathSegments[pathSegments.length - 1]);
+            final Map<String, String> queryMap =
+                    Arrays.stream(accessURL.getQuery().split("&"))
+                          .map(param -> param.split("="))
+                          .filter(splitParam -> splitParam.length == 2)
+                          .collect(Collectors.toMap(splitParam -> splitParam[0], splitParam -> splitParam[1]));
+
+            serviceDescriptor.id = String.format("SODA.%s", queryMap.get("ID"));
             serviceDescriptor.standardID = Standards.SODA_SYNC_10;
             serviceDescriptor.resourceIdentifier = almaProperties.getSodaServiceURI();
 
