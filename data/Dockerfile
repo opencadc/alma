@@ -34,7 +34,7 @@ RUN mkdir -p config \
 
 RUN apt update \
     && apt install -y sudo \
-    && echo "tomcat ALL=(root) NOPASSWD:/usr/sbin/update-ca-certificates" >> /etc/sudoers.d/tomcat \
+    && echo "tomcat ALL=(root) NOPASSWD:SETENV:/usr/sbin/update-ca-certificates" >> /etc/sudoers.d/tomcat \
     && apt clean \
     && rm -rf /var/apt/lists/*
 
