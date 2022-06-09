@@ -188,13 +188,7 @@ public class AlmaProperties extends PropertiesReader {
     }
 
     URL lookupApplicationURL(final URI serviceURI) throws IOException, ResourceNotFoundException {
-        return createApplicationsRegistryClient().getAccessURL(serviceURI);
-    }
-
-    RegistryClient createApplicationsRegistryClient() throws MalformedURLException {
-        // The hostname here doesn't matter as it gets mangled post construction.  The important part is the
-        // /applications endpoint.
-        return new RegistryClient(new URL("https://www.almascience.org/reg/applications"));
+        return createRegistryClient().getAccessURL(RegistryClient.Query.APPLICATIONS, serviceURI);
     }
 
     RegistryClient createRegistryClient() {
