@@ -305,6 +305,9 @@ public class DataLinkIterator implements Iterator<DataLink> {
         try {
             final URL accessURL = createCutoutURL(hierarchyItem);
             final ServiceDescriptor serviceDescriptor = new ServiceDescriptor(accessURL);
+
+            // The cutout (SODA) Access URLs all use GET style queries with a parameter of "ID", so pull that
+            // one out to use for the ID.
             final Map<String, String> queryMap =
                     Arrays.stream(accessURL.getQuery().split("&"))
                           .map(param -> param.split("="))
