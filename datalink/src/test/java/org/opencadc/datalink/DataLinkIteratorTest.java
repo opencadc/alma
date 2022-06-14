@@ -167,18 +167,18 @@ public class DataLinkIteratorTest {
 
                 final boolean contentTypeMatches = Objects.equals(o1.contentType, o2.contentType);
                 final int contentTypeComparison = contentTypeMatches ? 0 :
-                                                Objects.compare(o1.contentType, o2.contentType,
-                                                                (o11, o21) -> {
-                                                                    if (o11 == null && o21 == null) {
-                                                                        return 0;
-                                                                    } else if (o11 == null) {
-                                                                        return -1;
-                                                                    } else if (o21 == null) {
-                                                                        return 1;
-                                                                    } else {
-                                                                        return o11.compareTo(o21);
-                                                                    }
-                                                                });
+                                                  Objects.compare(o1.contentType, o2.contentType,
+                                                                  (o11, o21) -> {
+                                                                      if (o11 == null && o21 == null) {
+                                                                          return 0;
+                                                                      } else if (o11 == null) {
+                                                                          return -1;
+                                                                      } else if (o21 == null) {
+                                                                          return 1;
+                                                                      } else {
+                                                                          return o11.compareTo(o21);
+                                                                      }
+                                                                  });
 
                 if (comparison == 0) {
                     comparison = contentTypeComparison;
@@ -230,17 +230,18 @@ public class DataLinkIteratorTest {
                 fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
                                                 index++));
         final DataLink thisLink = createDataLink(hierarchyItemTwo, "application/x-tar",
-                                                    new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
-                                                                          hierarchyItemTwo.getName())),
-                                                    DataLink.Term.THIS);
-        final DataLink recursiveThisLink = createDataLink(hierarchyItemTwo, "text/xml",
-                                                    null, DataLink.Term.THIS);
+                                                 new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
+                                                                       hierarchyItemTwo.getName())),
+                                                 DataLink.Term.THIS);
+        final DataLink recursiveThisLink = createDataLink(hierarchyItemTwo,
+                                                          "application/x-votable+xml;content=datalink",
+                                                          null, DataLink.Term.THIS);
         final ServiceDescriptor serviceDescriptor =
                 new ServiceDescriptor(new URL(datalinkURL.toExternalForm() + "?ID=" + uid));
         serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
 
         recursiveThisLink.serviceDef = serviceDescriptor.id;
-        recursiveThisLink.contentType = "text/xml";
+        recursiveThisLink.contentType = "application/x-votable+xml;content=datalink";
         expectedDataLinks.add(recursiveThisLink);
 
         thisLink.descriptor = new ServiceDescriptor(new URL(datalinkURL + "?ID=" + hierarchyItemTwo.getName()));

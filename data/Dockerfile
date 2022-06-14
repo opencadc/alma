@@ -1,7 +1,7 @@
 FROM tomcat:9-jdk11-openjdk-slim as build
 
 RUN apt-get update \
-    && apt-get install -y bzip2 curl gcc make
+    && apt-get install -y bzip2 curl gcc make sudo
 
 ADD "https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2" "/tmp/wcslib.tar.bz2"
 
@@ -31,6 +31,12 @@ RUN groupadd --gid 8675309 tomcat \
 # Create expected config director for all application config.
 RUN mkdir -p config \
   && chown -R tomcat:tomcat /usr/local/tomcat
+
+RUN apt update \
+    && apt install -y sudo \
+    && echo "tomcat ALL=(root) NOPASSWD:SETENV:/usr/sbin/update-ca-certificates" >> /etc/sudoers.d/tomcat \
+    && apt clean \
+    && rm -rf /var/apt/lists/*
 
 USER tomcat
 

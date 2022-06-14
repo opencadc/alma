@@ -9,6 +9,12 @@ RUN groupadd --gid 8675309 tomcat \
 RUN mkdir -p config \
   && chown -R tomcat:tomcat /usr/local/tomcat
 
+RUN apt update \
+    && apt install -y sudo \
+    && echo "tomcat ALL=(root) NOPASSWD:SETENV:/usr/sbin/update-ca-certificates" >> /etc/sudoers.d/tomcat \
+    && apt clean \
+    && rm -rf /var/apt/lists/*
+
 USER tomcat
 
 WORKDIR /usr/local/tomcat
@@ -23,5 +29,5 @@ RUN sed -i 's| \
      </Host>|' \
   conf/server.xml
 
-COPY *.properties /root/config/
+COPY *.properties config/
 COPY build/libs/*.war webapps/

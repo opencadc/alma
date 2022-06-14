@@ -188,7 +188,7 @@ public class AlmaProperties extends PropertiesReader {
     }
 
     URL lookupApplicationURL(final URI serviceURI) throws IOException, ResourceNotFoundException {
-        return createRegistryClient().getAccessURL(serviceURI);
+        return createRegistryClient().getAccessURL(RegistryClient.Query.APPLICATIONS, serviceURI);
     }
 
     RegistryClient createRegistryClient() {

@@ -70,7 +70,6 @@
 package org.opencadc.datalink;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -80,6 +79,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
 
@@ -191,7 +191,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
                     recursiveDataLink.descriptor = serviceDescriptor;
                     recursiveDataLink.serviceDef = serviceDescriptor.id;
-                    recursiveDataLink.contentType = "text/xml";
+                    recursiveDataLink.contentType = "application/x-votable+xml;content=datalink";
 
                     setDescription(dataLink, null, null);
 
@@ -303,9 +303,17 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
         try {
             final URL accessURL = createCutoutURL(hierarchyItem);
-            final String[] pathSegments = accessURL.getPath().split("/");
             final ServiceDescriptor serviceDescriptor = new ServiceDescriptor(accessURL);
-            serviceDescriptor.id = String.format("SODA.%s", pathSegments[pathSegments.length - 1]);
+
+            // The cutout (SODA) Access URLs all use GET style queries with a parameter of "ID", so pull that
+            // one out to use for the ID.
+            final Map<String, String> queryMap =
+                    Arrays.stream(accessURL.getQuery().split("&"))
+                          .map(param -> param.split("="))
+                          .filter(splitParam -> splitParam.length == 2)
+                          .collect(Collectors.toMap(splitParam -> splitParam[0], splitParam -> splitParam[1]));
+
+            serviceDescriptor.id = String.format("SODA.%s", queryMap.get("ID"));
             serviceDescriptor.standardID = Standards.SODA_SYNC_10;
             serviceDescriptor.resourceIdentifier = almaProperties.getSodaServiceURI();
 
@@ -363,7 +371,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
         }
 
         final String description;
-        if (dataLink.getSemantics().contains(DataLink.Term.PKG)) {
+        if (dataLink.getSemantics().contains(DataLink.Term.PACKAGE)) {
             description = String.format("Download all data associated with %s.", descriptionID);
         } else if (dataLink.getID().toLowerCase(Locale.ROOT).contains("readme")) {
             description = String.format("Download documentation for %s.", descriptionID);
