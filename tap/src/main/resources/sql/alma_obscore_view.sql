@@ -76,7 +76,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     CASE WHEN science.product_type = 'MOUS' THEN 2
          WHEN science.product_type = 'GOUS' THEN 3
          ELSE null END,
-    'ALMA/' || REGEXP_REPLACE(LTRIM(RTRIM(science.band_list)), '\s', '/'),
+    'ALMA',
     energy.asa_energy_id,
     'ADS/JAO.ALMA#' || asap.code,
     'https://almascience.org/datalink/sync?ID=' || science.member_ouss_id,
@@ -122,7 +122,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     science.frequency_support,
     0.5 * (energy.frequency_max + energy.frequency_min),
     science.velocity_resolution,
-    asap.pi_name,
+    'ALMA',
     (SELECT LISTAGG(title, ' ') WITHIN GROUP (ORDER BY title) AS title FROM (SELECT DISTINCT aab.title FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
     (SELECT LISTAGG(first_author, ' ') WITHIN GROUP (ORDER BY first_author) AS first_author FROM (SELECT DISTINCT aab.first_author FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
     (SELECT LISTAGG(authors, ' ' ON OVERFLOW TRUNCATE) WITHIN GROUP (ORDER BY authors) AS authors FROM (SELECT DISTINCT aab.authors FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
