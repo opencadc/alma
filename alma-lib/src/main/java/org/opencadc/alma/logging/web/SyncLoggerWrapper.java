@@ -69,6 +69,7 @@
 package org.opencadc.alma.logging.web;
 
 import ca.nrc.cadc.rest.SyncInput;
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.uws.Job;
 import org.opencadc.alma.logging.LoggingEvent;
 import org.opencadc.alma.logging.LoggingEventKey;
@@ -94,8 +95,10 @@ public class SyncLoggerWrapper {
     }
 
     public LoggingEvent start() {
+        final String userAgent = syncInput.getHeader("user-agent");
         final LoggingEvent loggingEvent = new LoggingEvent(syncInput.getClientIP(), version, title,
-                                                           syncInput.getHeader("user-agent"), true);
+                                                           StringUtil.hasText(userAgent) ? userAgent : "Not Specified",
+                                                           true);
         loggingEvent.startTimer();
         final List<String> parameters = new ArrayList<>();
         final String requestURI;
