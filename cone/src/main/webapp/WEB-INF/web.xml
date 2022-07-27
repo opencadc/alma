@@ -137,7 +137,8 @@
 
     <servlet-mapping>
         <servlet-name>ConeSearchServlet</servlet-name>
-        <url-pattern>/search/cirada.VLASS_Source/*</url-pattern>
+<!--        <url-pattern>/search/cirada.VLASS_Source/*</url-pattern>-->
+        <url-pattern>/search/ivoa.obscore/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
