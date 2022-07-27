@@ -1,0 +1,55 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'war'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+apply from: '../properties.gradle'
+
+dependencies {
+    // Use JUnit test framework.
+    testImplementation 'junit:junit:4.13.2'
+
+    // This dependency is used by the application.
+    implementation 'org.opencadc:cadc-conesearch:[1.0.0,1.1.0)'
+    implementation 'org.opencadc:cadc-dali:[1.2.4,2.0)'
+    implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
+    implementation 'org.opencadc:cadc-registry:[1.6.1,2.0.0)'
+    implementation 'org.opencadc:cadc-rest:[1.3.12,1.4.0)'
+    implementation 'org.opencadc:cadc-uws-server:[1.2.14,1.3.0)'
+    implementation 'org.opencadc:cadc-vosi:[1.3.4,2.0)'
+
+    runtimeOnly 'org.opencadc:alma-lib:[2.2.0,2.3.0)'
+}
+
+war {
+    eachFile {
+        if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
+            filter(ReplaceTokens, tokens: [app_name: 'cone', version: version])
+        }
+    }
+    archiveName = 'cone.war'
+
+    manifest {
+        attributes "Implementation-Version": version
+        attributes "Implementation-Title": "ConeSearch"
+    }
+
+    // Include the swagger-ui so that /tap provides the TAP API documentation
+    from('../') {
+        include 'swagger-ui/'
+    }
+}
+
+configurations {
+    intTestImplementation.extendsFrom testImplementation
+    intTestRuntime.extendsFrom testRuntime
+
+    // Ensure only local files are available to prevent collisions.
+    implementation.exclude group: 'uk.ac.starlink'
+}

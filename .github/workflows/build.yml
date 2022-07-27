@@ -26,6 +26,13 @@ jobs:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
 
+  build-cone:
+    needs: install-alma-lib
+    uses: ./.github/workflows/gradle.yml
+    with:
+      name: cone
+      artifact-name: cone
+
   build-datalink:
     needs: install-alma-lib
     uses: ./.github/workflows/gradle.yml
@@ -100,6 +107,14 @@ jobs:
   #
   # Package jobs
   #
+  package-cone:
+    needs: build-cone
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      name: cone
+      artifact-name: cone
+
   package-datalink:
     needs: build-datalink
     uses: ./.github/workflows/docker.yml

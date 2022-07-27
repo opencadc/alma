@@ -1,0 +1,357 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "@version@",
+        "title": "Simple Cone Search (1.0.3) web service",
+        "description": "The Simple Cone Search web service.\n<a href=\"https://www.ivoa.net/documents/REC/DAL/ConeSearch-20080222.html\" target=\"_blank\">IVOA Simple Cone Search Specification</a>\n\nThe synchronous and asynchronous service endpoints conform the the IVOA Simple Cone Search Specification.\n"
+    },
+    "schemes": [
+        "https"
+    ],
+    "basePath": "/@app_name@",
+    "paths": {
+        "/search/sync": {
+            "get": {
+                "summary": "IVOA Simple Cone Search v1.0.3",
+                "tags": [
+                    "Cone Search",
+                    "Simple Cone Search",
+                    "Source Catalogue",
+                    "Catalog"
+                ],
+                "description": "Simple Cone Search synchronous search endpoint\n",
+                "parameters": [
+                    {
+                        "name": "RA",
+                        "in": "query",
+                        "description": "a right-ascension in the ICRS coordinate system for the position of the center of the cone to search, given in decimal degrees",
+                        "required": true,
+                        "type": "number",
+                        "oneOf": [
+                            "float", "double"
+                        ]
+                    },
+                    {
+                        "name": "DEC",
+                        "in": "query",
+                        "description": "a declination in the ICRS coordinate system for the position of the center of the cone to search, given in decimal degrees",
+                        "required": true,
+                        "type": "number",
+                        "oneOf": [
+                            "float", "double"
+                        ]
+                    },
+                    {
+                        "name": "SR",
+                        "in": "query",
+                        "description": "the radius of the cone to search, given in decimal degrees",
+                        "required": true,
+                        "type": "number",
+                        "oneOf": [
+                            "float", "double"
+                        ]
+                    },
+                    {
+                        "name": "VERB",
+                        "in": "query",
+                        "description": "a verbosity level (1, 2 (default), or 3) which determines how many columns are to be returned in the resulting table",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "TIME",
+                        "in": "query",
+                        "description": "an open or closed interval with numeric values interpreted as Modified Julian Dates",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/x-votable+xml"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    },
+                    "401": {
+                        "description": "Unauthorized - User not authenticated"
+                    },
+                    "404": {
+                        "description": "Not Found - User not found"
+                    },
+                    "500": {
+                        "description": "Internal error"
+                    },
+                    "503": {
+                        "description": "Service busy"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "IVOA Simple Cone Search v1.0.3",
+                "tags": [
+                    "Cone Search",
+                    "Simple Cone Search",
+                    "Source Catalogue",
+                    "Catalog"
+                ],
+                "description": "Simple Cone Search synchronous search endpoint\n",
+                "parameters": [
+                    {
+                        "name": "RA",
+                        "in": "query",
+                        "description": "a right-ascension in the ICRS coordinate system for the position of the center of the cone to search, given in decimal degrees",
+                        "required": true,
+                        "type": "number",
+                        "oneOf": [
+                            "float", "double"
+                        ]
+                    },
+                    {
+                        "name": "DEC",
+                        "in": "query",
+                        "description": "a declination in the ICRS coordinate system for the position of the center of the cone to search, given in decimal degrees",
+                        "required": true,
+                        "type": "number",
+                        "oneOf": [
+                            "float", "double"
+                        ]
+                    },
+                    {
+                        "name": "SR",
+                        "in": "query",
+                        "description": "the radius of the cone to search, given in decimal degrees",
+                        "required": true,
+                        "type": "number",
+                        "oneOf": [
+                            "float", "double"
+                        ]
+                    },
+                    {
+                        "name": "VERB",
+                        "in": "query",
+                        "description": "a verbosity level (1, 2 (default), or 3) which determines how many columns are to be returned in the resulting table",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "TIME",
+                        "in": "query",
+                        "description": "an open or closed interval with numeric values interpreted as Modified Julian Dates",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/x-votable+xml"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    },
+                    "401": {
+                        "description": "Unauthorized - User not authenticated"
+                    },
+                    "404": {
+                        "description": "Not Found - User not found"
+                    },
+                    "500": {
+                        "description": "Internal error"
+                    },
+                    "503": {
+                        "description": "Service busy"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/availability": {
+            "get": {
+                "tags": [
+                    "Support Interfaces"
+                ],
+                "summary": "VOSI Availability",
+                "description": "Indicates whether the service is operable and the reliability of the service for extended and scheduled requests.\n",
+                "produces": [
+                    "text/xml"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A VOSI availability document in XML.",
+                        "schema": {
+                            "$ref": "#/definitions/availability"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/capabilities": {
+            "get": {
+                "summary": "VOSI Capabilities",
+                "tags": [
+                    "Support Interfaces"
+                ],
+                "description": "Provides the service metadata in the form of a list of Capability descriptions.  Each of these descriptions is an \nXML element that:\n<ul>\n<li>states that the service provides a particular, IVOA-standard function;</li>\n<li>lists the interfaces for invoking that function;</li>\n<li>records any details of the implementation of the function that are not defined as default or constant in the standard for that function.</li>\n</ul>\n",
+                "produces": [
+                    "text/xml"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A VOSI Capabilities document in XML.",
+                        "schema": {
+                            "$ref": "#/definitions/capabilities"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "503": {
+                        "description": "Service too busy"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "Job": {
+            "type": "string"
+        },
+        "availability": {
+            "type": "object",
+            "xml": {
+                "namespace": "http://www.ivoa.net/xml/VOSIAvailability/v1.0",
+                "prefix": "vosi"
+            },
+            "properties": {
+                "available": {
+                    "type": "boolean",
+                    "xml": {
+                        "attribute": true,
+                        "prefix": "vosi"
+                    }
+                },
+                "note": {
+                    "type": "string",
+                    "xml": {
+                        "attribute": true,
+                        "prefix": "vosi"
+                    }
+                }
+            }
+        },
+        "tables": {
+            "type": "object",
+            "xml": {
+                "namespace": "http://www.ivoa.net/xml/VOSITables/v1.0",
+                "prefix": "vosi"
+            },
+            "properties": {
+                "available": {
+                    "type": "boolean",
+                    "xml": {
+                        "attribute": true,
+                        "prefix": "vosi"
+                    }
+                },
+                "note": {
+                    "type": "string",
+                    "xml": {
+                        "attribute": true,
+                        "prefix": "vosi"
+                    }
+                }
+            }
+        },
+        "capabilities": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/capability"
+            },
+            "xml": {
+                "namespace": "http://www.ivoa.net/xml/VOSICapabilities/v1.0",
+                "prefix": "vosi",
+                "wrapped": true
+            }
+        },
+        "capability": {
+            "type": "object",
+            "properties": {
+                "standardID": {
+                    "type": "string",
+                    "format": "uri",
+                    "xml": {
+                        "attribute": true
+                    }
+                },
+                "interface": {
+                    "type": "object",
+                    "properties": {
+                        "accessURL": {
+                            "type": "string",
+                            "properties": {
+                                "use": {
+                                    "type": "string",
+                                    "xml": {
+                                        "attribute": true
+                                    }
+                                }
+                            }
+                        },
+                        "securityMethod": {
+                            "type": "string",
+                            "properties": {
+                                "standardID": {
+                                    "type": "string",
+                                    "format": "uri",
+                                    "xml": {
+                                        "attribute": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Error": {
+            "required": [
+                "code",
+                "message"
+            ],
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
