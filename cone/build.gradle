@@ -37,7 +37,7 @@ war {
 
     manifest {
         attributes "Implementation-Version": version
-        attributes "Implementation-Title": "ConeSearch"
+        attributes "Implementation-Title": "SC ConeSearch"
     }
 
     // Include the swagger-ui so that /tap provides the TAP API documentation
