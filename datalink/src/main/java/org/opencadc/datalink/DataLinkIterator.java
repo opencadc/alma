@@ -75,7 +75,6 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -314,14 +313,16 @@ public class DataLinkIterator implements Iterator<DataLink> {
                           .filter(splitParam -> splitParam.length == 2)
                           .collect(Collectors.toMap(splitParam -> splitParam[0], splitParam -> splitParam[1]));
 
-            serviceDescriptor.id = String.format("SODA.%s", queryMap.get("ID"));
+            final String requestedID = queryMap.get("ID");
+
+            serviceDescriptor.id = String.format("SODA.%s", requestedID);
             serviceDescriptor.standardID = Standards.SODA_SYNC_10;
             serviceDescriptor.resourceIdentifier = almaProperties.getSodaServiceURI();
 
             dataLink.contentType = FITS_CONTENT_TYPE;
             dataLink.descriptor = serviceDescriptor;
             dataLink.serviceDef = serviceDescriptor.id;
-            dataLink.description = String.format("Synchronous SODA sub-image of %s.", hierarchyItem.getUidString());
+            dataLink.description = String.format("Synchronous SODA sub-image of %s.", requestedID);
         } catch (MalformedURLException e) {
             LOGGER.warn("Cutout URL creation failed.", e);
             dataLink.errorMessage = String.format("Unable to create Cutout URL for %s.",
