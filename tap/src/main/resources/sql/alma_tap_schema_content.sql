@@ -4,15 +4,18 @@ DELETE FROM TAP_SCHEMA.keys11;
 
 DELETE FROM TAP_SCHEMA.columns11
   WHERE table_name = 'ivoa.obscore'
-  OR table_name LIKE 'tap_schema.%';
+  OR table_name LIKE 'tap_schema.%'
+  OR table_name LIKE 'TAP_SCHEMA.%';
 
 DELETE FROM TAP_SCHEMA.tables11
   WHERE table_name = 'ivoa.obscore'
-  OR schema_name = 'tap_schema';
+  OR schema_name = 'tap_schema'
+  OR schema_name = 'TAP_SCHEMA';
 
 DELETE FROM TAP_SCHEMA.schemas11
   WHERE schema_name = 'ivoa'
-  OR schema_name = 'tap_schema';
+  OR schema_name = 'tap_schema'
+  OR schema_name = 'TAP_SCHEMA';
 
 INSERT INTO TAP_SCHEMA.schemas11 (schema_name, utype, description, schema_index) VALUES ('ivoa', null, 'IVOA tables', 10);
 INSERT INTO TAP_SCHEMA.schemas11 (schema_name, utype, description, schema_index) VALUES ('tap_schema', null, 'Special schema to describe TAP-1.1 tablesets', 20);
