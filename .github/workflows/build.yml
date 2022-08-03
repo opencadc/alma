@@ -27,12 +27,38 @@ jobs:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
 
+  install-cadc-conesearch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 11
+      # Install cadc-conesearch
+      - name: build, test, and install cadc-conesearch
+        run: git clone https://github.com/at88mph/dal.git && cd dal && gradle --info -b cadc-conesearch/build.gradle clean build install
+      # Upload cadc-conesearch artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: cadc-conesearch
+          path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
+
   build-cone:
-    needs: install-alma-lib
-    uses: ./.github/workflows/gradle.yml
-    with:
-      name: cone
-      artifact-name: cone
+    needs:
+      - install-alma-lib
+      - install-cadc-conesearch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/gradle.yml
+        with:
+          name: cone
+          artifact-name: cone
+      - uses: actions/download-artifact@v2
+        with:
+          name: cadc-conesearch
+          path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
 
   build-datalink:
     needs: install-alma-lib
