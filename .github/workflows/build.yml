@@ -38,7 +38,7 @@ jobs:
           java-version: 11
       # Install cadc-conesearch
       - name: build, test, and install cadc-conesearch
-        run: git clone https://github.com/at88mph/dal.git && cd dal && gradle --info -b cadc-conesearch/build.gradle clean build install
+        run: git clone -b conesearch https://github.com/at88mph/dal.git && cd dal && ./gradlew --info -b cadc-conesearch/build.gradle clean build install
       # Upload cadc-conesearch artifact
       - uses: actions/upload-artifact@v2
         with:
