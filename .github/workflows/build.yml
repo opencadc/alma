@@ -42,8 +42,8 @@ jobs:
       # Upload cadc-conesearch artifact
       - uses: actions/upload-artifact@v2
         with:
-          name: cadc-conesearch
-          path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
+          name: dal-libs
+          path: /home/runner/.m2/repository/org/opencadc
 
   build-cone:
     needs:
@@ -59,12 +59,8 @@ jobs:
           java-version: 11
       - uses: actions/download-artifact@v2
         with:
-          name: alma-lib
-          path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - uses: actions/download-artifact@v2
-        with:
-          name: cadc-conesearch
-          path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
+          name: dal-libs
+          path: /home/runner/.m2/repository/org/opencadc
       - name: build and test cone
         run: gradle --info -b cone/build.gradle clean build test
       # Upload WAR artifact
