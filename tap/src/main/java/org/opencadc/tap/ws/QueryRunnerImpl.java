@@ -84,11 +84,6 @@ public class QueryRunnerImpl extends QueryRunner {
     }
 
     @Override
-    protected DataSource getUploadDataSource() throws Exception {
-        return getQueryDataSource();
-    }
-
-    @Override
     protected DataSource getTapSchemaDataSource() throws Exception {
         return getQueryDataSource();
     }
