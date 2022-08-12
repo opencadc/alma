@@ -62,7 +62,7 @@ jobs:
           java-version: 11
       # Install cadc-tap-server-oracle
       - name: build, test, and install cadc-tap-server-oracle
-        run: cd ../ && git clone -b point-to-string-oracle-fix https://github.com/at88mph/tap.git && ./gradlew --info -b cadc-tap-server-oracle/build.gradle clean build install
+        run: cd ../ && git clone -b point-to-string-oracle-fix https://github.com/at88mph/tap.git && cd tap && ./gradlew --info -b cadc-tap-server-oracle/build.gradle clean build install
       # Upload cadc-tap-server-oracle artifact
       - uses: actions/upload-artifact@v2
         with:
