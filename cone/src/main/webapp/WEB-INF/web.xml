@@ -137,7 +137,7 @@
 
     <servlet-mapping>
         <servlet-name>ConeSearchServlet</servlet-name>
-        <url-pattern>/search/alma.source_catalogue/*</url-pattern>
+        <url-pattern>/search/sourcecatalogue.source_cone_search/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
