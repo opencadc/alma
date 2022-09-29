@@ -1,4 +1,4 @@
-CREATE OR REPLACE FORCE VIEW source_catalogue (
+CREATE OR REPLACE FORCE VIEW source_cone_search (
     catalogue_name,
     source_names,
     m_ra,
@@ -15,16 +15,12 @@ CREATE OR REPLACE FORCE VIEW source_catalogue (
 	m_angle_uncertainty, 
 	m_date_observed, 
 	m_frequency_support_display,
-	m_uvmin, 
-	m_uvmax,
-	s_ra_deg, 
+	s_ra_deg,
 	s_ra_deg_uncertainty, 
 	s_dec_deg, 
 	s_dec_deg_uncertainty,
 	s_center,
-	b_uvmin, 
-	b_uvmax, 
-	b_spectral_index, 
+	b_spectral_index,
 	band_name
  ) AS SELECT 
     c.catalogue_name,
@@ -43,16 +39,12 @@ CREATE OR REPLACE FORCE VIEW source_catalogue (
 	m.angle_uncertainty,
 	m.date_observed, 
 	m.frequency_support_display,
-	m.uvmin, 
-	m.uvmax,
-	s.ra_deg, 
+	s.ra_deg,
 	s.ra_deg_uncertainty,
 	s.dec_deg, 
 	s.dec_deg_uncertainty,
 	s.center,
-	b.uvmin, 
-	b.uvmax, 
-	b.spectral_index, 
+	b.spectral_index,
 	coalesce(r.range_name, 'non-ALMA Band')
 FROM measurements m 
 INNER JOIN sources s on s.source_id = m.source_id 
