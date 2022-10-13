@@ -46,6 +46,10 @@
             <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
         </init-param>
         <init-param>
+            <param-name>ca.nrc.cadc.uws.web.SyncPostAction.execOnPOST</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
             <param-name>augmentSubject</param-name>
             <param-value>false</param-value>
         </init-param>
