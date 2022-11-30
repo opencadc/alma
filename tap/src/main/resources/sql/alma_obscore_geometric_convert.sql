@@ -19,7 +19,7 @@ begin
         select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 2), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into y_val from DUAL;
         select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 3), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into radius_val from DUAL;
         select radius_val * metres_multiplier into radius_in_metres from DUAL;
-        select SDO_UTIL.CIRCLE_POLYGON(x_val, y_val, radius_in_metres, 0.005) into circle_polygon from DUAL;
+        select SDO_UTIL.CIRCLE_POLYGON(x_val, y_val, radius_in_metres, 0.05) into circle_polygon from DUAL;
         return circle_polygon;
 end;
 /
@@ -96,7 +96,7 @@ return SDO_GEOMETRY is
 			geo_shape := TO_POLYGON(parsed_footprint);
 		elsif footprint_type = 'union'
 		then
-		     geo_shape := TO_UNION(parsed_footprint);
+		  geo_shape := TO_UNION(parsed_footprint);
 		elsif footprint_type = '' or footprint_type is null
 		then
 			geo_shape := null;

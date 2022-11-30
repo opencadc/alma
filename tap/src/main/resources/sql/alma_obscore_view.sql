@@ -13,6 +13,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     s_fov,
     s_region,
     footprint,
+    spectral_resolution,
     s_xel1,
     s_xel2,
     em_xel,
@@ -88,6 +89,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     (science.fov / 3600),
     science.spatial_bounds,
     science.footprint,
+    science.frequency_resolution,
     NULL,
     NULL,
     energy.channel_num,
@@ -103,7 +105,12 @@ CREATE OR REPLACE FORCE VIEW obscore (
     energy.resolving_power_max,
     'phot.flux.density;phys.polarization',
     -- Special case where the pol_products that include all of the states but omit the YX value.
-    CASE WHEN LTRIM(RTRIM(energy.pol_product)) = 'XX XY YY' THEN '/XX/XY/YX/YY/' ELSE '/' || REGEXP_REPLACE(LTRIM(RTRIM(energy.pol_product)), '\s', '/') || '/' END,
+    CASE WHEN LTRIM(RTRIM(energy.pol_product)) = 'XX XY YY'
+    THEN
+      '/XX/XY/YX/YY/'
+    ELSE
+      '/' || REGEXP_REPLACE(LTRIM(RTRIM(energy.pol_product)), '\s', '/') || '/'
+    END,
     'JAO',
     'ALMA',
     science.project_code,
@@ -112,12 +119,21 @@ CREATE OR REPLACE FORCE VIEW obscore (
     science.gal_latitude,
     science.band_list,
     -- Convert frequency_resolution to metres as per ObsCore expectations.
-    CASE WHEN science.frequency_resolution IS NOT NULL THEN (science.frequency_resolution * 2.99792458e+11) ELSE NULL END,
+    CASE WHEN science.frequency_resolution IS NOT NULL AND science.frequency_max IS NOT NULL AND science.frequency_min IS NOT NULL
+    THEN
+      (0.25 * 2.99792458e+11 * science.frequency_resolution / ((science.frequency_min + science.frequency_max) * (science.frequency_min + science.frequency_max)))
+    ELSE
+      NULL
+    END,
     energy.bandwidth,
     science.antennas,
     CASE WHEN science.is_mosaic = 'Y' THEN 'T' ELSE 'F' END,
-    CASE WHEN ads.release_date is null THEN TO_TIMESTAMP('3000-01-01T00:00:00.000Z', 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"')
-         ELSE CAST(ads.release_date AS TIMESTAMP) END,
+    CASE WHEN ads.release_date is null
+    THEN
+      TO_TIMESTAMP('3000-01-01T00:00:00.000Z', 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"')
+    ELSE
+      CAST(ads.release_date AS TIMESTAMP)
+    END,
     science.spatial_resolution,
     science.frequency_support,
     0.5 * (energy.frequency_max + energy.frequency_min),
