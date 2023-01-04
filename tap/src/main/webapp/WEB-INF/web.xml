@@ -104,6 +104,11 @@
     <servlet>
         <servlet-name>TempStorageServlet</servlet-name>
         <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <!-- Optional init parameter to validate configuration. -->
+        <init-param>
+            <param-name>init</param-name>
+            <param-value>org.opencadc.tap.tmp.TempStorageInitAction</param-value>
+        </init-param>
         <init-param>
             <param-name>get</param-name>
             <param-value>org.opencadc.tap.tmp.TempStorageGetAction</param-value>
