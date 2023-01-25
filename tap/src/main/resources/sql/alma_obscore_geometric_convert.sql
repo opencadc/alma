@@ -32,21 +32,47 @@ return SDO_GEOMETRY is
 	connect by regexp_substr(in_coordinate_string, pattern, 1, level) is not null;
 	poly SDO_GEOMETRY;
 	vertices SDO_ORDINATE_ARRAY := SDO_ORDINATE_ARRAY();
+	rev_vertices SDO_ORDINATE_ARRAY := SDO_ORDINATE_ARRAY();
 	counter integer := 0;
+	r_counter integer := 0;
+	x_counter integer := 0;
 	next_vert number := 0.0;
-    format varchar2(16) := '999.99999999';
+	next_vert_y number := 0.0;
+	x_vert integer := 0;
+    format varchar2(22) := '999.999999999999999999';
 	begin
 		if REGEXP_COUNT(in_coordinate_string, pattern) < 6
 		then
 			RAISE_APPLICATION_ERROR(-20002, 'Polygons require three (3) points (six (6) values): (point1.x, point1.y, point2.x, point2.y, point3.x, point3.y)');
 		end if;
-		for i in c_vertices loop
-      		counter := counter + 1;
-      		next_vert := to_number(i.VERT, format, ' NLS_NUMERIC_CHARACTERS = '',.''');
-      		vertices.extend;
-      		vertices(counter) := next_vert;
-      	end loop;
-		select SDO_GEOMETRY(2003, 8307, null, SDO_ELEM_INFO_ARRAY(1, 1003, 1), vertices) into poly from DUAL;
+
+		-- Collect the vertices as an ordinate array of numbers.
+    for i in c_vertices loop
+      counter := counter + 1;
+      next_vert := to_number(i.VERT, format, ' NLS_NUMERIC_CHARACTERS = '',.''');
+      vertices.extend;
+      vertices(counter) := next_vert;
+    end loop;
+
+    -- Iterate the vertices in reverse order, and write out each pair.  This is to accommodate Oracle's indexed
+    -- Polygons, which are constructed counter-clockwise.
+    for j in reverse vertices.first .. vertices.last loop
+      r_counter := r_counter + 1;
+      -- 1-based array, but skip every second one to only use pairs.
+      if mod(r_counter,2) = 0
+      then
+	      x_counter := r_counter - 1;
+	      x_vert := j + 1;
+        next_vert := to_number(vertices(x_vert), format, ' NLS_NUMERIC_CHARACTERS = '',.''');
+        next_vert_y := to_number(vertices(j), format, ' NLS_NUMERIC_CHARACTERS = '',.''');
+        rev_vertices.extend;
+        rev_vertices(x_counter) := next_vert_y;
+
+        rev_vertices.extend;
+        rev_vertices(r_counter) := next_vert;
+      end if;
+    end loop;
+		select SDO_GEOMETRY(2003, 8307, null, SDO_ELEM_INFO_ARRAY(1, 1003, 1), rev_vertices) into poly from DUAL;
 		return poly;
 	end;
 /
