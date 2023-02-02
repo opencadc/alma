@@ -246,9 +246,10 @@ public class DataLinkIterator implements Iterator<DataLink> {
                 dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(hierarchyItem);
                 dataLink.contentLength = determineSizeInBytes(hierarchyItem);
                 dataLink.contentType = determineContentType(hierarchyItem);
-                dataLink.readable = hierarchyItem.isReadable();
+                dataLink.linkAuthorized = hierarchyItem.isReadable();
                 dataLink.description = getDescription(dataLink, hierarchyItem.getSubDirectory(),
                                                       hierarchyItem.getFileClass());
+                dataLink.linkAuth = DataLink.LinkAuthTerm.FALSE;
 
                 final String subDirectory = hierarchyItem.getSubDirectory();
                 final String fileClass = hierarchyItem.getFileClass();
@@ -278,7 +279,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
             descriptionID.append("|").append(fileClass);
         }
 
-        if (dataLink.getSemantics().contains(DataLink.Term.PACKAGE)) {
+        if (dataLink.getSemantics().equals(DataLink.Term.PACKAGE)) {
             final String appendage;
             if (dataLink.descriptor == null) {
                 appendage = "";
@@ -288,7 +289,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
             dataLink.description = String.format("Download all data associated with %s%s.", descriptionID,
                                                  appendage);
-        } else if (dataLink.getSemantics().contains(DataLink.Term.DOCUMENTATION)) {
+        } else if (dataLink.getSemantics().equals(DataLink.Term.DOCUMENTATION)) {
             dataLink.description = String.format("Download documentation for %s.", descriptionID);
         } else {
             // Assumes #this
@@ -373,7 +374,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
         }
 
         final String description;
-        if (dataLink.getSemantics().contains(DataLink.Term.PACKAGE)) {
+        if (dataLink.getSemantics().equals(DataLink.Term.PACKAGE)) {
             description = String.format("Download all data associated with %s.", descriptionID);
         } else if (dataLink.getID().toLowerCase(Locale.ROOT).contains("readme")) {
             description = String.format("Download documentation for %s.", descriptionID);

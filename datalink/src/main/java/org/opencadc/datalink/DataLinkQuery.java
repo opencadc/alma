@@ -91,6 +91,8 @@ public class DataLinkQuery extends RequestHandlerQuery {
     private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
             "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
             + "\"children\":[],\"allMousUids\":[]}";
+    private static final String DOWNWARDS_ENDPOINT_TEMPLATE = "%s/%s/expand/%s/downwards";
+
     private static final Logger LOGGER = Logger.getLogger(DataLinkQuery.class);
 
     public DataLinkQuery(final AlmaProperties almaProperties) {
@@ -160,13 +162,7 @@ public class DataLinkQuery extends RequestHandlerQuery {
      * @throws IOException Any errors are passed back up the stack.
      */
     InputStream downwardsJSONStream(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
-        LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
-        final URL downwardsQueryURL = new URL(String.format("%s/ous/expand/%s/downwards",
-                                                            baseServiceURL.toExternalForm(),
-                                                            almaUID.getArchiveUID() == null
-                                                            ? almaUID.getSanitisedUid()
-                                                            : almaUID.getArchiveUID().getSanitisedUid()));
+        final URL downwardsQueryURL = getDownwardsEndpointURL(almaUID);
 
         LOGGER.debug(String.format("Base URL for Request Handler is %s", downwardsQueryURL));
         final HttpGet httpGet = createHttpGet(downwardsQueryURL);
@@ -178,5 +174,19 @@ public class DataLinkQuery extends RequestHandlerQuery {
         } else {
             return httpGet.getInputStream();
         }
+    }
+
+    URL getDownwardsEndpointURL(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
+        final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
+        LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
+
+        final String contextEndpoint = almaUID.isEnergyID() ? "spw" : "ous";
+
+        return new URL(String.format(DOWNWARDS_ENDPOINT_TEMPLATE,
+                                     baseServiceURL.toExternalForm(),
+                                     contextEndpoint,
+                                     almaUID.getArchiveUID() == null
+                                     ? almaUID.getSanitisedUid()
+                                     : almaUID.getArchiveUID().getSanitisedUid()));
     }
 }
