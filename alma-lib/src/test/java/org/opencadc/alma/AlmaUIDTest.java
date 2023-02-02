@@ -96,6 +96,7 @@ public class AlmaUIDTest {
     public void constructFromSanitizedMOUSID() {
         final AlmaUID testSubject = new AlmaUID("uid___C0_C1_C2");
         assertEquals("Wrong ID", "uid___C0_C1_C2", testSubject.getUID());
+        assertFalse("Not SPW (Energy).", testSubject.isEnergyID());
     }
 
     @Test
@@ -127,5 +128,15 @@ public class AlmaUIDTest {
         assertEquals("Wrong MOUS ID.",
                      "uid___A002_Xc4f3ae_X537a",
                      testSubject.getArchiveUID().toString());
+        assertFalse("Not energy.", testSubject.isEnergyID());
+    }
+
+    @Test
+    public void constructFromEnergyID() {
+        final AlmaUID testSubject = new AlmaUID("uid://A001/X1465/X162.source.Serp_02.spw.17");
+        assertEquals("Wrong MOUS ID.",
+                     "uid://A001/X1465/X162",
+                     testSubject.getArchiveUID().toString());
+        assertTrue("Is energy.", testSubject.isEnergyID());
     }
 }

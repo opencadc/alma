@@ -38,7 +38,7 @@ configurations {
 dependencies {
     implementation 'org.opencadc:alma-lib:' + version
     implementation 'org.opencadc:cadc-cdp:[1.2.3,2.0)'
-    implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
+    implementation 'org.opencadc:cadc-log:[1.1.7,1.2.0)'
     implementation 'org.opencadc:cadc-sia:[1.1.9,2.0)'
     implementation 'org.opencadc:cadc-tap:[1.0,2.0)'
     implementation 'org.opencadc:cadc-util:[1.6.0,2.0)'

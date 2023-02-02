@@ -63,6 +63,10 @@
                 org.opencadc.conesearch
             </param-value>
         </init-param>
+        <init-param>
+            <param-name>logControlProperties</param-name>
+            <param-value>alma-logControl.properties</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

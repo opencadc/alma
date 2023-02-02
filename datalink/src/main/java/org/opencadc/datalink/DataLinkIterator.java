@@ -162,7 +162,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
     }
 
     /**
-     * Create all of the necessary DataLink entries for the given source DeliverableInfo.  Some files will produce
+     * Create all the necessary DataLink entries for the given source DeliverableInfo.  Some files will produce
      * multiple DataLink entries.
      *
      * @param hierarchyItem The HierarchyItem to create from.

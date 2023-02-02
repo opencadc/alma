@@ -47,7 +47,7 @@ configurations {
 
 dependencies {
     implementation 'org.opencadc:cadc-dali:[1.2.1,2.0)'
-    implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
+    implementation 'org.opencadc:cadc-log:[1.1.7,1.2.0)'
     implementation 'org.opencadc:cadc-registry:[1.5.9,2.0)'
     implementation 'org.opencadc:cadc-registry-server:[1.0.9,2.0)'
     implementation 'org.opencadc:cadc-util:[1.6.0,2.0)'

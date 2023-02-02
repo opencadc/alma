@@ -87,6 +87,8 @@ public class AlmaUID {
     private static final Logger LOGGER = LogManager.getLogger(AlmaUID.class);
     private static final Pattern UID_PATTERN =
             Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
+    private static final Pattern ENERGY_SPW_ID_PATTERN =
+            Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+\\.source.*\\.spw");
 
 
     // The original UID as provided by the constructor.
@@ -129,20 +131,16 @@ public class AlmaUID {
         return this.sanitize(this.uid);
     }
 
-    public String getSanitizedArchiveUID() {
-        return this.sanitize(this.archiveUID.getUID());
-    }
-
-    public String getDesanitisedUid() {
-        return desanitize(this.uid);
-    }
-
     String desanitize(final String uid) {
         return uid.replace("uid___", "uid://").replaceAll("_", "/");
     }
 
     String sanitize(final String uid) {
         return uid.replace(':', '_').replaceAll("/", "_");
+    }
+
+    public boolean isEnergyID() {
+        return ENERGY_SPW_ID_PATTERN.matcher(this.uid).find();
     }
 
     @Override
