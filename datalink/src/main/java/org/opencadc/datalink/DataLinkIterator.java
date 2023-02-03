@@ -172,7 +172,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
         final List<DataLink> dataLinkCollection = new ArrayList<>();
         final HierarchyItem.Type deliverableType = hierarchyItem.getType();
 
-        if (!hierarchyItem.fileExists()) {
+        if (hierarchyItem.fileMissing()) {
             dataLinkCollection.add(createNotFoundDataLink(hierarchyItem));
         } else {
             final DataLink.Term dataLinkTerm = determineSemantic(hierarchyItem);
@@ -231,14 +231,7 @@ public class DataLinkIterator implements Iterator<DataLink> {
     private DataLink createDataLink(final HierarchyItem hierarchyItem, final DataLink.Term semantic) {
         final DataLink dataLink;
 
-        //
-        // TODO: Is it safe to assume that if the size is less than zero that the file doesn't exist?  This
-        // TODO: makes that assumption.  If a UID that does not exist is passed in, the DataPacker will still
-        // TODO: return a result, so we'll hide it here if the size is less than zero bytes.
-        //
-        // jenkinsd 2019.07.11
-        //
-        if (!hierarchyItem.fileExists()) {
+        if (hierarchyItem.fileMissing()) {
             dataLink = createNotFoundDataLink(hierarchyItem);
         } else {
             dataLink = new DataLink(hierarchyItem.getUidString(), semantic);
@@ -246,7 +239,8 @@ public class DataLinkIterator implements Iterator<DataLink> {
                 dataLink.accessURL = dataLinkURLBuilder.createDownloadURL(hierarchyItem);
                 dataLink.contentLength = determineSizeInBytes(hierarchyItem);
                 dataLink.contentType = determineContentType(hierarchyItem);
-                dataLink.linkAuthorized = hierarchyItem.isReadable();
+                dataLink.linkAuthorized = hierarchyItem.isPermissionAllowed();
+                dataLink.readable = dataLink.linkAuthorized;
                 dataLink.description = getDescription(dataLink, hierarchyItem.getSubDirectory(),
                                                       hierarchyItem.getFileClass());
                 dataLink.linkAuth = DataLink.LinkAuthTerm.FALSE;
