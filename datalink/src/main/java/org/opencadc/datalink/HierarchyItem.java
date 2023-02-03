@@ -287,43 +287,80 @@ public class HierarchyItem {
 
     public enum Type {
         // NB that the order in which these enums are listed is used in DeliverableInfo to determine the display order.
-        SGOUS,
-        GOUS,
-        MOUS,
+        PROJECT("Project"),
+        SGOUS("Science Goal OUS"),
+        GOUS("Group OUS"),
+        MOUS("Member OUS"),
+        // following two are not _actually_ things which we deliver, and hence not a deliverable in that sense. They
+        // are used for displaying information
+        // in the RequestHandler regarding the SB and SOURCE names for each MOUS.
+        SCHEDBLOCK("SchedBlock"),
+        SOURCE("Source"),
         // the order of the enums here determines the order of children in the DeliverableInfo class. README should
         // come before PIPELINE files
-        PIPELINE_AUXILIARY_README,
+        PIPELINE_AUXILIARY_README("Auxiliary/Readme"),
         // An on-the-fly tar file which is created from actual, individual files contained in NGAS. This entity
         // doesn't physically
         // exist anywhere, rather it consists of lots of (real, actually existing)....
-        PIPELINE_PRODUCT_TARFILE,
+        PIPELINE_PRODUCT_TARFILE("Product"),
         // ... physical file which exists in NGAS
-        PIPELINE_PRODUCT,
-        PIPELINE_AUXILIARY_TARFILE,
-        PIPELINE_AUXILIARY_CYCLE1TO4_TARFILE,
+        PIPELINE_PRODUCT("Product"),
+        PIPELINE_AUXILIARY_TARFILE("Auxiliary"),
+        PIPELINE_AUXILIARY_CYCLE1TO4_TARFILE("Auxiliary"),
         // TODO remove this after 2018DEC - it is only needed with legacy data during the deployment of 2018DEC.
         //  After the RH schema is
         // updated it is replaced by the 5 AUXILIARY enums below.
-        PIPELINE_AUXILIARY,
+        PIPELINE_AUXILIARY("Auxiliary"),
         // ICT-13550 the RH should display the subdir of the auxiliary files as well. So I simply expanded the
         // AUXILIARY types. TODO rethink this from end-to-end - I suspect there is a simpler way to do it now.
-        PIPELINE_AUXILIARY_CALIBRATION,
-        PIPELINE_AUXILIARY_SCRIPT,
-        PIPELINE_AUXILIARY_LOG,
-        PIPELINE_AUXILIARY_QA,
+        PIPELINE_AUXILIARY_CALIBRATION("Auxiliary/Calibration"),
+        PIPELINE_AUXILIARY_SCRIPT("Auxiliary/Script"),
+        PIPELINE_AUXILIARY_LOG("Auxiliary/Log"),
+        PIPELINE_AUXILIARY_QA("Auxiliary/Qa"),
+        // there is overlap here with ProductFileClass.CALIBRATION and DataPackerJClient.Entity.PIPELINE_CALIBRATION
+        // This does not seem to fit here - there will not be a deliverable to the PI through the RH which is
+        // a pipeline calibration node. This is only used so we can specify to the DataPacker that we want to export
+        // a calibration tar. We then create a filter to extract some of the product files.
+        PIPELINE_CALIBRATION("Calibration"),
+        // can be either an individual product file or an individual auxiliary file. The individual file is stored in
+        // NGAS. But the
+        // individual file is tarred up in the project structure before being downloaded
+        PIPELINE_TARRED_INDIVIDUAL_FILE("TarredIndividualFile"),
         // when expanded and delivered via the request handler. The ASDM was Pass status.
-        ASDM,
+        ASDM("Asdm"),
         // when the ASDM is Qa0 semipass
-        ASDM_SEMIPASS,
+        ASDM_SEMIPASS("SemipassAsdm"),
+        // an ASDM when we want direct access to an ASDM just by supplying the UID to the download manager. Normally
+        // just used by developers.
+        // ASDM will be an ASDM which has been used by the pipeline, and we already have the size cached. A Direct
+        // ASDM may not yet have had
+        // the size cached
+        DIRECT_ACCESS_ASDM("DirectAccessAsdm"),
+        // a file which is stored in NGAS and we're not sure about the type. In fact, we don't care. We just want to
+        // stream it straight out
+        // of NGAS to the user.
+        GENERIC_NGAS_FILE("NgasFile"),
         // An on-the-fly tarfile which is created from actual, individual files contained in NGAS. This entity
         // doesn't physically
         // exist anywhere, rather it consists of lots of (real, actually existing)....
-        EXTERNAL_TARFILE,
+        EXTERNAL_TARFILE("External"),
         // ICT-10907, ICT-7441
         // A single tar-file which represents a piece of data (like re-processed data) which has been contributed from
         // somewhere outside of ALMA.
-        EXTERNAL,
-        ADMIT;
+        EXTERNAL("External"),
+        // another type of externally produced data
+        ADMIT_TARFILE("ADMIT"),
+        ADMIT("ADMIT");
+
+        private final String display;
+
+        Type(String display) {
+            this.display = display;
+        }
+
+        public String getDisplay() {
+            return display;
+        }
 
         public boolean isOus() {
             return this == SGOUS || this == GOUS || this == MOUS;
