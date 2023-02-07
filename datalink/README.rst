@@ -1,8 +1,8 @@
-ALMA DataLink (1.4.0)
+ALMA DataLink (2.2.1)
 ================
 
 Current implementation can be found at the CADC here:
-https://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/alma-datalink/
+https://almascience.org/datalink
 
 
 `IVOA DataLink`_ service for the `ALMA Science Archive`_.
@@ -25,7 +25,7 @@ Docker
 
 This is a working prototype using a DataLink implementation.  An existing image can be found here:
 
-``docker pull opencadc/alma-datalink:1.4.0``
+``docker pull opencadc/alma-datalink:2.2.1``
 
 Building for Docker
 ~~~~~~~~~~~~~~~~~~~
@@ -74,7 +74,7 @@ Or set to a completely custom location:
 
 
 .. _IVOA DataLink: http://www.ivoa.net/documents/DataLink/
-.. _ALMA Science Archive: http://almascience.nrao.edu/
+.. _ALMA Science Archive: http://almascience.org/
 .. _build.gradle: build.gradle
 .. _Build: #build
 .. _WAR File: datalink

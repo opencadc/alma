@@ -240,7 +240,6 @@ public class DataLinkIterator implements Iterator<DataLink> {
                 dataLink.contentLength = determineSizeInBytes(hierarchyItem);
                 dataLink.contentType = determineContentType(hierarchyItem);
                 dataLink.linkAuthorized = hierarchyItem.isPermissionAllowed();
-                dataLink.readable = dataLink.linkAuthorized;
                 dataLink.description = getDescription(dataLink, hierarchyItem.getSubDirectory(),
                                                       hierarchyItem.getFileClass());
                 dataLink.linkAuth = DataLink.LinkAuthTerm.FALSE;

@@ -73,7 +73,6 @@ import ca.nrc.cadc.net.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -91,7 +90,6 @@ public class DataLinkQuery extends RequestHandlerQuery {
     private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
             "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
             + "\"children\":[],\"allMousUids\":[]}";
-    private static final String DOWNWARDS_ENDPOINT_TEMPLATE = "%s/%s/expand/%s/downwards";
 
     private static final Logger LOGGER = Logger.getLogger(DataLinkQuery.class);
 
@@ -118,9 +116,8 @@ public class DataLinkQuery extends RequestHandlerQuery {
         } catch (IOException ioException) {
             LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.\n\n%s",
                                        almaUID.getUID(), ioException));
-            return HierarchyItem.fromJSONObject(almaUID,
-                                                new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
-                                                                             almaUID.getUID())));
+            return HierarchyItem.fromJSONObject(almaUID, new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
+                                                                                      almaUID.getUID())));
         } catch (ResourceNotFoundException resourceNotFoundException) {
             LOGGER.fatal("Unable to find Registry lookup.");
             throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
@@ -162,10 +159,10 @@ public class DataLinkQuery extends RequestHandlerQuery {
      * @throws IOException Any errors are passed back up the stack.
      */
     InputStream downwardsJSONStream(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        final URL downwardsQueryURL = getDownwardsEndpointURL(almaUID);
+        final ExpansionURL downwardsQueryURL = new ExpansionURL(almaUID, this.almaProperties);
 
         LOGGER.debug(String.format("Base URL for Request Handler is %s", downwardsQueryURL));
-        final HttpGet httpGet = createHttpGet(downwardsQueryURL);
+        final HttpGet httpGet = createHttpGet(downwardsQueryURL.toURL());
         httpGet.run();
 
         final Throwable throwable = httpGet.getThrowable();
@@ -174,19 +171,5 @@ public class DataLinkQuery extends RequestHandlerQuery {
         } else {
             return httpGet.getInputStream();
         }
-    }
-
-    URL getDownwardsEndpointURL(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
-        LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
-
-        final String contextEndpoint = almaUID.isEnergyID() ? "spw" : "ous";
-
-        return new URL(String.format(DOWNWARDS_ENDPOINT_TEMPLATE,
-                                     baseServiceURL.toExternalForm(),
-                                     contextEndpoint,
-                                     almaUID.getArchiveUID() == null
-                                     ? almaUID.getSanitisedUid()
-                                     : almaUID.getArchiveUID().getSanitisedUid()));
     }
 }
