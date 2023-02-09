@@ -6,14 +6,6 @@
             body {
                 font-family: Arial;
             }
-
-            pre {
-                border: 1px solid;
-                width: 50%;
-                margin-left: 1em;
-                margin-right: auto;
-                padding: 5px;
-            }
         </style>
     </head>
     <body vocab="http://www.ivoa.net/rdf/examples#">
@@ -28,6 +20,9 @@
             </li>
             <li>
                 <a href="#by_target">Query using Spatial Geometries</a>
+            </li>
+            <li>
+                <a href="#schema_info">Query for schema information</a>
             </li>
         </ul>
 
@@ -51,7 +46,17 @@
             <h2 property="name">Query for ObsCore data by Spatial Functions</h2>
             <p>When querying against geometric columns, in particular coverage, use <a href="https://www.ivoa.net/documents/latest/ADQL.html" target="_blank">&#x2197;ADQL</a>'s CONTAINS or INTERSECTS functions.</p>
             <pre class="dachs-ex-tapquery literal-block" property="query">
-                select distinct member_ous_uid from ivoa.obscore where INTERSECTS(CIRCLE('ICRS',168.1155600,-76.739526,0.001), s_region) = 1
+                select distinct member_ous_uid
+                from ivoa.obscore
+                where INTERSECTS(CIRCLE('ICRS',168.1155600,-76.739526,0.001), s_region) = 1
+            </pre>
+        </div>
+
+        <div typeof="example" id="schema_info" resource="#schema_info">
+            <h2 property="name">List all schema table and column information</h2>
+            <pre class="dachs-ex-tapquery literal-block" property="query">
+                select t.schema_name, c.table_name, c.column_name
+                from TAP_SCHEMA.columns c JOIN TAP_SCHEMA.tables t on t.table_name = c.table_name
             </pre>
         </div>
     </body>
