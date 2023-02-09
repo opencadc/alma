@@ -218,6 +218,9 @@
 
     <welcome-file-list>
         <welcome-file>/index.jsp</welcome-file>
+
+        <!-- Enable the /examples endpoint's index.html -->
+        <welcome-file>index.html</welcome-file>
     </welcome-file-list>
 
 </web-app>

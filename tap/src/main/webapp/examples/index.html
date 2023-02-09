@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.1//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-2.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" version="XHTML+RDFa 1.1">
+    <head>
+        <title>ALMA ObsCore Service Example Queries</title>
+        <style>
+            body {
+                font-family: Arial;
+            }
+
+            pre {
+                border: 1px solid;
+                width: 50%;
+                margin-left: 1em;
+                margin-right: auto;
+                padding: 5px;
+            }
+        </style>
+    </head>
+    <body vocab="http://www.ivoa.net/rdf/examples#">
+        <h1>ALMA ObsCore /examples</h1>
+
+        <ul id="toc">
+            <li>
+                <a href="#by_project">Query by Project</a>
+            </li>
+            <li>
+                <a href="#by_project_fuzzy">Query by Project (partial)</a>
+            </li>
+            <li>
+                <a href="#by_target">Query using Spatial Geometries</a>
+            </li>
+        </ul>
+
+        <div typeof="example" id="by_project" resource="#by_project">
+            <h2 property="name">Query for ObsCore data by Project Code</h2>
+            <pre class="dachs-ex-tapquery literal-block" property="query">
+                select * from ivoa.obscore where proposal_id = '2011.0.00004.E'
+            </pre>
+        </div>
+
+        <div typeof="example" id="by_project_fuzzy" resource="#by_project_fuzzy">
+            <h2 property="name">Query for ObsCore data by partial Project Code</h2>
+            <pre class="dachs-ex-tapquery literal-block" property="query">
+                select * from ivoa.obscore where proposal_id like '2013%'
+            </pre>
+            <p>Note: URL encode the <code>%</code> to be <code>%25</code> when using with command line tools such as cURL,
+                or send it through a service like this <a href="https://meyerweb.com/eric/tools/dencoder/" target="_blank">&#x2197;Encoder/Decoder</a>.</p>
+        </div>
+
+        <div typeof="example" id="by_target" resource="#by_target">
+            <h2 property="name">Query for ObsCore data by Spatial Functions</h2>
+            <p>When querying against geometric columns, in particular coverage, use <a href="https://www.ivoa.net/documents/latest/ADQL.html" target="_blank">&#x2197;ADQL</a>'s CONTAINS or INTERSECTS functions.</p>
+            <pre class="dachs-ex-tapquery literal-block" property="query">
+                select distinct member_ous_uid from ivoa.obscore where INTERSECTS(CIRCLE('ICRS',168.1155600,-76.739526,0.001), s_region) = 1
+            </pre>
+        </div>
+    </body>
+</html>
