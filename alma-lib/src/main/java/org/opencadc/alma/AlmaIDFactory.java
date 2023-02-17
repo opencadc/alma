@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,86 +66,20 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
-
-import ca.nrc.cadc.net.ResourceNotFoundException;
-import org.opencadc.alma.AlmaIDFactory;
-import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaID;
-
+package org.opencadc.alma;
 
 
 /**
- * Iterator to provide streaming over the DeliverableInfo items that the DataPacker expands.
+ * Factory to generate the appropriate ID type.
  */
-public class DataLinkIterator implements Iterator<DataLink> {
-    private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
-    private final Iterator<String> datasetIDIterator;
-    private final AlmaProperties almaProperties;
-    private final DataLinkURLBuilder dataLinkURLBuilder;
-
-
-    DataLinkIterator(final Iterator<String> datasetIDIterator, final AlmaProperties almaProperties)
-            throws IOException, ResourceNotFoundException {
-        this.datasetIDIterator = datasetIDIterator;
-        this.almaProperties = almaProperties;
-        this.dataLinkURLBuilder = new DataLinkURLBuilder(this.almaProperties);
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (dataLinkQueue.isEmpty()) {
-            final DataLinkQuery dataLinkQuery = createQuery();
-            if (datasetIDIterator.hasNext()) {
-                final AlmaID nextAlmaID = toAlmaID(datasetIDIterator.next());
-                final HierarchyItem hierarchyItem = dataLinkQuery.query(nextAlmaID);
-                final HierarchyVisitor hierarchyVisitor =
-                        new HierarchyVisitor(nextAlmaID, hierarchyItem, this.almaProperties, this.dataLinkURLBuilder);
-
-                if (hierarchyItem.hasChildren()) {
-                    hierarchyVisitor.visitChildren(this.dataLinkQueue);
-                } else {
-                    dataLinkQueue.add(hierarchyVisitor.createNotFoundDataLink());
-                }
-
-                return !dataLinkQueue.isEmpty();
-            } else {
-                return false;
-            }
+public class AlmaIDFactory {
+    public static AlmaID createID(final String id) {
+        if (SpectralWindowID.matches(id)) {
+            return new SpectralWindowID(id);
+        } else if (ObsUnitSetID.matches(id)) {
+            return new ObsUnitSetID(id);
         } else {
-            return true;
+            throw new IllegalArgumentException(String.format("Unsupported ID ('%s')", id));
         }
-    }
-
-    /**
-     * Tests can override this.
-     * @return  DataLinkQuery instance.
-     */
-    DataLinkQuery createQuery() {
-        return new DataLinkQuery(this.almaProperties);
-    }
-
-    /**
-     * Tests can override this.
-     * @param value     Value to create an AlmaID from.
-     * @return  AlmaID instance.
-     */
-    AlmaID toAlmaID(final String value) {
-        return AlmaIDFactory.createID(value);
-    }
-
-    /**
-     * This next method will simply take from the current stack.
-     *
-     * @return DataLink     Next DataLink created from the next DeliverableInfo in the Queue.
-     */
-    @Override
-    public DataLink next() {
-        return dataLinkQueue.poll();
     }
 }

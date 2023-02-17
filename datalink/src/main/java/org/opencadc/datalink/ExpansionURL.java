@@ -72,7 +72,8 @@ import ca.nrc.cadc.net.ResourceNotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.AlmaID;
+import org.opencadc.alma.SpectralWindowID;
 
 import java.io.IOException;
 import java.net.URL;
@@ -98,11 +99,11 @@ public class ExpansionURL {
     private static final String SPW_ENDPOINT = "spw";
     private static final String OUS_ENDPOINT = "ous";
 
-    private final AlmaUID almaUID;
+    private final AlmaID almaID;
     private final AlmaProperties almaProperties;
 
-    public ExpansionURL(final AlmaUID almaUID, final AlmaProperties almaProperties) {
-        this.almaUID = almaUID;
+    public ExpansionURL(final AlmaID almaID, final AlmaProperties almaProperties) {
+        this.almaID = almaID;
         this.almaProperties = almaProperties;
     }
 
@@ -117,13 +118,9 @@ public class ExpansionURL {
         final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
         LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
 
-        final String contextEndpoint = almaUID.isEnergyID() ? SPW_ENDPOINT : OUS_ENDPOINT;
+        final String contextEndpoint = (almaID instanceof SpectralWindowID) ? SPW_ENDPOINT : OUS_ENDPOINT;
 
-        return new URL(String.format(DOWNWARDS_ENDPOINT_TEMPLATE,
-                                     baseServiceURL.toExternalForm(),
-                                     contextEndpoint,
-                                     almaUID.getArchiveUID() == null
-                                     ? almaUID.getSanitisedUid()
-                                     : almaUID.getArchiveUID().getSanitisedUid()));
+        return new URL(String.format(DOWNWARDS_ENDPOINT_TEMPLATE, baseServiceURL.toExternalForm(), contextEndpoint,
+                                     almaID.getEndpointID()));
     }
 }

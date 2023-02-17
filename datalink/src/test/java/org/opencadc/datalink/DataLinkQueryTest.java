@@ -74,7 +74,8 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Test;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.AlmaID;
+import org.opencadc.alma.AlmaIDFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -94,30 +95,30 @@ public class DataLinkQueryTest {
             /**
              * Obtain an InputStream to JSON data representing the hierarchy of elements.
              *
-             * @param almaUID The UID to query for.
+             * @param almaID The UID to query for.
              * @return InputStream to feed to a JSON Object.
              *
              * @throws IOException Any errors are passed back up the stack.
              */
             @Override
-            InputStream downwardsJSONStream(AlmaUID almaUID) throws IOException {
+            InputStream downwardsJSONStream(AlmaID almaID) throws IOException {
                 return new FileInputStream(testFile);
             }
         };
-        final AlmaUID testAlmaUIDOne = new AlmaUID("uid://A001/X74/X29");
-        final HierarchyItem resultHierarchyItem = testSubject.query(testAlmaUIDOne);
+        final AlmaID testAlmaIDOne = AlmaIDFactory.createID("uid://A001/X74/X29");
+        final HierarchyItem resultHierarchyItem = testSubject.query(testAlmaIDOne);
 
-        Assert.assertEquals("Wrong document.", HierarchyItem.fromJSONObject(testAlmaUIDOne, testDocument),
+        Assert.assertEquals("Wrong document.", HierarchyItem.fromJSONObject(testDocument),
                             resultHierarchyItem);
 
-        final AlmaUID testAlmaUIDTwo = new AlmaUID("2011.0.00101.S_uid___A002_X30a93d_X43e.asdm.sdm.tar");
-        final HierarchyItem resultSubHierarchyItem = testSubject.query(testAlmaUIDTwo);
+        final AlmaID testAlmaIDTwo = AlmaIDFactory.createID("2011.0.00101.S_uid___A002_X30a93d_X43e.asdm.sdm.tar");
+        final HierarchyItem resultSubHierarchyItem = testSubject.query(testAlmaIDTwo);
         HierarchyItem expectedSubHierarchyItem = null;
 
         for (final Object o : testDocument.getJSONArray("children")) {
             final JSONObject jsonObject = (JSONObject) o;
-            if (testAlmaUIDTwo.getSanitisedUid().equals(jsonObject.get("name").toString())) {
-                expectedSubHierarchyItem = HierarchyItem.fromJSONObject(testAlmaUIDTwo, jsonObject);
+            if (testAlmaIDTwo.sanitize().equals(jsonObject.get("name").toString())) {
+                expectedSubHierarchyItem = HierarchyItem.fromJSONObject(jsonObject);
             }
         }
 

@@ -67,86 +67,73 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
+package org.opencadc.alma;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.junit.Before;
+import org.junit.Test;
 
-import ca.nrc.cadc.net.ResourceNotFoundException;
-import org.opencadc.alma.AlmaIDFactory;
-import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaID;
+import static org.junit.Assert.*;
 
 
+public class AlmaIDTest {
 
-/**
- * Iterator to provide streaming over the DeliverableInfo items that the DataPacker expands.
- */
-public class DataLinkIterator implements Iterator<DataLink> {
-    private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
-    private final Iterator<String> datasetIDIterator;
-    private final AlmaProperties almaProperties;
-    private final DataLinkURLBuilder dataLinkURLBuilder;
-
-
-    DataLinkIterator(final Iterator<String> datasetIDIterator, final AlmaProperties almaProperties)
-            throws IOException, ResourceNotFoundException {
-        this.datasetIDIterator = datasetIDIterator;
-        this.almaProperties = almaProperties;
-        this.dataLinkURLBuilder = new DataLinkURLBuilder(this.almaProperties);
+    @Before
+    public void setup() {
+        Configurator.setLevel(AlmaID.class.getCanonicalName(), Level.DEBUG);
     }
 
-    @Override
-    public boolean hasNext() {
-        if (dataLinkQueue.isEmpty()) {
-            final DataLinkQuery dataLinkQuery = createQuery();
-            if (datasetIDIterator.hasNext()) {
-                final AlmaID nextAlmaID = toAlmaID(datasetIDIterator.next());
-                final HierarchyItem hierarchyItem = dataLinkQuery.query(nextAlmaID);
-                final HierarchyVisitor hierarchyVisitor =
-                        new HierarchyVisitor(nextAlmaID, hierarchyItem, this.almaProperties, this.dataLinkURLBuilder);
+    @Test
+    public void constructFromDeSanitizedMOUSID() {
+        final AlmaID testSubject = AlmaIDFactory.createID("uid://C0/C1/C2");
+        assertTrue("Wrong type.", testSubject instanceof ObsUnitSetID);
+        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getID());
+        assertEquals("Wrong sanitized ID", "uid___C0_C1_C2", testSubject.sanitize());
+        assertEquals("Wrong desanitized ID", "uid://C0/C1/C2", testSubject.desanitize());
+    }
 
-                if (hierarchyItem.hasChildren()) {
-                    hierarchyVisitor.visitChildren(this.dataLinkQueue);
-                } else {
-                    dataLinkQueue.add(hierarchyVisitor.createNotFoundDataLink());
-                }
+    @Test
+    public void constructFromSanitizedMOUSID() {
+        final AlmaID testSubject = AlmaIDFactory.createID("uid___C0_C1_C2");
+        assertTrue("Wrong type.", testSubject instanceof ObsUnitSetID);
+        assertEquals("Wrong ID", "uid___C0_C1_C2", testSubject.getID());
+        assertEquals("Wrong sanitized ID", "uid___C0_C1_C2", testSubject.sanitize());
+        assertEquals("Wrong desanitized ID", "uid://C0/C1/C2", testSubject.desanitize());
+        assertEquals("Wrong endpoint", "uid___C0_C1_C2", testSubject.getEndpointID());
+    }
 
-                return !dataLinkQueue.isEmpty();
-            } else {
-                return false;
-            }
-        } else {
-            return true;
+    @Test
+    public void constructFromBadInput() {
+        try {
+            AlmaIDFactory.createID("");
+            fail("Should throw IllegalArgumentException.");
+        } catch (IllegalArgumentException e) {
+            // Good.
+        }
+
+        try {
+            AlmaIDFactory.createID(null);
+            fail("Should throw IllegalArgumentException.");
+        } catch (IllegalArgumentException e) {
+            // Good.
         }
     }
 
-    /**
-     * Tests can override this.
-     * @return  DataLinkQuery instance.
-     */
-    DataLinkQuery createQuery() {
-        return new DataLinkQuery(this.almaProperties);
+    @Test
+    public void constructFromTARFileID() {
+        final AlmaID testSubject = AlmaIDFactory.createID("2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar");
+        assertTrue("Wrong type.", testSubject instanceof ObsUnitSetID);
+        assertEquals("Wrong endpoint ID.", "uid___A002_Xc4f3ae_X537a", testSubject.getEndpointID());
+        assertEquals("Wrong sanitized ID.", "uid___A002_Xc4f3ae_X537a",
+                     testSubject.getEndpointID());
     }
 
-    /**
-     * Tests can override this.
-     * @param value     Value to create an AlmaID from.
-     * @return  AlmaID instance.
-     */
-    AlmaID toAlmaID(final String value) {
-        return AlmaIDFactory.createID(value);
-    }
-
-    /**
-     * This next method will simply take from the current stack.
-     *
-     * @return DataLink     Next DataLink created from the next DeliverableInfo in the Queue.
-     */
-    @Override
-    public DataLink next() {
-        return dataLinkQueue.poll();
+    @Test
+    public void constructFromEnergyID() {
+        final AlmaID testSubject = AlmaIDFactory.createID("uid://A001/X1465/X162.source.Serp_02.spw.17");
+        assertTrue("Wrong type.", testSubject instanceof SpectralWindowID);
+        assertEquals("Wrong MOUS ID.", "uid___A001_X1465_X162.source.Serp_02.spw.17",
+                     testSubject.getEndpointID());
     }
 }

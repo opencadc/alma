@@ -86,7 +86,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
 import org.junit.Test;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.AlmaID;
 import org.opencadc.soda.server.Cutout;
 
 import static org.mockito.Mockito.*;

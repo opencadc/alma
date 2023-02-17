@@ -71,6 +71,7 @@ package org.opencadc.datalink;
 
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import org.apache.log4j.Logger;
+import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
 import ca.nrc.cadc.util.StringUtil;
 
@@ -90,10 +91,6 @@ public class DataLinkURLBuilder {
     private final URL cutoutServiceEndpoint;
     private final URL dataPortalServiceEndpoint;
 
-
-    public DataLinkURLBuilder() throws IOException, ResourceNotFoundException {
-        this(new AlmaProperties());
-    }
 
     public DataLinkURLBuilder(final AlmaProperties almaProperties) throws IOException, ResourceNotFoundException {
         this.dataLinkServiceEndpoint = almaProperties.lookupDataLinkServiceURL();
@@ -122,7 +119,7 @@ public class DataLinkURLBuilder {
 
                 // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
                 sanitizePath(type == HierarchyItem.Type.ASDM ?
-                             hierarchyItem.getName() : hierarchyItem.getNullSafeId(true))
+                             hierarchyItem.getName() : AlmaIDFactory.createID(hierarchyItem.getName()).sanitize())
         }));
     }
 
@@ -130,7 +127,7 @@ public class DataLinkURLBuilder {
             throws MalformedURLException {
         final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
                                              StringUtil.hasText(serviceURLEndpoint.getQuery()) ? "&" : "?",
-                                             hierarchyItem.getNullSafeId(true));
+                                             AlmaIDFactory.createID(hierarchyItem.getName()).sanitize());
 
         return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
                        serviceURLEndpoint.getPort(), urlFile);

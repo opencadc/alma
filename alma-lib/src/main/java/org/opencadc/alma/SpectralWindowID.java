@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -69,121 +68,38 @@
 
 package org.opencadc.alma;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import ca.nrc.cadc.util.StringUtil;
 
-import java.util.Objects;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 /**
- * Class that can handle a UID in the form of archiveUID://C0/C1/C2 (or uid___C0_C1_C2), or a Project Tarfile ID that is
- * in the form of 2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar.
+ * Represents an SPW ID (Energy, or Spectral Window, ID) to use in querying the Request Handler to get its hierarchy.
  */
-public class AlmaUID {
-
-    private static final Logger LOGGER = LogManager.getLogger(AlmaUID.class);
-    private static final Pattern UID_PATTERN =
-            Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
-    private static final Pattern ENERGY_SPW_ID_PATTERN =
+public class SpectralWindowID implements AlmaID {
+    static final Pattern ENERGY_SPW_ID_PATTERN =
             Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+\\.source.*\\.spw");
 
-
-    // The original UID as provided by the constructor.
-    private final String uid;
-    private final AlmaUID archiveUID;
-
-
-    public AlmaUID(final String uid) {
-        if (!StringUtil.hasText(uid)) {
-            throw new IllegalArgumentException("Passed ID cannot be null or empty.");
-        }
-
-        this.uid = uid;
-        this.archiveUID = parseArchiveID();
-    }
-
-    private AlmaUID parseArchiveID() {
-        final Matcher matcher = UID_PATTERN.matcher(this.uid);
-
-        if (matcher.find()) {
-            final String uidMatch = matcher.group();
-
-            LOGGER.debug(String.format("Found match (%s)", uidMatch));
-            // If the parent matches this current one then don't set it.
-            return desanitize(uidMatch).equals(desanitize(this.uid)) ? null : new AlmaUID(uidMatch);
-        } else {
-            throw new IllegalArgumentException(String.format("No UID found in %s", this.uid));
-        }
-    }
-
-    public String getUID() {
-        return this.uid;
-    }
-
-    public AlmaUID getArchiveUID() {
-        return this.archiveUID;
-    }
-
-    public String getSanitisedUid() {
-        return this.sanitize(this.uid);
-    }
-
-    String desanitize(final String uid) {
-        return uid.replace("uid___", "uid://").replaceAll("_", "/");
-    }
-
-    String sanitize(final String uid) {
-        return uid.replace(':', '_').replaceAll("/", "_");
-    }
-
-    public boolean isEnergyID() {
-        return ENERGY_SPW_ID_PATTERN.matcher(this.uid).find();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        AlmaUID almaUID = (AlmaUID) o;
-        return this.uid.equals(almaUID.uid) &&
-               Objects.equals(this.archiveUID, almaUID.archiveUID);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.uid, this.archiveUID);
-    }
+    private final String id;
 
     /**
-     * Returns a string representation of the object. In general, the
-     * {@code toString} method returns a string that
-     * "textually represents" this object. The result should
-     * be a concise but informative representation that is easy for a
-     * person to read.
-     * It is recommended that all subclasses override this method.
-     * <p>
-     * The {@code toString} method for class {@code Object}
-     * returns a string consisting of the name of the class of which the
-     * object is an instance, the at-sign character `{@code @}', and
-     * the unsigned hexadecimal representation of the hash code of the
-     * object. In other words, this method returns a string equal to the
-     * value of:
-     * <blockquote>
-     * <pre>
-     * getClass().getName() + '@' + Integer.toHexString(hashCode())
-     * </pre></blockquote>
-     *
-     * @return a string representation of the object.
+     * Constructor.
+     * @param id    The ID.
      */
+    SpectralWindowID(final String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String getID() {
+        return this.id;
+    }
+
     @Override
     public String toString() {
-        return this.uid;
+        return this.id;
+    }
+
+    static boolean matches(final String id) {
+        return StringUtil.hasText(id) && ENERGY_SPW_ID_PATTERN.matcher(id).find();
     }
 }

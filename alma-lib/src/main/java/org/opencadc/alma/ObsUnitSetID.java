@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -69,74 +68,71 @@
 
 package org.opencadc.alma;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.junit.Before;
-import org.junit.Test;
+import ca.nrc.cadc.util.StringUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.net.URI;
-
-import static org.junit.Assert.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
-public class AlmaUIDTest {
+/**
+ * Represents an OUS ID.
+ */
+public class ObsUnitSetID implements AlmaID {
+    private static final Logger LOGGER = LogManager.getLogger(ObsUnitSetID.class.getName());
+    private static final Pattern OUS_UID_PATTERN =
+            Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
 
-    @Before
-    public void setup() {
-        Configurator.setLevel(AlmaUID.class.getCanonicalName(), Level.DEBUG);
+    private final String id;
+
+    ObsUnitSetID(final String id) {
+        this.id = id;
     }
 
-    @Test
-    public void constructFromDesanitizedMOUSID() {
-        final AlmaUID testSubject = new AlmaUID("uid://C0/C1/C2");
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getUID());
+    @Override
+    public String getID() {
+        return this.id;
     }
 
-    @Test
-    public void constructFromSanitizedMOUSID() {
-        final AlmaUID testSubject = new AlmaUID("uid___C0_C1_C2");
-        assertEquals("Wrong ID", "uid___C0_C1_C2", testSubject.getUID());
-        assertFalse("Not SPW (Energy).", testSubject.isEnergyID());
-    }
+    /**
+     * The ID used in the endpoint to request a JSON document is always the parent ID (in desanitized form of uid://XXX)
+     * @return  String endpoint ID to use, never null.
+     */
+    @Override
+    public String getEndpointID() {
+        final Matcher matcher = OUS_UID_PATTERN.matcher(this.id);
 
-    @Test
-    public void constructFromURI() {
-        final AlmaUID testSubject = new AlmaUID("uid://C0/C1/C2");
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getUID());
-    }
+        if (matcher.find()) {
+            final String uidMatch = matcher.group();
 
-    @Test
-    public void constructFromBadInput() {
-        try {
-            new AlmaUID("");
-            fail("Should throw IllegalArgumentException.");
-        } catch (IllegalArgumentException e) {
-            // Good.
-        }
-
-        try {
-            new AlmaUID(null);
-            fail("Should throw IllegalArgumentException.");
-        } catch (IllegalArgumentException e) {
-            // Good.
+            LOGGER.debug(String.format("Found match (%s)", uidMatch));
+            return new ObsUnitSetID(uidMatch).sanitize();
+        } else {
+            throw new IllegalArgumentException(String.format("No ID found in %s", this.id));
         }
     }
 
-    @Test
-    public void constructFromTarfileID() {
-        final AlmaUID testSubject = new AlmaUID("2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar");
-        assertEquals("Wrong MOUS ID.",
-                     "uid___A002_Xc4f3ae_X537a",
-                     testSubject.getArchiveUID().toString());
-        assertFalse("Not energy.", testSubject.isEnergyID());
+    @Override
+    public int hashCode() {
+        return this.id.hashCode();
     }
 
-    @Test
-    public void constructFromEnergyID() {
-        final AlmaUID testSubject = new AlmaUID("uid://A001/X1465/X162.source.Serp_02.spw.17");
-        assertEquals("Wrong MOUS ID.",
-                     "uid://A001/X1465/X162",
-                     testSubject.getArchiveUID().toString());
-        assertTrue("Is energy.", testSubject.isEnergyID());
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        } else {
+            return ((AlmaID) obj).getID().equals(this.id);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return this.id;
+    }
+
+    static boolean matches(final String id) {
+        return StringUtil.hasText(id) && OUS_UID_PATTERN.matcher(id).find();
     }
 }

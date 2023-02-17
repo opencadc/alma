@@ -100,7 +100,7 @@ public class DataLinkURLBuilderTest {
 
         final DataLinkURLBuilder testSubject = new DataLinkURLBuilder(mockAlmaProperties);
 
-        when(mockHierarchyItem.getNullSafeId(true)).thenReturn("uid___C71_C72_C73.tmp");
+        when(mockHierarchyItem.getName()).thenReturn("uid___C71_C72_C73.tmp");
         when(mockHierarchyItem.getType()).thenReturn(HierarchyItem.Type.MOUS);
 
         final String downloadURL = testSubject.createDownloadURL(mockHierarchyItem).toExternalForm();
@@ -109,7 +109,7 @@ public class DataLinkURLBuilderTest {
                             "https://myhost.com/mydownloads/uid___C71_C72_C73.tmp",
                             downloadURL);
 
-        verify(mockHierarchyItem, times(1)).getNullSafeId(true);
+        verify(mockHierarchyItem, times(1)).getName();
         verify(mockHierarchyItem, times(1)).getType();
     }
 
@@ -123,7 +123,7 @@ public class DataLinkURLBuilderTest {
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
         final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
 
-        when(mockHierarchyItem.getNullSafeId(true)).thenReturn("2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar");
+        when(mockHierarchyItem.getName()).thenReturn("2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar");
 
         when(mockAlmaProperties.lookupDataLinkServiceURL()).thenReturn(serviceEndpoint);
         when(mockAlmaProperties.lookupSodaServiceURL()).thenReturn(sodaEndpoint);
@@ -137,7 +137,7 @@ public class DataLinkURLBuilderTest {
                             "https://myhost.com/datalink/endpoint?ID=2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar",
                             recursiveDataLinkURL);
 
-        verify(mockHierarchyItem, times(1)).getNullSafeId(true);
+        verify(mockHierarchyItem, times(1)).getName();
     }
 
     @Test
@@ -150,7 +150,7 @@ public class DataLinkURLBuilderTest {
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
         final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
 
-        when(mockHierarchyItem.getNullSafeId(true)).thenReturn("2016.1.00161.S_uid___C81_C82_C83_sci.fits");
+        when(mockHierarchyItem.getName()).thenReturn("2016.1.00161.S_uid___C81_C82_C83_sci.fits");
         when(mockAlmaProperties.lookupDataLinkServiceURL()).thenReturn(serviceEndpoint);
         when(mockAlmaProperties.lookupSodaServiceURL()).thenReturn(sodaEndpoint);
         when(mockAlmaProperties.lookupDataPortalURL()).thenReturn(dataPortalEndpoint);
@@ -162,7 +162,7 @@ public class DataLinkURLBuilderTest {
                             "https://myhost.com/soda/endpoint?ID=2016.1.00161.S_uid___C81_C82_C83_sci.fits",
                             recursiveDataLinkURL);
 
-        verify(mockHierarchyItem, times(1)).getNullSafeId(true);
+        verify(mockHierarchyItem, times(1)).getName();
     }
 
     @Test
@@ -175,7 +175,7 @@ public class DataLinkURLBuilderTest {
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
         final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
 
-        when(mockHierarchyItem.getNullSafeId(true)).thenReturn("2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar");
+        when(mockHierarchyItem.getName()).thenReturn("2016.1.00161.S_uid___C81_C82_C83_auxiliary.tar");
         when(mockAlmaProperties.lookupDataLinkServiceURL()).thenReturn(serviceEndpoint);
         when(mockAlmaProperties.lookupSodaServiceURL()).thenReturn(sodaEndpoint);
         when(mockAlmaProperties.lookupDataPortalURL()).thenReturn(dataPortalEndpoint);
@@ -189,6 +189,6 @@ public class DataLinkURLBuilderTest {
                             ".S_uid___C81_C82_C83_auxiliary.tar",
                             recursiveDataLinkURL);
 
-        verify(mockHierarchyItem, times(1)).getNullSafeId(true);
+        verify(mockHierarchyItem, times(1)).getName();
     }
 }

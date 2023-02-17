@@ -92,7 +92,7 @@ import org.json.JSONTokener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.AlmaID;
 import org.opencadc.alma.deliverable.RequestHandlerQuery;
 import org.opencadc.soda.server.Cutout;
 

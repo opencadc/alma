@@ -67,86 +67,30 @@
  ************************************************************************
  */
 
-package org.opencadc.datalink;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
-
-import ca.nrc.cadc.net.ResourceNotFoundException;
-import org.opencadc.alma.AlmaIDFactory;
-import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaID;
-
+package org.opencadc.alma;
 
 
 /**
- * Iterator to provide streaming over the DeliverableInfo items that the DataPacker expands.
+ * Class that can handle a UID in the form of archive uid://C0/C1/C2 (or uid___C0_C1_C2), or a Project Tarfile ID that is
+ * in the form of 2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar, or an SPW ID.
+ *
  */
-public class DataLinkIterator implements Iterator<DataLink> {
-    private final Queue<DataLink> dataLinkQueue = new LinkedList<>();
-    private final Iterator<String> datasetIDIterator;
-    private final AlmaProperties almaProperties;
-    private final DataLinkURLBuilder dataLinkURLBuilder;
-
-
-    DataLinkIterator(final Iterator<String> datasetIDIterator, final AlmaProperties almaProperties)
-            throws IOException, ResourceNotFoundException {
-        this.datasetIDIterator = datasetIDIterator;
-        this.almaProperties = almaProperties;
-        this.dataLinkURLBuilder = new DataLinkURLBuilder(this.almaProperties);
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (dataLinkQueue.isEmpty()) {
-            final DataLinkQuery dataLinkQuery = createQuery();
-            if (datasetIDIterator.hasNext()) {
-                final AlmaID nextAlmaID = toAlmaID(datasetIDIterator.next());
-                final HierarchyItem hierarchyItem = dataLinkQuery.query(nextAlmaID);
-                final HierarchyVisitor hierarchyVisitor =
-                        new HierarchyVisitor(nextAlmaID, hierarchyItem, this.almaProperties, this.dataLinkURLBuilder);
-
-                if (hierarchyItem.hasChildren()) {
-                    hierarchyVisitor.visitChildren(this.dataLinkQueue);
-                } else {
-                    dataLinkQueue.add(hierarchyVisitor.createNotFoundDataLink());
-                }
-
-                return !dataLinkQueue.isEmpty();
-            } else {
-                return false;
-            }
-        } else {
-            return true;
-        }
-    }
+public interface AlmaID {
+    String getID();
 
     /**
-     * Tests can override this.
-     * @return  DataLinkQuery instance.
+     * Obtain the ID used in the query endpoint.
+     * @return  String ID.  Default is the configured ID.
      */
-    DataLinkQuery createQuery() {
-        return new DataLinkQuery(this.almaProperties);
+    default String getEndpointID() {
+        return sanitize();
     }
 
-    /**
-     * Tests can override this.
-     * @param value     Value to create an AlmaID from.
-     * @return  AlmaID instance.
-     */
-    AlmaID toAlmaID(final String value) {
-        return AlmaIDFactory.createID(value);
+    default String sanitize() {
+        return this.getID().replace(':', '_').replaceAll("/", "_");
     }
 
-    /**
-     * This next method will simply take from the current stack.
-     *
-     * @return DataLink     Next DataLink created from the next DeliverableInfo in the Queue.
-     */
-    @Override
-    public DataLink next() {
-        return dataLinkQueue.poll();
+    default String desanitize() {
+        return this.getID().replace("uid___", "uid://").replaceAll("_", "/");
     }
 }
