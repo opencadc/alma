@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk11-openjdk-slim
+FROM tomcat:9-jdk17-openjdk-slim
 
 # Create tomcat user:group with known uid:gid
 RUN groupadd --gid 8675309 tomcat \
