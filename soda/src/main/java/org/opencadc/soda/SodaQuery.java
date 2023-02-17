@@ -114,24 +114,24 @@ public class SodaQuery extends RequestHandlerQuery {
      * Request the absolute path on disk of the given ALMA UID.  This will make a request to the Request Handler
      * service's location endpoint.
      *
-     * @param almaUID       The UID to look up.
+     * @param almaID       The UID to look up.
      * @return              URL to the SODA endpoint of the file.
      * @throws IOException  For any service URL lookup errors.
      * @throws ResourceNotFoundException    If no service could be located.
      */
-    public URL locateFile(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
+    public URL locateFile(final AlmaID almaID) throws IOException, ResourceNotFoundException {
         final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
         LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
         final URL downwardsQueryURL = new URL(String.format("%s/data/%s/location",
                                                             baseServiceURL.toExternalForm(),
-                                                            almaUID.getSanitisedUid()));
+                                                            almaID.sanitize()));
 
         try (final InputStream jsonStream = jsonStream(downwardsQueryURL)) {
             final JSONObject jsonObject = new JSONObject(new JSONTokener(jsonStream));
             if (jsonObject.keySet().contains(JSON_ERROR_MESSAGE_KEY)) {
                 throw new IllegalArgumentException(String.format("Error trying to resolve %s to an absolute path:"
                                                                  + "\nStatus: %d\nMessage: %s",
-                                                                 almaUID, jsonObject.getInt(JSON_ERROR_STATUS_KEY),
+                                                                 almaID, jsonObject.getInt(JSON_ERROR_STATUS_KEY),
                                                                  jsonObject.getString(JSON_ERROR_MESSAGE_KEY)));
             } else {
                 final String serverName = jsonObject.getString(JSON_SERVER_NAME_KEY);
@@ -161,8 +161,8 @@ public class SodaQuery extends RequestHandlerQuery {
         }
     }
 
-    public URL toCutoutURL(final AlmaUID almaUID, final Cutout cutout) throws IOException, ResourceNotFoundException {
-        return toCutoutURL(locateFile(almaUID), cutout);
+    public URL toCutoutURL(final AlmaID almaID, final Cutout cutout) throws IOException, ResourceNotFoundException {
+        return toCutoutURL(locateFile(almaID), cutout);
     }
 
     private URL toCutoutURL(final URL downloadURL, final Cutout cutout) throws MalformedURLException {
