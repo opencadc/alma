@@ -115,10 +115,6 @@ jobs:
         with:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - uses: actions/download-artifact@v2
-        with:
-          name: cadc-tap-server-oracle
-          path: /home/runner/.m2/repository/org/opencadc/cadc-tap-server-oracle
       - name: build and test tap
         run: gradle --info -b tap/build.gradle clean build test
       # Upload WAR artifact
