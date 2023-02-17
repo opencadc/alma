@@ -2,6 +2,9 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'war'
+
+    // IntelliJ IDEA plugin here to allow integration tests to be properly loaded.
+    id 'idea'
 }
 
 repositories {
@@ -10,6 +13,7 @@ repositories {
 }
 
 apply from: '../properties.gradle'
+apply from: '../int_test.gradle'
 
 dependencies {
     // Use JUnit test framework.
@@ -44,12 +48,4 @@ war {
     from('../') {
         include 'swagger-ui/'
     }
-}
-
-configurations {
-    intTestImplementation.extendsFrom testImplementation
-    intTestRuntime.extendsFrom testRuntime
-
-    // Ensure only local files are available to prevent collisions.
-    implementation.exclude group: 'uk.ac.starlink'
 }

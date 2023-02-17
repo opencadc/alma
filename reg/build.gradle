@@ -2,6 +2,9 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'war'
+
+    // IntelliJ IDEA plugin here to allow integration tests to be properly loaded.
+    id 'idea'
 }
 
 repositories {
@@ -30,20 +33,7 @@ war {
     }
 }
 
-sourceSets {
-    intTest {
-        java {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
-            srcDir file('src/intTest/java')
-        }
-    }
-}
-
-configurations {
-    intTestImplementation.extendsFrom testImplementation
-    intTestRuntime.extendsFrom testRuntime
-}
+apply from: '../int_test.gradle'
 
 dependencies {
     implementation 'org.opencadc:cadc-dali:[1.2.1,2.0)'
@@ -59,7 +49,6 @@ dependencies {
     intTestImplementation 'org.opencadc:cadc-test-vosi:[1.0.2,)'
 }
 
-
 tasks.withType(Test) {
     // reset the report destinations so that intTests go to their
     // own page
@@ -70,23 +59,7 @@ tasks.withType(Test) {
     systemProperties System.properties
 }
 
-task intTest(type: Test) {
-    // set the configuration context
-    testClassesDirs = sourceSets.intTest.output.classesDirs
-    classpath = sourceSets.intTest.runtimeClasspath
-
-    // run the tests always
-    outputs.upToDateWhen { false }
-}
-
 test {
-    testLogging {
-        events "PASSED", "FAILED", "SKIPPED"
-        // "STARTED",
-    }
-}
-
-intTest {
     testLogging {
         events "PASSED", "FAILED", "SKIPPED"
         // "STARTED",
