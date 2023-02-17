@@ -50,25 +50,6 @@ jobs:
         with:
           name: cadc-conesearch
           path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
-
-  install-cadc-tap-server-oracle:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
-      # Install cadc-tap-server-oracle
-      - name: build, test, and install cadc-tap-server-oracle
-        run: cd ../ && git clone -b point-to-string-oracle-fix https://github.com/at88mph/tap.git && cd tap && ./gradlew --info -b cadc-tap-server-oracle/build.gradle clean build install
-      # Upload cadc-tap-server-oracle artifact
-      - uses: actions/upload-artifact@v2
-        with:
-          name: cadc-tap-server-oracle
-          path: /home/runner/.m2/repository/org/opencadc/cadc-tap-server-oracle
-
   # END BUILD UNPUBLISHED LIBRARIES.  REMOVE WHEN PUBLISHED! #
 
   # Temporarily depends on unpublished cadc-dali and cadc-conesearch libraries.
@@ -122,7 +103,6 @@ jobs:
   build-tap:
     needs:
       - install-alma-lib
-      - install-cadc-tap-server-oracle
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
