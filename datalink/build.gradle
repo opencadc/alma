@@ -17,7 +17,7 @@ war {
             filter(ReplaceTokens, tokens: [app_name: 'datalink', version: version])
         }
     }
-    archiveName = 'datalink.war'
+    archiveFileName = 'datalink.war'
 
     manifest {
         attributes "Implementation-Version": version

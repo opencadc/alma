@@ -33,7 +33,7 @@ war {
             filter(ReplaceTokens, tokens: [app_name: 'cone', version: version])
         }
     }
-    archiveName = 'cone.war'
+    archiveFileName = 'cone.war'
 
     manifest {
         attributes "Implementation-Version": version
