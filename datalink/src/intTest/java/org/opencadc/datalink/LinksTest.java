@@ -82,6 +82,7 @@ import ca.nrc.cadc.util.Log4jInit;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -346,13 +347,13 @@ public class LinksTest {
             List<Object> row1 = rows.next();
             Assert.assertFalse(rows.hasNext()); // exactly one row
 
-            Integer[] index = TestUtil.getFieldIndexes(getFields);
-            String id = (String) row1.get(index[0]);
-            String emsg = (String) row1.get(index[7]);
+            final List<String> expectedColumns = Arrays.asList(TestUtil.EXPECTED_COLUMNS);
+            String id = (String) row1.get(expectedColumns.indexOf("ID"));
+            String emsg = (String) row1.get(expectedColumns.indexOf("error_message"));
             Assert.assertEquals(NOT_FOUND_URI, id);
             Assert.assertTrue(emsg.startsWith("NotFoundFault"));
-            Assert.assertNull(row1.get(index[1])); // access_url
-            Assert.assertNull(row1.get(index[2])); // service_def
+            Assert.assertNull(row1.get(expectedColumns.indexOf("access_url"))); // access_url
+            Assert.assertNull(row1.get(expectedColumns.indexOf("service_def"))); // service_def
         } catch (Exception unexpected) {
             LOGGER.error("unexpected exception", unexpected);
             throw unexpected;

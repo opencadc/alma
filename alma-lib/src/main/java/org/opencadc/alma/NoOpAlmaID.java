@@ -68,24 +68,22 @@
 
 package org.opencadc.alma;
 
-
-import ca.nrc.cadc.util.StringUtil;
-
 /**
- * Factory to generate the appropriate ID type.
+ * Represents an AlmaID that is not meant to be queried on.  Can be used as-is.
  */
-public class AlmaIDFactory {
-    public static AlmaID createID(final String id) {
-        if (StringUtil.hasText(id)) {
-            if (SpectralWindowID.matches(id)) {
-                return new SpectralWindowID(id);
-            } else if (ObsUnitSetID.matches(id)) {
-                return new ObsUnitSetID(id);
-            } else {
-                return new NoOpAlmaID(id);
-            }
-        } else {
-            throw new IllegalArgumentException("ID cannot be empty or null.");
-        }
+public class NoOpAlmaID implements AlmaID {
+    private final String id;
+    NoOpAlmaID(final String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String getID() {
+        return this.id;
+    }
+
+    @Override
+    public String getEndpointID() {
+        throw new UnsupportedOperationException("NoOpID - cannot get tree.");
     }
 }

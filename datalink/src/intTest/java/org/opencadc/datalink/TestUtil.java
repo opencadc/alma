@@ -79,7 +79,6 @@ import ca.nrc.cadc.net.HttpPost;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -96,6 +95,20 @@ import org.junit.Assert;
  * @author pdowler
  */
 class TestUtil {
+    static final String[] EXPECTED_COLUMNS = new String[] {
+            "ID",
+            "access_url",
+            "service_def",
+            "error_message",
+            "semantics",
+            "local_semantics",
+            "description",
+            "content_type",
+            "content_length",
+            "content_qualifier",
+            "link_auth",
+            "link_authorized"
+    };
 
     private static final Logger log = Logger.getLogger(TestUtil.class);
 
@@ -127,41 +140,16 @@ class TestUtil {
      */
     static Integer[] getFieldIndexes(List<VOTableField> fields) {
         Assert.assertNotNull("VOTable FIELD: should not be null", fields);
-        Assert.assertEquals("GET VOTable FIELD: should have 9", fields.size(), 9);
-        Integer[] indexes = new Integer[] {null, null, null, null, null, null, null, null, null};
+        Assert.assertEquals("GET VOTable FIELD: should have 9", fields.size(), 12);
+        Integer[] indexes = new Integer[EXPECTED_COLUMNS.length];
+        Arrays.fill(indexes, null);
+
+        final List<String> expectedColumns = Arrays.asList(EXPECTED_COLUMNS);
         int index = 0;
         for (VOTableField field : fields) {
             log.debug(field);
-            switch (field.getName()) {
-                case "ID":
-                    indexes[0] = index;
-                    break;
-                case "access_url":
-                    indexes[1] = index;
-                    break;
-                case "service_def":
-                    indexes[2] = index;
-                    break;
-                case "description":
-                    indexes[3] = index;
-                    break;
-                case "semantics":
-                    indexes[4] = index;
-                    break;
-                case "content_type":
-                    indexes[5] = index;
-                    break;
-                case "content_length":
-                    indexes[6] = index;
-                    break;
-                case "error_message":
-                    indexes[7] = index;
-                    break;
-                case "readable":
-                    indexes[8] = index;
-                    break;
-            }
-            index++;
+            final int listColumnIndex = expectedColumns.indexOf(field.getName());
+            indexes[listColumnIndex] = index++;
         }
         Assert.assertNotNull("ID not found", indexes[0]);
         Assert.assertNotNull("access_url not found", indexes[1]);
@@ -178,12 +166,13 @@ class TestUtil {
     static void checkContent(VOTableTable tab) throws Exception {
         Integer[] indices = TestUtil.getFieldIndexes(tab.getFields());
         log.info(String.format("Checking content against %s", Arrays.toString(indices)));
+        final List<String> expectedColumns = Arrays.asList(EXPECTED_COLUMNS);
 
-        int uriCol = indices[0];
-        int urlCol = indices[1];
-        int srvCol = indices[2];
-        int semCol = indices[4];
-        int errCol = indices[7];
+        int uriCol = indices[expectedColumns.indexOf("ID")];
+        int urlCol = indices[expectedColumns.indexOf("access_url")];
+        int srvCol = indices[expectedColumns.indexOf("service_def")];
+        int semCol = indices[expectedColumns.indexOf("semantics")];
+        int errCol = indices[expectedColumns.indexOf("error_message")];
 
         for (final Iterator<List<Object>> iter = tab.getTableData().iterator(); iter.hasNext(); ) {
             final List<Object> row = iter.next();
@@ -215,11 +204,6 @@ class TestUtil {
 
     /**
      * Compare that two TableData objects contain the same results.
-     *
-     * @param getTableData
-     * @param postTableData
-     * @param urlCol
-     * @param sdfCol
      */
     static void compareTableData(TableData getTableData, TableData postTableData, int urlCol, int sdfCol)
             throws Exception {
@@ -266,11 +250,9 @@ class TestUtil {
                                 }
                             }
                         }
-                    } else if (i == sdfCol) {
-                        // dynamic: cannot compare
-                    } else {
+                    } else if (i != sdfCol) {
                         Assert.assertEquals("GET and POST row values are different", getObject, postObject);
-                    }
+                    } // End if - otherwise it's dynamic and cannot compare
                 }
             }
         }
@@ -283,8 +265,6 @@ class TestUtil {
      * @param endpoint   URL endpoint.
      * @param parameters Parameters.
      * @return VOtable
-     *
-     * @throws IOException
      */
     static VOTableDocument get(URL endpoint, String[] parameters) throws IOException {
         return get(endpoint, parameters, 200);
@@ -340,13 +320,6 @@ class TestUtil {
 
     /**
      * POST the given parameters and return the defaulty format: VOTable.
-     *
-     * @param endpoint
-     * @param parameters POST parameters.
-     *
-     * @return VOTable.
-     *
-     * @throws IOException
      */
     static VOTableDocument post(URL endpoint, Map<String, Object> parameters) throws IOException {
         final String response = post(endpoint, parameters, null);
@@ -360,18 +333,8 @@ class TestUtil {
     /**
      * POST the given parameters plus an optional  RESPONSEFORMAT=responseFormat and return
      * the raw response in the specified format.
-     *
-     * @param endpoint
-     * @param parameters
-     * @param responseFormat null for default
-     * @return
-     *
-     * @throws UnsupportedEncodingException
-     * @throws MalformedURLException
-     * @throws IOException
      */
-    static String post(URL endpoint, Map<String, Object> parameters, String responseFormat)
-            throws MalformedURLException, IOException {
+    static String post(URL endpoint, Map<String, Object> parameters, String responseFormat) throws IOException {
         // POST parameters.
         URL url = getQueryURL(endpoint, null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -406,8 +369,6 @@ class TestUtil {
      *
      * @param parameters query parameters.
      * @return query URL
-     *
-     * @throws MalformedURLException
      */
     static URL getQueryURL(URL baseUrl, String[] parameters) throws MalformedURLException {
         StringBuilder sb = new StringBuilder();
@@ -419,6 +380,6 @@ class TestUtil {
             }
             sb.deleteCharAt(sb.length() - 1);
         }
-        return new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPath() + sb.toString());
+        return new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPath() + sb);
     }
 }
