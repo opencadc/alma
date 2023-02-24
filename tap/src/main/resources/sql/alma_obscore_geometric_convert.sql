@@ -54,6 +54,18 @@ return SDO_GEOMETRY is
       vertices(counter) := next_vert;
     end loop;
 
+    -- If the last vertex pair does not match the first one, then close it here by adding the first vertex at the end.
+    if vertices(1) != vertices(counter - 1) or vertices(2) != vertices(counter)
+    then
+      counter := counter + 1;
+      vertices.extend;
+      vertices(counter) := vertices(1);
+
+      counter := counter + 1;
+      vertices.extend;
+      vertices(counter) := vertices(2);
+    end if;
+
     -- Iterate the vertices in reverse order, and write out each pair.  This is to accommodate Oracle's indexed
     -- Polygons, which are constructed counter-clockwise.
     for j in reverse vertices.first .. vertices.last loop
