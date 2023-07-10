@@ -85,8 +85,9 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
 import org.junit.Test;
+import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.AlmaID;
 import org.opencadc.soda.server.Cutout;
 
 import static org.mockito.Mockito.*;
@@ -119,11 +120,11 @@ public class SodaQueryTest {
             }
         };
 
-        final AlmaUID almaUID = new AlmaUID("1977.11.25_uid___C1_C2_C3.fits");
+        final AlmaID almaID = AlmaIDFactory.createID("1977.11.25_uid___C1_C2_C3.fits");
         final URL expectedURL = new URL("http://srv-ngas-001:8080/data/files?file="
                                         + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
                                         + "&POS=RANGE+8.41+8.42+2.7+2.72");
-        final URL resultURL = testSubject.toCutoutURL(almaUID, shapeCutout);
+        final URL resultURL = testSubject.toCutoutURL(almaID, shapeCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
         verify(mockAlmaProperties, atMostOnce()).getFileSodaServicePort();
@@ -150,11 +151,11 @@ public class SodaQueryTest {
             }
         };
 
-        final AlmaUID almaUID = new AlmaUID("1977.11.25_uid___C1_C2_C3.fits");
+        final AlmaID almaID = AlmaIDFactory.createID("1977.11.25_uid___C1_C2_C3.fits");
         final URL expectedURL = new URL("http://srv-ngas-001:8080/data/files?file="
                                         + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
                                         + "&CIRCLE=12.0+56.0+0.6");
-        final URL resultURL = testSubject.toCutoutURL(almaUID, shapeCutout);
+        final URL resultURL = testSubject.toCutoutURL(almaID, shapeCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
         verify(mockAlmaProperties, atMostOnce()).getFileSodaServicePort();
@@ -185,11 +186,11 @@ public class SodaQueryTest {
             }
         };
 
-        final AlmaUID almaUID = new AlmaUID("1977.11.25_uid___C1_C2_C3.fits");
+        final AlmaID almaID = AlmaIDFactory.createID("1977.11.25_uid___C1_C2_C3.fits");
         final URL expectedURL = new URL("http://srv-ngas-002:8081/data/files?file="
                                         + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
                                         + "&POLYGON=12.4+56.7+5.6+44.5+18.3+33.5");
-        final URL resultURL = testSubject.toCutoutURL(almaUID, shapeCutout);
+        final URL resultURL = testSubject.toCutoutURL(almaID, shapeCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
         verify(mockAlmaProperties, atMostOnce()).getFileSodaServicePort();
@@ -216,11 +217,11 @@ public class SodaQueryTest {
             }
         };
 
-        final AlmaUID almaUID = new AlmaUID("1977.11.25_uid___C1_C2_C3.fits");
+        final AlmaID almaID = AlmaIDFactory.createID("1977.11.25_uid___C1_C2_C3.fits");
         final URL expectedURL = new URL("http://srv-ngas-002:8081/data/files?file="
                                         + NetUtil.encode("/ngas/node/1/1977.11.25_uid___C1_C2_C3.fits")
                                         + "&BAND=9.8+76.4");
-        final URL resultURL = testSubject.toCutoutURL(almaUID, bandCutout);
+        final URL resultURL = testSubject.toCutoutURL(almaID, bandCutout);
         Assert.assertEquals("Wrong cutout URL.", expectedURL, resultURL);
 
         verify(mockAlmaProperties, atMostOnce()).getFileSodaServicePort();

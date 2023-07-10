@@ -100,13 +100,10 @@ public class OracleObsCoreSelectListConverter extends SelectNavigator {
 
         if (selectItems != null) {
             for (final SelectItem s : selectItems) {
-                if (s instanceof SelectExpressionItem) {
-
-                    final SelectExpressionItem se = (SelectExpressionItem) s;
+                if (s instanceof final SelectExpressionItem se) {
                     final Expression e = se.getExpression();
 
-                    if (e instanceof Column) {
-                        final Column c = (Column) e;
+                    if (e instanceof final Column c) {
                         if (c.getColumnName().equalsIgnoreCase(OBSCORE_REGION_COLUMN_NAME)) {
                             c.setColumnName(OBSCORE_REGION_COLUMN_REPLACE_NAME);
                         }

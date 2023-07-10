@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk11-openjdk-slim
+FROM tomcat:9-jdk17-openjdk-slim
 
 # Create tomcat user:group with known uid:gid
 RUN groupadd --gid 8675309 tomcat \
@@ -8,6 +8,12 @@ RUN groupadd --gid 8675309 tomcat \
 # Create expected config director for all application config.
 RUN mkdir -p config \
   && chown -R tomcat:tomcat /usr/local/tomcat
+
+RUN apt update \
+    && apt install -y sudo \
+    && echo "tomcat ALL=(root) NOPASSWD:SETENV:/usr/sbin/update-ca-certificates" >> /etc/sudoers.d/tomcat \
+    && apt clean \
+    && rm -rf /var/apt/lists/*
 
 USER tomcat
 

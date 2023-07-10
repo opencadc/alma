@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vosi:capabilities
+    xmlns:vosi="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1">
+
+  <capability standardID="ivo://ivoa.net/std/VOSI#capabilities">
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="full">https://replace.me.com/@app_name@/capabilities</accessURL>
+    </interface>
+  </capability>
+
+  <capability standardID="ivo://ivoa.net/std/VOSI#availability">
+    <interface xsi:type="vs:ParamHTTP">
+      <accessURL use="full">https://replace.me.com/@app_name@/availability</accessURL>
+    </interface>
+  </capability>
+
+  <capability xmlns:cs="http://www.ivoa.net/xml/ConeSearch/v1.0"
+              standardID="ivo://ivoa.net/std/conesearch#query-1.1"
+              xsi:type="cs:ConeSearch">
+    <interface xsi:type="vs:ParamHTTP" role="std" version="1.0">
+      <accessURL use="full">https://replace.me.com/@app_name@/search</accessURL>
+    </interface>
+    <verbosity>true</verbosity>
+  </capability>
+
+</vosi:capabilities>

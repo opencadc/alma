@@ -148,14 +148,16 @@ public class DataJobRunner implements JobRunner {
     void throwUsageError() {
         final String requestURI = this.job.getRequestPath();
         throw new IllegalArgumentException(
-                String.format("\nUsage: \n"
-                              + "%s?file=[ABSOLUTE_FILE_PATH]\n"
-                              + "OR for a sub-region:\n"
-                              + "%s?file=[ABSOLUTE_FILE_PATH]&[SODA_PARAM]=[CUTOUT_SPEC]\n"
-                              + "OR for headers only:\n%s"
-                              + "?file=[ABSOLUTE_FILE_PATH]&headers=true\n\n"
-                              + "See https://www.ivoa.net/documents/SODA/20170517/REC-SODA-1.0.html#tth_sEc3.3 for "
-                              + "SODA_PARAM values.",
+                String.format("""
+
+                                      Usage:\s
+                                      %s?file=[ABSOLUTE_FILE_PATH]
+                                      OR for a sub-region:
+                                      %s?file=[ABSOLUTE_FILE_PATH]&[SODA_PARAM]=[CUTOUT_SPEC]
+                                      OR for headers only:
+                                      %s?file=[ABSOLUTE_FILE_PATH]&headers=true
+
+                                      See https://www.ivoa.net/documents/SODA/20170517/REC-SODA-1.0.html#tth_sEc3.3 for SODA_PARAM values.""",
                               requestURI,
                               requestURI,
                               requestURI));

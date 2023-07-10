@@ -113,7 +113,6 @@ public class ServiceAvailability implements AvailabilityPlugin {
      * TODO - Check access to NGAS service?
      *
      * @return Information of the availability check.
-     * @deprecated Use getAvailability() instead.
      */
     @Override
     public Availability getStatus() {

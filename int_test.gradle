@@ -1,0 +1,41 @@
+configurations {
+    intTestImplementation.extendsFrom testImplementation
+    intTestRuntime.extendsFrom testRuntime
+
+    // Ensure only local files are available to prevent collisions.
+    implementation.exclude group: 'uk.ac.starlink'
+}
+
+sourceSets {
+    intTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/intTest/java')
+        }
+    }
+}
+
+task intTest(type: Test) {
+    // set the configuration context
+    testClassesDirs = sourceSets.intTest.output.classesDirs
+    classpath = sourceSets.intTest.runtimeClasspath
+
+    // run the tests always
+    outputs.upToDateWhen { false }
+}
+
+intTest {
+    testLogging {
+        events "PASSED", "FAILED", "SKIPPED"
+        // "STARTED",
+    }
+}
+
+idea {
+    module {
+        //and some extra test source dirs
+        testSourceDirs += file('src/intTest/java')
+        scopes.TEST.plus += [configurations.runtimeClasspath]
+    }
+}

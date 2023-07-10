@@ -70,9 +70,9 @@ package org.opencadc.datalink;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.AlmaID;
 
-import ca.nrc.cadc.util.StringUtil;
+import org.opencadc.alma.AlmaIDFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,17 +84,15 @@ import java.util.Objects;
  * Represents a JSON Document parsed into a model from the RequestHandler hierarchy.
  */
 public class HierarchyItem {
-
-    private final AlmaUID uid;
     private final String id;
     private final String name;
     private final Type type;
     private final long sizeInBytes;
-    private final boolean readable;
+    private final boolean permissionAllowed;
     private final String fileClass;
     private final String subDirectory;
     private final HierarchyItem[] childrenArray;
-    private final AlmaUID[] mousIDArray;
+    private final AlmaID[] idArray;
 
     /**
      * Create a hierarchy item from a JSON Document.
@@ -102,24 +100,22 @@ public class HierarchyItem {
      * @param document The JSONObject of the query.
      * @return A new HierarchyItem instance.  Never null.
      */
-    public static HierarchyItem fromJSONObject(final AlmaUID almaUID, final JSONObject document) {
+    public static HierarchyItem fromJSONObject(final JSONObject document) {
         final String itemID = document.get("id").toString();
         final JSONArray childrenJSONArray = document.getJSONArray("children");
         final List<HierarchyItem> childrenList = new ArrayList<>(childrenJSONArray.length());
 
         childrenJSONArray.forEach(child -> {
             final JSONObject jsonObject = (JSONObject) child;
-            childrenList.add(HierarchyItem.fromJSONObject(almaUID, jsonObject));
+            childrenList.add(HierarchyItem.fromJSONObject(jsonObject));
         });
 
         final JSONArray mousIDJSONArray = document.getJSONArray("allMousUids");
-        final List<AlmaUID> mousIDList = new ArrayList<>(mousIDJSONArray.length());
+        final List<AlmaID> mousIDList = new ArrayList<>(mousIDJSONArray.length());
 
-        mousIDJSONArray.forEach(mousID -> mousIDList.add(new AlmaUID(mousID.toString())));
+        mousIDJSONArray.forEach(mousID -> mousIDList.add(AlmaIDFactory.createID(mousID.toString())));
 
-        return new HierarchyItem(almaUID,
-                                 (StringUtil.hasText(itemID) && !itemID.trim().equalsIgnoreCase("null"))
-                                 ? itemID : null,
+        return new HierarchyItem(itemID,
                                  document.get("name").toString(),
                                  Type.valueOf(document.get("type").toString()),
                                  document.getLong("sizeInBytes"),
@@ -130,57 +126,46 @@ public class HierarchyItem {
                                  document.has("subDirectory") ? document.get("subDirectory").toString() : "",
 
                                  childrenList.toArray(new HierarchyItem[0]),
-                                 mousIDList.toArray(new AlmaUID[0]));
+                                 mousIDList.toArray(new AlmaID[0]));
     }
 
     /**
      * Complete constructor.
      *
-     * @param uid           The identifier in the form of uid://c0/c1/c2.  Can NOT be null.
-     * @param id            This article's ID parameter.
+     * @param id            This article's ID parameter.  If this is null or "null", then it will be treated as null.
      * @param name          This article's name.
      * @param type          This article's type.
      * @param sizeInBytes   The size in bytes.
-     * @param readable      Whether this document's file is readable.
+     * @param permissionAllowed      Whether this document's file can be accessed with current credentials
+     *                            (if any required).
      * @param childrenArray The Array of child objects.
-     * @param mousIDArray   The Array of MOUS IDs associated.
+     * @param idArray   The Array of MOUS IDs associated.
      */
-    public HierarchyItem(AlmaUID uid, String id, String name, Type type, long sizeInBytes, boolean readable,
-                         String fileClass, String subDirectory, HierarchyItem[] childrenArray, AlmaUID[] mousIDArray) {
-        this.uid = uid;
-        this.id = id;
+    HierarchyItem(String id, String name, Type type, long sizeInBytes, boolean permissionAllowed,
+                  String fileClass, String subDirectory, HierarchyItem[] childrenArray, AlmaID[] idArray) {
+
+        if (id == null || id.equals("null")) {
+            this.id = null;
+        } else {
+            this.id = id;
+        }
+
         this.name = name;
         this.type = type;
         this.sizeInBytes = sizeInBytes;
-        this.readable = readable;
+        this.permissionAllowed = permissionAllowed;
         this.fileClass = fileClass;
         this.subDirectory = subDirectory;
         this.childrenArray = childrenArray;
-        this.mousIDArray = mousIDArray;
+        this.idArray = idArray;
     }
 
-    public String getUidString() {
-        return this.getUid().toString();
-    }
-
-    public AlmaUID getUid() {
-        return uid;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getNullSafeId() {
-        return StringUtil.hasText(this.id) ? this.id : this.name;
-    }
-
-    public String getNullSafeId(final boolean sanitize) {
-        return sanitize ? this.getNullSafeId().replace(':', '_').replaceAll("/", "_") : this.getNullSafeId();
+    public String getID() {
+        return this.id;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public Type getType() {
@@ -191,12 +176,16 @@ public class HierarchyItem {
         return sizeInBytes;
     }
 
-    public boolean fileExists() {
-        return sizeInBytes > 0L;
+    /**
+     * Entries whose content length is zero or less are considered absent.
+     * @return  True if there is no size, False otherwise
+     */
+    public boolean fileMissing() {
+        return sizeInBytes <= 0L;
     }
 
-    public boolean isReadable() {
-        return readable;
+    public boolean isPermissionAllowed() {
+        return permissionAllowed;
     }
 
     public String getFileClass() {
@@ -215,10 +204,6 @@ public class HierarchyItem {
         return childrenArray;
     }
 
-    public AlmaUID[] getMousIDArray() {
-        return mousIDArray;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -231,12 +216,12 @@ public class HierarchyItem {
 
         HierarchyItem that = (HierarchyItem) o;
         return sizeInBytes == that.sizeInBytes &&
-               readable == that.readable &&
+               permissionAllowed == that.permissionAllowed &&
                Objects.equals(this.id, that.id) &&
                Objects.equals(this.name, that.name) &&
                type == that.type &&
                Arrays.equals(childrenArray, that.childrenArray) &&
-               Arrays.equals(mousIDArray, that.mousIDArray);
+               Arrays.equals(idArray, that.idArray);
     }
 
     /**
@@ -265,11 +250,10 @@ public class HierarchyItem {
         return "{"
                + "\"CLASS\": \"" + getClass().getSimpleName() + "\","
                + "\"id\": \"" + this.id + "\","
-               + "\"uid\": \"" + this.uid + "\","
                + "\"name\": \"" + this.name + "\","
                + "\"type\": \"" + this.type.name() + "\","
                + "\"sizeInBytes\": \"" + this.sizeInBytes + "\","
-               + "\"readable\": " + this.readable + "\","
+               + "\"linkAuthorized\": " + this.permissionAllowed + "\","
                + "\"fileClass\": " + this.fileClass + "\","
                + "\"subDirectory\": " + this.subDirectory + "\","
                + "\"children\": " + Arrays.toString(this.childrenArray)
@@ -278,9 +262,9 @@ public class HierarchyItem {
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(id, name, type, sizeInBytes, readable);
+        int result = Objects.hash(id, name, type, sizeInBytes, permissionAllowed);
         result = 31 * result + Arrays.hashCode(childrenArray);
-        result = 31 * result + Arrays.hashCode(mousIDArray);
+        result = 31 * result + Arrays.hashCode(idArray);
         return result;
     }
 
@@ -375,8 +359,7 @@ public class HierarchyItem {
             return this == PIPELINE_AUXILIARY_TARFILE
                    || this == PIPELINE_AUXILIARY_CYCLE1TO4_TARFILE
                    // we keep this so that we can work with the data which was expanded with the previous version and
-                   // has been
-                   // cached in RH_FILES. The type will still be PIPELINE_AUXILIARY
+                   // has been cached in RH_FILES. The type will still be PIPELINE_AUXILIARY
                    || this == PIPELINE_AUXILIARY
                    || this == PIPELINE_AUXILIARY_SCRIPT
                    || this == PIPELINE_AUXILIARY_QA

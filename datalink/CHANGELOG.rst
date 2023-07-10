@@ -1,5 +1,10 @@
-ALMA DataLink Service (1.4.0)
+ALMA DataLink Service (2.2.1)
 =============================
+
+2023.02.07 - 2.2.1 - opencadc/alma-datalink:2.2.1
+-------------------------------------------------
+- Support SPW IDs to get a DataLink document representing the Product files for that energy value.
+- Small cleanup.
 
 2022.02.21 - 1.4.0 - opencadc/alma-datalink:1.4.0
 -------------------------------------------------

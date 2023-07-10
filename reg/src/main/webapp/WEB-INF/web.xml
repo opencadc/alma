@@ -28,6 +28,10 @@
                 ca.nrc.cadc.uws
             </param-value>
         </init-param>
+        <init-param>
+            <param-name>logControlProperties</param-name>
+            <param-value>alma-logControl.properties</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -37,6 +41,10 @@
         <init-param>
             <param-name>get</param-name>
             <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>

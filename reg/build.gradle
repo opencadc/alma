@@ -2,6 +2,9 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'war'
+
+    // IntelliJ IDEA plugin here to allow integration tests to be properly loaded.
+    id 'idea'
 }
 
 repositories {
@@ -9,9 +12,6 @@ repositories {
     mavenLocal()
 }
 
-version = '2.0.0'
-
-// Added AFTER the version is declared.
 apply from: '../properties.gradle'
 
 war {
@@ -20,7 +20,7 @@ war {
             filter(ReplaceTokens, tokens: [app_name: 'reg', version: version])
         }
     }
-    archiveName = 'reg.war'
+    archiveFileName = 'reg.war'
 
     manifest {
         attributes "Implementation-Version": version
@@ -33,24 +33,11 @@ war {
     }
 }
 
-sourceSets {
-    intTest {
-        java {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
-            srcDir file('src/intTest/java')
-        }
-    }
-}
-
-configurations {
-    intTestImplementation.extendsFrom testImplementation
-    intTestRuntime.extendsFrom testRuntime
-}
+apply from: '../int_test.gradle'
 
 dependencies {
     implementation 'org.opencadc:cadc-dali:[1.2.1,2.0)'
-    implementation 'org.opencadc:cadc-log:[1.1.5,1.2.0)'
+    implementation 'org.opencadc:cadc-log:[1.1.7,1.2.0)'
     implementation 'org.opencadc:cadc-registry:[1.5.9,2.0)'
     implementation 'org.opencadc:cadc-registry-server:[1.0.9,2.0)'
     implementation 'org.opencadc:cadc-util:[1.6.0,2.0)'
@@ -62,7 +49,6 @@ dependencies {
     intTestImplementation 'org.opencadc:cadc-test-vosi:[1.0.2,)'
 }
 
-
 tasks.withType(Test) {
     // reset the report destinations so that intTests go to their
     // own page
@@ -73,23 +59,7 @@ tasks.withType(Test) {
     systemProperties System.properties
 }
 
-task intTest(type: Test) {
-    // set the configuration context
-    testClassesDirs = sourceSets.intTest.output.classesDirs
-    classpath = sourceSets.intTest.runtimeClasspath
-
-    // run the tests always
-    outputs.upToDateWhen { false }
-}
-
 test {
-    testLogging {
-        events "PASSED", "FAILED", "SKIPPED"
-        // "STARTED",
-    }
-}
-
-intTest {
     testLogging {
         events "PASSED", "FAILED", "SKIPPED"
         // "STARTED",

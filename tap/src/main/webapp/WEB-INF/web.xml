@@ -17,11 +17,17 @@
         <init-param>
             <param-name>logLevelPackages</param-name>
             <param-value>
+                ca.nrc.cadc.dali
                 ca.nrc.cadc.tap
+                org.opencadc.alma
                 org.opencadc.tap
                 ca.nrc.cadc.rest
                 ca.nrc.cadc.uws
             </param-value>
+        </init-param>
+        <init-param>
+            <param-name>logControlProperties</param-name>
+            <param-value>alma-logControl.properties</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -32,6 +38,36 @@
         <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
         <load-on-startup>2</load-on-startup>
     </servlet>
+
+    <servlet>
+        <servlet-name>AsyncServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.uws.web.GetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>post</param-name>
+            <param-value>ca.nrc.cadc.uws.web.PostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>delete</param-name>
+            <param-value>ca.nrc.cadc.uws.web.DeleteAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
+            <param-value>org.opencadc.tap.ws.QueryJobManager</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.rest.InlineContentHandler</param-name>
+            <param-value>org.opencadc.tap.tmp.TempStorageManager</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+     </servlet>
 
     <!-- synchronous access to JobManager service -->
     <servlet>
@@ -62,6 +98,30 @@
             <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
             <param-value>org.opencadc.tap.ws.QueryJobManager</param-value>
         </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.rest.InlineContentHandler</param-name>
+            <param-value>org.opencadc.tap.tmp.TempStorageManager</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>TempStorageServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <!-- Optional init parameter to validate configuration. -->
+        <init-param>
+            <param-name>init</param-name>
+            <param-value>org.opencadc.tap.tmp.TempStorageInitAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>org.opencadc.tap.tmp.TempStorageGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <load-on-startup>3</load-on-startup>
     </servlet>
 
     <servlet>
@@ -105,7 +165,15 @@
          This implementation uses the TAP_SCHEMA to find the required metadata -->
     <servlet>
         <servlet-name>TableServlet</servlet-name>
-        <servlet-class>org.opencadc.tap.impl.ALMATableServlet</servlet-class>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.vosi.actions.GetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
         <load-on-startup>3</load-on-startup>
     </servlet>
 
@@ -116,6 +184,16 @@
     <servlet-mapping>
         <servlet-name>SyncServlet</servlet-name>
         <url-pattern>/auth-sync/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AsyncServlet</servlet-name>
+        <url-pattern>/async/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>TempStorageServlet</servlet-name>
+        <url-pattern>/files/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
@@ -140,6 +218,9 @@
 
     <welcome-file-list>
         <welcome-file>/index.jsp</welcome-file>
+
+        <!-- Enable the /examples endpoint's index.html -->
+        <welcome-file>index.html</welcome-file>
     </welcome-file-list>
 
 </web-app>

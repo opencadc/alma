@@ -6,8 +6,12 @@ defmodule RhWeb.RhController do
     render(conn, "index.json", %{:uid => uid})
   end
   
-  def expand(conn, %{"uid" => uid}) do
+  def expand_ous(conn, %{"uid" => uid}) do
     visit(conn, "https://almascience.eso.org/rh/ous/expand/#{uid}/downwards")
+  end
+
+  def expand_spw(conn, %{"uid" => uid}) do
+    visit(conn, "https://2023mar.asa-test.hq.eso.org/rh/spw/expand/#{uid}/downwards")
   end
   
   defp visit(conn, url) do

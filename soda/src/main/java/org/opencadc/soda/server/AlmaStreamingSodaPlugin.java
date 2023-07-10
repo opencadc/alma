@@ -81,7 +81,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.AlmaID;
+import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.soda.SodaQuery;
 
 
@@ -133,15 +134,15 @@ public class AlmaStreamingSodaPlugin implements StreamingSodaPlugin, SodaPlugin 
      * @param serialNum   number that increments for each call to the plugin within a single request
      * @param uri         the ID value that identifies the data (file)
      * @param cutouts     holder for all cutout requests
-     * @param extraParams custom parameters and values (may be empty)
+     * @param extraParams custom parameters and values (this may be empty)
      * @return a URL to the result of the operation
      * @throws IOException failure to read or write data
      */
     @Override
     public URL toURL(int serialNum, URI uri, Cutout cutouts, Map<String, List<String>> extraParams) throws IOException {
-        final AlmaUID almaUID = new AlmaUID(uri.toString());
+        final AlmaID almaID = AlmaIDFactory.createID(uri.toString());
         try {
-            return sodaQuery.toCutoutURL(almaUID, cutouts);
+            return sodaQuery.toCutoutURL(almaID, cutouts);
         } catch (ResourceNotFoundException resourceNotFoundException) {
             throw new IOException(resourceNotFoundException.getMessage(), resourceNotFoundException);
         }

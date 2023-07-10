@@ -86,8 +86,9 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
 import org.junit.Assert;
+import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.AlmaID;
 
 import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.PropertiesReader;
@@ -143,9 +144,8 @@ public class DataLinkIteratorTest {
             int comparison;
             final int compareID = o1.getID().compareTo(o2.getID());
             if (compareID == 0) {
-                final boolean containsAllSemantics =
-                        o2.getSemantics().containsAll(o1.getSemantics());
-                comparison = containsAllSemantics ? 0 : -1;
+                final boolean semanticsMatch = o2.getSemantics().equals(o1.getSemantics());
+                comparison = semanticsMatch ? 0 : -1;
                 final boolean accessURLMatches = Objects.equals(o1.accessURL, o2.accessURL);
                 final int accessURLComparison = accessURLMatches ? 0 :
                                                 Objects.compare(o1.accessURL, o2.accessURL,
@@ -167,18 +167,18 @@ public class DataLinkIteratorTest {
 
                 final boolean contentTypeMatches = Objects.equals(o1.contentType, o2.contentType);
                 final int contentTypeComparison = contentTypeMatches ? 0 :
-                                                Objects.compare(o1.contentType, o2.contentType,
-                                                                (o11, o21) -> {
-                                                                    if (o11 == null && o21 == null) {
-                                                                        return 0;
-                                                                    } else if (o11 == null) {
-                                                                        return -1;
-                                                                    } else if (o21 == null) {
-                                                                        return 1;
-                                                                    } else {
-                                                                        return o11.compareTo(o21);
-                                                                    }
-                                                                });
+                                                  Objects.compare(o1.contentType, o2.contentType,
+                                                                  (o11, o21) -> {
+                                                                      if (o11 == null && o21 == null) {
+                                                                          return 0;
+                                                                      } else if (o11 == null) {
+                                                                          return -1;
+                                                                      } else if (o21 == null) {
+                                                                          return 1;
+                                                                      } else {
+                                                                          return o11.compareTo(o21);
+                                                                      }
+                                                                  });
 
                 if (comparison == 0) {
                     comparison = contentTypeComparison;
@@ -197,59 +197,70 @@ public class DataLinkIteratorTest {
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
         final DataLinkQuery mockDataLinkQuery = mock(DataLinkQuery.class);
         final Iterator<String> dataSetIDIterator = Collections.singletonList("uid://A001/X879/X8f1").iterator();
-        final AlmaUID uid = new AlmaUID("uid://A001/X879/X8f1");
+        final AlmaID id = AlmaIDFactory.createID("uid://A001/X879/X8f1");
         final URL datalinkURL = new URL("https://alma.com/datalink");
         final URL sodaURL = new URL("https://alma.com/soda");
         final URL dataPortalURL = new URL("https://alma.com/dataportal");
         final URI sodaURI = URI.create("ivo://alma.com/soda");
+        final URL requestHanlderURL = new URL("https://alma.com/rh");
 
-        final HierarchyItem hierarchy = fromJSONFile(uid, DataLinkIteratorTest.class.getSimpleName() + ".json");
-        when(mockDataLinkQuery.query(uid)).thenReturn(hierarchy);
+        final HierarchyItem hierarchy = fromJSONFile(DataLinkIteratorTest.class.getSimpleName() + ".json");
+        when(mockDataLinkQuery.query(id)).thenReturn(hierarchy);
         when(mockAlmaProperties.lookupDataLinkServiceURL()).thenReturn(datalinkURL);
         when(mockAlmaProperties.lookupSodaServiceURL()).thenReturn(sodaURL);
         when(mockAlmaProperties.lookupDataPortalURL()).thenReturn(dataPortalURL);
         when(mockAlmaProperties.getSodaServiceURI()).thenReturn(sodaURI);
+        when(mockAlmaProperties.lookupRequestHandlerURL()).thenReturn(requestHanlderURL);
 
-        final DataLinkURLBuilder dataLinkURLBuilder = new DataLinkURLBuilder(mockAlmaProperties);
         final List<DataLink> expectedDataLinks = new ArrayList<>();
         final List<DataLink> resultDataLinks = new ArrayList<>();
-        new DataLinkIterator(dataLinkURLBuilder, dataSetIDIterator, mockDataLinkQuery, mockAlmaProperties)
-                .forEachRemaining(resultDataLinks::add);
+        new DataLinkIterator(dataSetIDIterator, mockAlmaProperties) {
+            @Override
+            AlmaID toAlmaID(final String val) {
+                return id;
+            }
+
+            @Override
+            DataLinkQuery createQuery() {
+                return mockDataLinkQuery;
+            }
+        }.forEachRemaining(resultDataLinks::add);
         final String itemFileNameTemplate = "%s.%d.json";
 
         int index = 1;
         final HierarchyItem hierarchyItemOne =
-                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
-                                                index++));
-        expectedDataLinks.add(createDataLink(hierarchyItemOne, "text/plain",
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
+                                               index++));
+        expectedDataLinks.add(createDataLink(id, "text/plain",
                                              new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
                                                                    hierarchyItemOne.getName())),
                                              DataLink.Term.DOCUMENTATION));
 
         final HierarchyItem hierarchyItemTwo =
-                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
-                                                index++));
-        final DataLink thisLink = createDataLink(hierarchyItemTwo, "application/x-tar",
-                                                    new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
-                                                                          hierarchyItemTwo.getName())),
-                                                    DataLink.Term.THIS);
-        final DataLink recursiveThisLink = createDataLink(hierarchyItemTwo, "text/xml",
-                                                    null, DataLink.Term.THIS);
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
+                                               index++));
+        final DataLink thisLink = createDataLink(id, "application/x-tar",
+                                                 new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
+                                                                       hierarchyItemTwo.getName())),
+                                                 DataLink.Term.THIS);
+        final DataLink recursiveThisLink = createDataLink(id,
+                                                          "application/x-votable+xml;content=datalink",
+                                                          null, DataLink.Term.THIS);
         final ServiceDescriptor serviceDescriptor =
-                new ServiceDescriptor(new URL(datalinkURL.toExternalForm() + "?ID=" + uid));
+                new ServiceDescriptor(new URL(datalinkURL.toExternalForm() + "?ID=" + id));
         serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
 
         recursiveThisLink.serviceDef = serviceDescriptor.id;
-        recursiveThisLink.contentType = "text/xml";
+        recursiveThisLink.contentType = "application/x-votable+xml;content=datalink";
         expectedDataLinks.add(recursiveThisLink);
 
         thisLink.descriptor = new ServiceDescriptor(new URL(datalinkURL + "?ID=" + hierarchyItemTwo.getName()));
         expectedDataLinks.add(thisLink);
 
         final HierarchyItem hierarchyItemThree =
-                fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
-                                                index++));
-        expectedDataLinks.add(createDataLink(hierarchyItemThree, "application/x-tar",
+                fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
+                                           index++));
+        expectedDataLinks.add(createDataLink(id, "application/x-tar",
                                              new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
                                                                    hierarchyItemThree.getName())),
                                              DataLink.Term.AUXILIARY));
@@ -257,9 +268,9 @@ public class DataLinkIteratorTest {
         // The rest are progenitors.
         while (index <= 10) {
             final HierarchyItem nextHierarchyItem =
-                    fromJSONFile(uid, String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
-                                                    index++));
-            expectedDataLinks.add(createDataLink(nextHierarchyItem, "application/x-tar",
+                    fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
+                                               index++));
+            expectedDataLinks.add(createDataLink(id, "application/x-tar",
                                                  new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
                                                                        nextHierarchyItem.getName())),
                                                  DataLink.Term.PROGENITOR));
@@ -282,16 +293,16 @@ public class DataLinkIteratorTest {
         }
     }
 
-    private HierarchyItem fromJSONFile(final AlmaUID uid, final String filename) throws Throwable {
+    private HierarchyItem fromJSONFile(final String filename) throws Throwable {
         final File jsonFile = FileUtil.getFileFromResource(filename, DataLinkIteratorTest.class);
         final FileInputStream fileInputStream = new FileInputStream(jsonFile);
         final JSONObject jsonObject = new JSONObject(new JSONTokener(fileInputStream));
-        return HierarchyItem.fromJSONObject(uid, jsonObject);
+        return HierarchyItem.fromJSONObject(jsonObject);
     }
 
-    private DataLink createDataLink(final HierarchyItem hierarchyItem, final String contentType,
+    private DataLink createDataLink(final AlmaID almaID, final String contentType,
                                     final URL accessURL, final DataLink.Term semantic) {
-        final DataLink dataLink = new DataLink(hierarchyItem.getUidString(), semantic);
+        final DataLink dataLink = new DataLink(almaID.getID(), semantic);
 
         dataLink.accessURL = accessURL;
         dataLink.contentType = contentType;
