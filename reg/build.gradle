@@ -17,7 +17,7 @@ war {
             filter(ReplaceTokens, tokens: [app_name: 'reg', version: version])
         }
     }
-    archiveName = 'reg.war'
+    archiveFileName = 'reg.war'
 
     manifest {
         attributes "Implementation-Version": version
