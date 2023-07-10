@@ -71,6 +71,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     scientific_category,
     collections,
     pi_userid,
+    pi_name,
     lastModified
  ) AS SELECT
     CASE WHEN energy.channel_num > 128 THEN 'cube'
@@ -165,6 +166,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     asap.scientific_category,
     (SELECT LISTAGG(collection, ' ') WITHIN GROUP (ORDER BY collection) AS collection FROM (SELECT DISTINCT collection FROM asa_product_files WHERE asa_ous_id = science.member_ouss_id)),
     asap.pi_userid,
+    asap.pi_name,
     science.last_updated
 FROM asa_science science
 INNER JOIN asa_energy energy ON upper(energy.asa_dataset_id) = upper(science.dataset_id)

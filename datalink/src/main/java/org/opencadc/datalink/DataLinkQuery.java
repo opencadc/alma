@@ -81,6 +81,7 @@ import org.json.JSONTokener;
 import org.opencadc.alma.AlmaID;
 import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
+import org.opencadc.alma.SpectralWindowID;
 import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 
@@ -107,7 +108,13 @@ public class DataLinkQuery extends RequestHandlerQuery {
     public HierarchyItem query(final AlmaID almaID) {
         try {
             final JSONObject document = new JSONObject(new JSONTokener(downwardsJSONStream(almaID)));
-            final JSONObject baseDocument = getBaseDocument(almaID, document);
+            final JSONObject baseDocument;
+
+            if (almaID instanceof SpectralWindowID) {
+                baseDocument = document;
+            } else {
+                baseDocument = getBaseDocument(almaID, document);
+            }
 
             if (baseDocument == null) {
                 throw new IOException("No entry found for " + almaID);

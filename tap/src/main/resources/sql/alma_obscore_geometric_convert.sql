@@ -1,26 +1,26 @@
 create or replace function TO_CIRCLE(in_coordinate_string in varchar2)
 return SDO_GEOMETRY is
 	circle_polygon SDO_GEOMETRY;
-    begin_index number;
-    x_val number;
-    y_val number;
-    radius_val number;
-    radius_in_metres number;
-    pattern varchar2(32) := '-?[0-9]\d*(\.\d+)?';
-    format varchar2(22) := '999.999999999999999999';
-    metres_multiplier number := 2.0 * 3.14159265358979 * 6371000 / 360.0;
+  begin_index number;
+  x_val number;
+  y_val number;
+  radius_val number;
+  radius_in_metres number;
+  pattern varchar2(32) := '-?[0-9]\d*(\.\d+)?';
+  format varchar2(22) := '999.999999999999999999';
+  metres_multiplier number := 2.0 * 3.14159265358979 * 6371000 / 360.0;
 begin
-		if REGEXP_COUNT(in_coordinate_string, pattern) <> 3
-		then
-			RAISE_APPLICATION_ERROR(-20001, 'Circles require three (3) values: (x, y, radius)');
-        end if;
-        select regexp_instr(in_coordinate_string, pattern) into begin_index from DUAL;
-        select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 1), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into x_val from DUAL;
-        select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 2), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into y_val from DUAL;
-        select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 3), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into radius_val from DUAL;
-        select radius_val * metres_multiplier into radius_in_metres from DUAL;
-        select SDO_UTIL.CIRCLE_POLYGON(x_val, y_val, radius_in_metres, 0.05) into circle_polygon from DUAL;
-        return circle_polygon;
+	if REGEXP_COUNT(in_coordinate_string, pattern) <> 3
+	then
+	  RAISE_APPLICATION_ERROR(-20001, 'Circles require three (3) values: (x, y, radius)');
+  end if;
+  select regexp_instr(in_coordinate_string, pattern) into begin_index from DUAL;
+  select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 1), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into x_val from DUAL;
+  select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 2), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into y_val from DUAL;
+  select to_number(regexp_substr(in_coordinate_string, pattern, begin_index, 3), format, ' NLS_NUMERIC_CHARACTERS = '',.''') into radius_val from DUAL;
+  select radius_val * metres_multiplier into radius_in_metres from DUAL;
+  select SDO_UTIL.CIRCLE_POLYGON(x_val, y_val, radius_in_metres, 0.05) into circle_polygon from DUAL;
+  return circle_polygon;
 end;
 /
 
@@ -39,7 +39,7 @@ return SDO_GEOMETRY is
 	next_vert number := 0.0;
 	next_vert_y number := 0.0;
 	x_vert integer := 0;
-    format varchar2(22) := '999.999999999999999999';
+  format varchar2(22) := '999.999999999999999999';
 	begin
 		if REGEXP_COUNT(in_coordinate_string, pattern) < 6
 		then
