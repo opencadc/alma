@@ -13,6 +13,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     s_fov,
     s_region,
     footprint,
+    spectral_resolution,
     s_xel1,
     s_xel2,
     em_xel,
@@ -69,6 +70,8 @@ CREATE OR REPLACE FORCE VIEW obscore (
     science_keyword,
     scientific_category,
     collections,
+    pi_userid,
+    pi_name,
     lastModified
  ) AS SELECT
     CASE WHEN energy.channel_num > 128 THEN 'cube'
@@ -76,7 +79,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     CASE WHEN science.product_type = 'MOUS' THEN 2
          WHEN science.product_type = 'GOUS' THEN 3
          ELSE null END,
-    'ALMA/' || REGEXP_REPLACE(LTRIM(RTRIM(science.band_list)), '\s', '/'),
+    'ALMA',
     energy.asa_energy_id,
     'ADS/JAO.ALMA#' || asap.code,
     'https://almascience.org/datalink/sync?ID=' || science.member_ouss_id,
@@ -88,6 +91,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     (science.fov / 3600),
     science.spatial_bounds,
     science.footprint,
+    science.frequency_resolution,
     NULL,
     NULL,
     energy.channel_num,
@@ -103,7 +107,12 @@ CREATE OR REPLACE FORCE VIEW obscore (
     energy.resolving_power_max,
     'phot.flux.density;phys.polarization',
     -- Special case where the pol_products that include all of the states but omit the YX value.
-    CASE WHEN LTRIM(RTRIM(energy.pol_product)) = 'XX XY YY' THEN '/XX/XY/YX/YY/' ELSE '/' || REGEXP_REPLACE(LTRIM(RTRIM(energy.pol_product)), '\s', '/') || '/' END,
+    CASE WHEN LTRIM(RTRIM(energy.pol_product)) = 'XX XY YY'
+    THEN
+      '/XX/XY/YX/YY/'
+    ELSE
+      '/' || REGEXP_REPLACE(LTRIM(RTRIM(energy.pol_product)), '\s', '/') || '/'
+    END,
     'JAO',
     'ALMA',
     science.project_code,
@@ -112,18 +121,27 @@ CREATE OR REPLACE FORCE VIEW obscore (
     science.gal_latitude,
     science.band_list,
     -- Convert frequency_resolution to metres as per ObsCore expectations.
-    CASE WHEN science.frequency_resolution IS NOT NULL THEN (science.frequency_resolution * 2.99792458e+11) ELSE NULL END,
+    CASE WHEN science.frequency_resolution IS NOT NULL AND science.frequency_max IS NOT NULL AND science.frequency_min IS NOT NULL
+    THEN
+      (0.25 * 2.99792458e+11 * science.frequency_resolution / ((science.frequency_min + science.frequency_max) * (science.frequency_min + science.frequency_max)))
+    ELSE
+      NULL
+    END,
     energy.bandwidth,
     science.antennas,
     CASE WHEN science.is_mosaic = 'Y' THEN 'T' ELSE 'F' END,
-    CASE WHEN ads.release_date is null THEN TO_TIMESTAMP('3000-01-01T00:00:00.000Z', 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"')
-         ELSE CAST(ads.release_date AS TIMESTAMP) END,
+    CASE WHEN ads.release_date is null
+    THEN
+      TO_TIMESTAMP('3000-01-01T00:00:00.000Z', 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"')
+    ELSE
+      CAST(ads.release_date AS TIMESTAMP)
+    END,
     science.spatial_resolution,
     science.frequency_support,
     0.5 * (energy.frequency_max + energy.frequency_min),
     science.velocity_resolution,
-    asap.pi_name,
-    (SELECT LISTAGG(title, ' ') WITHIN GROUP (ORDER BY title) AS title FROM (SELECT DISTINCT aab.title FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
+    'ALMA',
+    (SELECT LISTAGG(title, ' ' ON OVERFLOW TRUNCATE) WITHIN GROUP (ORDER BY title) AS title FROM (SELECT DISTINCT aab.title FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
     (SELECT LISTAGG(first_author, ' ') WITHIN GROUP (ORDER BY first_author) AS first_author FROM (SELECT DISTINCT aab.first_author FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
     (SELECT LISTAGG(authors, ' ' ON OVERFLOW TRUNCATE) WITHIN GROUP (ORDER BY authors) AS authors FROM (SELECT DISTINCT aab.authors FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
     (SELECT LISTAGG(abstract, ' ' ON OVERFLOW TRUNCATE) WITHIN GROUP (ORDER BY abstract) AS abstract FROM(SELECT DISTINCT aab.abstract FROM asa_bibliography aab JOIN asa_project_bibliography aapb ON aab.bibcode = aapb.bibcode WHERE aapb.project_code = science.project_code)),
@@ -147,6 +165,8 @@ CREATE OR REPLACE FORCE VIEW obscore (
     asap.science_keyword,
     asap.scientific_category,
     (SELECT LISTAGG(collection, ' ') WITHIN GROUP (ORDER BY collection) AS collection FROM (SELECT DISTINCT collection FROM asa_product_files WHERE asa_ous_id = science.member_ouss_id)),
+    asap.pi_userid,
+    asap.pi_name,
     science.last_updated
 FROM asa_science science
 INNER JOIN asa_energy energy ON upper(energy.asa_dataset_id) = upper(science.dataset_id)
