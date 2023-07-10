@@ -143,8 +143,7 @@ public class DataLinkIteratorTest {
             int comparison;
             final int compareID = o1.getID().compareTo(o2.getID());
             if (compareID == 0) {
-                final boolean containsAllSemantics =
-                        o2.getSemantics().containsAll(o1.getSemantics());
+                final boolean containsAllSemantics = o2.getSemantics().equals(o1.getSemantics());
                 comparison = containsAllSemantics ? 0 : -1;
                 final boolean accessURLMatches = Objects.equals(o1.accessURL, o2.accessURL);
                 final int accessURLComparison = accessURLMatches ? 0 :
