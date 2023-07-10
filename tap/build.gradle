@@ -17,7 +17,7 @@ war {
             filter(ReplaceTokens, tokens: [app_name: 'tap', version: version])
         }
     }
-    archiveName = 'tap.war'
+    archiveName 'tap.war'
 
     manifest {
         attributes "Implementation-Version": version
