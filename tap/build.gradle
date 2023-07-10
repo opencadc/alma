@@ -16,7 +16,7 @@ apply from: '../properties.gradle'
 
 war {
     eachFile {
-        if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
+        if (it.name == 'capabilities.xml' || it.name == 'service.json') {
             filter(ReplaceTokens, tokens: [app_name: 'tap', version: version])
         }
     }
