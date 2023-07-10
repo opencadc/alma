@@ -12,7 +12,7 @@
         <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
         <init-param>
             <param-name>logLevel</param-name>
-            <param-value>info</param-value>
+            <param-value>warn</param-value>
         </init-param>
         <init-param>
             <param-name>logLevelPackages</param-name>
@@ -24,14 +24,11 @@
                 ca.nrc.cadc.dali
             </param-value>
         </init-param>
+        <init-param>
+            <param-name>logControlProperties</param-name>
+            <param-value>alma-logControl.properties</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
-    </servlet>
-
-    <!-- Initialize the remote logging AFTER the main logging, otherwise it will be cleared. -->
-    <servlet>
-        <servlet-name>remoteLogger</servlet-name>
-        <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
-        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <servlet>
@@ -39,11 +36,15 @@
         <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
         <init-param>
             <param-name>get</param-name>
-            <param-value>org.opencadc.alma.logging.web.LoggingSyncGetAction</param-value>
+            <param-value>ca.nrc.cadc.uws.web.SyncGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>post</param-name>
-            <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
+            <param-value>ca.nrc.cadc.uws.web.SyncPostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.uws.web.SyncPostAction.execOnPOST</param-name>
+            <param-value>true</param-value>
         </init-param>
         <init-param>
             <param-name>augmentSubject</param-name>

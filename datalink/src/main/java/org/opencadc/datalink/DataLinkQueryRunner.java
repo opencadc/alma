@@ -92,10 +92,6 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
     private final AlmaProperties almaProperties;
 
 
-    public DataLinkQueryRunner(final String propertiesFileName) {
-        this.almaProperties = new AlmaProperties(propertiesFileName);
-    }
-
     public DataLinkQueryRunner() {
         this.almaProperties = new AlmaProperties();
     }
@@ -112,22 +108,13 @@ public class DataLinkQueryRunner extends LinkQueryRunner {
 
     private DataLinkIterator createDataLinkIterator() throws IOException, ResourceNotFoundException {
         final List<Parameter> jobParameterList = this.job.getParameterList();
-        final List<String> dataSetIDList = ParameterUtil.findParameterValues(PARAMETER_KEY, jobParameterList);
+        final List<String> dataSetIDList = ParameterUtil.findParameterValues(DataLinkQueryRunner.PARAMETER_KEY,
+                                                                             jobParameterList);
 
         if (dataSetIDList.isEmpty()) {
             throw new IllegalArgumentException("No dataset IDs provided.  Use ID=uid://XXX");
         } else {
-            final DataLinkQuery dataLinkQuery = createDataLinkQuery();
-            return new DataLinkIterator(createDataLinkURLBuilder(), dataSetIDList.iterator(), dataLinkQuery,
-                                        almaProperties);
+            return new DataLinkIterator(dataSetIDList.iterator(), this.almaProperties);
         }
-    }
-
-    private DataLinkURLBuilder createDataLinkURLBuilder() throws IOException, ResourceNotFoundException {
-        return new DataLinkURLBuilder(this.almaProperties);
-    }
-
-    private DataLinkQuery createDataLinkQuery() {
-        return new DataLinkQuery(this.almaProperties);
     }
 }

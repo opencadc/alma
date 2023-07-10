@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2022.                            (c) 2022.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,125 +66,31 @@
  ************************************************************************
  */
 
-package org.opencadc.alma;
+package org.opencadc.conesearch;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import ca.nrc.cadc.util.StringUtil;
-
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import ca.nrc.cadc.uws.server.JobExecutor;
+import ca.nrc.cadc.uws.server.MemoryJobPersistence;
+import ca.nrc.cadc.uws.server.SimpleJobManager;
+import ca.nrc.cadc.uws.server.SyncJobExecutor;
 
 
-/**
- * Class that can handle a UID in the form of archiveUID://C0/C1/C2 (or uid___C0_C1_C2), or a Project Tarfile ID that is
- * in the form of 2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar.
- */
-public class AlmaUID {
+public class ConeSearchJobManager extends SimpleJobManager {
+    private static final Long MAX_EXEC_DURATION = 600L;
+    private static final Long MAX_DESTRUCTION = 1L + MAX_EXEC_DURATION;
+    private static final Long MAX_QUOTE = 600L; // same as exec since we don't queue
 
-    private static final Logger LOGGER = LogManager.getLogger(AlmaUID.class);
-    private static final Pattern UID_PATTERN =
-            Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+");
+    public ConeSearchJobManager() {
+        super();
+        // persist UWS jobs to memory
+        MemoryJobPersistence jobPersist = new MemoryJobPersistence();
 
+        // exec jobs in request thread using custom SiaRunner
+        JobExecutor jobExec = new SyncJobExecutor(jobPersist, ConeSearchRunner.class);
 
-    // The original UID as provided by the constructor.
-    private final String uid;
-    private final AlmaUID archiveUID;
-
-
-    public AlmaUID(final String uid) {
-        if (!StringUtil.hasText(uid)) {
-            throw new IllegalArgumentException("Passed ID cannot be null or empty.");
-        }
-
-        this.uid = uid;
-        this.archiveUID = parseArchiveID();
-    }
-
-    private AlmaUID parseArchiveID() {
-        final Matcher matcher = UID_PATTERN.matcher(this.uid);
-
-        if (matcher.find()) {
-            final String uidMatch = matcher.group();
-
-            LOGGER.debug(String.format("Found match (%s)", uidMatch));
-            // If the parent matches this current one then don't set it.
-            return desanitize(uidMatch).equals(desanitize(this.uid)) ? null : new AlmaUID(uidMatch);
-        } else {
-            throw new IllegalArgumentException(String.format("No UID found in %s", this.uid));
-        }
-    }
-
-    public String getUID() {
-        return this.uid;
-    }
-
-    public AlmaUID getArchiveUID() {
-        return this.archiveUID;
-    }
-
-    public String getSanitisedUid() {
-        return this.sanitize(this.uid);
-    }
-
-    public String getSanitizedArchiveUID() {
-        return this.sanitize(this.archiveUID.getUID());
-    }
-
-    public String getDesanitisedUid() {
-        return desanitize(this.uid);
-    }
-
-    String desanitize(final String uid) {
-        return uid.replace("uid___", "uid://").replaceAll("_", "/");
-    }
-
-    String sanitize(final String uid) {
-        return uid.replace(':', '_').replaceAll("/", "_");
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        AlmaUID almaUID = (AlmaUID) o;
-        return this.uid.equals(almaUID.uid) &&
-               Objects.equals(this.archiveUID, almaUID.archiveUID);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.uid, this.archiveUID);
-    }
-
-    /**
-     * Returns a string representation of the object. In general, the
-     * {@code toString} method returns a string that
-     * "textually represents" this object. The result should
-     * be a concise but informative representation that is easy for a
-     * person to read.
-     * It is recommended that all subclasses override this method.
-     * <p>
-     * The {@code toString} method for class {@code Object}
-     * returns a string consisting of the name of the class of which the
-     * object is an instance, the at-sign character `{@code @}', and
-     * the unsigned hexadecimal representation of the hash code of the
-     * object. In other words, this method returns a string equal to the
-     * value of:
-     * <blockquote>
-     * <pre>
-     * getClass().getName() + '@' + Integer.toHexString(hashCode())
-     * </pre></blockquote>
-     *
-     * @return a string representation of the object.
-     */
-    @Override
-    public String toString() {
-        return this.uid;
+        super.setJobPersistence(jobPersist);
+        super.setJobExecutor(jobExec);
+        super.setMaxExecDuration(MAX_EXEC_DURATION);
+        super.setMaxDestruction(MAX_DESTRUCTION);
+        super.setMaxQuote(MAX_QUOTE);
     }
 }

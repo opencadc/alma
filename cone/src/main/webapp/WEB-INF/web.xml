@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+************************************************************************
+*******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
+**************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
+*
+*  (c) 2022.                            (c) 2022.
+*  Government of Canada                 Gouvernement du Canada
+*  National Research Council            Conseil national de recherches
+*  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
+*  All rights reserved                  Tous droits réservés
+*
+*  NRC disclaims any warranties,        Le CNRC dénie toute garantie
+*  expressed, implied, or               énoncée, implicite ou légale,
+*  statutory, of any kind with          de quelque nature que ce
+*  respect to the software,             soit, concernant le logiciel,
+*  including without limitation         y compris sans restriction
+*  any warranty of merchantability      toute garantie de valeur
+*  or fitness for a particular          marchande ou de pertinence
+*  purpose. NRC shall not be            pour un usage particulier.
+*  liable in any event for any          Le CNRC ne pourra en aucun cas
+*  damages, whether direct or           être tenu responsable de tout
+*  indirect, special or general,        dommage, direct ou indirect,
+*  consequential or incidental,         particulier ou général,
+*  arising from the use of the          accessoire ou fortuit, résultant
+*  software.  Neither the name          de l'utilisation du logiciel. Ni
+*  of the National Research             le nom du Conseil National de
+*  Council of Canada nor the            Recherches du Canada ni les noms
+*  names of its contributors may        de ses  participants ne peuvent
+*  be used to endorse or promote        être utilisés pour approuver ou
+*  products derived from this           promouvoir les produits dérivés
+*  software without specific prior      de ce logiciel sans autorisation
+*  written permission.                  préalable et particulière
+*                                       par écrit.
+*
+*  $Revision: 4 $
+*
+************************************************************************
+-->
+
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         id="conesearch" version="3.1">
+
+    <display-name>ConeSearch</display-name>
+
+    <welcome-file-list>
+        <welcome-file>/index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <servlet>
+        <servlet-name>logControl</servlet-name>
+        <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
+        <init-param>
+            <param-name>logLevel</param-name>
+            <param-value>info</param-value>
+        </init-param>
+        <init-param>
+            <param-name>logLevelPackages</param-name>
+            <param-value>
+                org.opencadc.conesearch
+            </param-value>
+        </init-param>
+        <init-param>
+            <param-name>logControlProperties</param-name>
+            <param-value>alma-logControl.properties</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <!-- Initialize the remote logging AFTER the main logging, otherwise it will be cleared. -->
+    <servlet>
+        <servlet-name>remoteLogger</servlet-name>
+        <servlet-class>org.opencadc.alma.logging.web.RemoteLogServlet</servlet-class>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>2</load-on-startup>
+        <servlet-name>ConeSearchServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.uws.server.JobServlet</servlet-class>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>post</param-name>
+            <param-value>org.opencadc.alma.logging.web.LoggingSyncPostAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>augmentSubject</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ca.nrc.cadc.uws.server.JobManager</param-name>
+            <param-value>org.opencadc.conesearch.ConeSearchJobManager</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <load-on-startup>3</load-on-startup>
+        <servlet-name>AvailabilityServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.vosi.AvailabilityServlet</servlet-class>
+        <init-param>
+            <param-name>ca.nrc.cadc.vosi.AvailabilityPlugin</param-name>
+            <param-value>org.opencadc.conesearch.ws.ServiceAvailability</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <servlet-name>CapabilitiesServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>init</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapInitAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>get</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>head</param-name>
+            <param-value>ca.nrc.cadc.vosi.CapHeadAction</param-value>
+        </init-param>
+        <init-param>
+            <param-name>authHeaders</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>input</param-name>
+            <param-value>/capabilities.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ConeSearchServlet</servlet-name>
+        <url-pattern>/search/sourcecatalogue.source_cone_search/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>logControl</servlet-name>
+        <url-pattern>/logControl/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AvailabilityServlet</servlet-name>
+        <url-pattern>/availability</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CapabilitiesServlet</servlet-name>
+        <url-pattern>/capabilities</url-pattern>
+    </servlet-mapping>
+
+</web-app>

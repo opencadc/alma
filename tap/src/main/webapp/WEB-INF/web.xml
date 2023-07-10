@@ -25,6 +25,10 @@
                 ca.nrc.cadc.uws
             </param-value>
         </init-param>
+        <init-param>
+            <param-name>logControlProperties</param-name>
+            <param-value>alma-logControl.properties</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -104,6 +108,11 @@
     <servlet>
         <servlet-name>TempStorageServlet</servlet-name>
         <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <!-- Optional init parameter to validate configuration. -->
+        <init-param>
+            <param-name>init</param-name>
+            <param-value>org.opencadc.tap.tmp.TempStorageInitAction</param-value>
+        </init-param>
         <init-param>
             <param-name>get</param-name>
             <param-value>org.opencadc.tap.tmp.TempStorageGetAction</param-value>
@@ -209,6 +218,9 @@
 
     <welcome-file-list>
         <welcome-file>/index.jsp</welcome-file>
+
+        <!-- Enable the /examples endpoint's index.html -->
+        <welcome-file>index.html</welcome-file>
     </welcome-file-list>
 
 </web-app>

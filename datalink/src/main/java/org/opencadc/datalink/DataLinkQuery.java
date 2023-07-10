@@ -73,14 +73,15 @@ import ca.nrc.cadc.net.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import org.opencadc.alma.AlmaID;
+import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.AlmaUID;
+import org.opencadc.alma.SpectralWindowID;
 import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 
@@ -91,6 +92,7 @@ public class DataLinkQuery extends RequestHandlerQuery {
     private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
             "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
             + "\"children\":[],\"allMousUids\":[]}";
+
     private static final Logger LOGGER = Logger.getLogger(DataLinkQuery.class);
 
     public DataLinkQuery(final AlmaProperties almaProperties) {
@@ -100,51 +102,56 @@ public class DataLinkQuery extends RequestHandlerQuery {
     /**
      * Obtain the HierarchyItem representing the top level downwards from the given UID.
      *
-     * @param almaUID The UID to start from.
+     * @param almaID The UID to start from.
      * @return HierarchyItem for the UID, or a NotFound HierarchyItem.
      */
-    public HierarchyItem query(final AlmaUID almaUID) {
+    public HierarchyItem query(final AlmaID almaID) {
         try {
-            final JSONObject document = new JSONObject(new JSONTokener(downwardsJSONStream(almaUID)));
-            final JSONObject baseDocument = getBaseDocument(almaUID, document);
+            final JSONObject document = new JSONObject(new JSONTokener(downwardsJSONStream(almaID)));
+            final JSONObject baseDocument;
 
-            if (baseDocument == null) {
-                throw new IOException("No entry found for " + almaUID);
+            if (almaID instanceof SpectralWindowID) {
+                baseDocument = document;
+            } else {
+                baseDocument = getBaseDocument(almaID, document);
             }
 
-            return HierarchyItem.fromJSONObject(almaUID, baseDocument);
+            if (baseDocument == null) {
+                throw new IOException("No entry found for " + almaID);
+            }
+
+            return HierarchyItem.fromJSONObject(baseDocument);
         } catch (IOException ioException) {
             LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.\n\n%s",
-                                       almaUID.getUID(), ioException));
-            return HierarchyItem.fromJSONObject(almaUID,
-                                                new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
-                                                                             almaUID.getUID())));
+                                       almaID.getID(), ioException));
+            return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
+                                                                             almaID.getID())));
         } catch (ResourceNotFoundException resourceNotFoundException) {
             LOGGER.fatal("Unable to find Registry lookup.");
             throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
         }
     }
 
-    private JSONObject getBaseDocument(final AlmaUID almaUID, final JSONObject rootDocument) {
-        final JSONArray childrenJSONArray = rootDocument.getJSONArray("children");
-        if (almaUID.getArchiveUID() == null) {
-            return rootDocument;
+    /**
+     * Obtain the main document for the requested ID.  Walk the JSON document until one of the <code>children</code>'s
+     * ID matches the requested ID, then use the children of that entry to create Links.
+     *
+     * @param almaID   The ALMA ID to check.
+     * @param document The Document received from the data source.
+     * @return JSONObject, or null if the ID cannot be found.
+     */
+    private JSONObject getBaseDocument(final AlmaID almaID, final JSONObject document) {
+        final JSONArray childrenJSONArray = document.getJSONArray("children");
+        if (matchesEntry(almaID, document)) {
+            return document;
         } else {
-            final String sanitisedUid = almaUID.getSanitisedUid();
-            for (final Object o : childrenJSONArray) {
-                final JSONObject jsonObject = (JSONObject) o;
-                final String childID = jsonObject.get("id").toString();
-                final String childName = jsonObject.get("name").toString();
+            final int length = childrenJSONArray.length();
+            for (int i = 0; i < length; i++) {
+                final JSONObject child = childrenJSONArray.getJSONObject(i);
+                final JSONObject baseDocument = getBaseDocument(almaID, child);
 
-                // The name and id values in the JSON document are sanitised.
-                if (sanitisedUid.equals(childID) || sanitisedUid.equals(childName)) {
-                    return jsonObject;
-                } else {
-                    final JSONObject rootChildDocument = getBaseDocument(almaUID, jsonObject);
-
-                    if (rootChildDocument != null) {
-                        return rootChildDocument;
-                    }
+                if (baseDocument != null) {
+                    return baseDocument;
                 }
             }
 
@@ -152,24 +159,29 @@ public class DataLinkQuery extends RequestHandlerQuery {
         }
     }
 
+    private boolean matchesEntry(final AlmaID almaID, final JSONObject document) {
+        final String objectName = document.get("name").toString();
+        final String sanitizedID = almaID.sanitize();
+
+        try {
+            return AlmaIDFactory.createID(objectName).sanitize().equals(sanitizedID);
+        } catch (IllegalArgumentException illegalArgumentException) {
+            return false;
+        }
+    }
+
     /**
      * Obtain an InputStream to JSON data representing the hierarchy of elements.
      *
-     * @param almaUID The UID to query for.
+     * @param almaID The UID to query for.
      * @return InputStream to feed to a JSON Object.
      * @throws IOException Any errors are passed back up the stack.
      */
-    InputStream downwardsJSONStream(final AlmaUID almaUID) throws IOException, ResourceNotFoundException {
-        final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
-        LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
-        final URL downwardsQueryURL = new URL(String.format("%s/ous/expand/%s/downwards",
-                                                            baseServiceURL.toExternalForm(),
-                                                            almaUID.getArchiveUID() == null
-                                                            ? almaUID.getSanitisedUid()
-                                                            : almaUID.getArchiveUID().getSanitisedUid()));
+    InputStream downwardsJSONStream(final AlmaID almaID) throws IOException, ResourceNotFoundException {
+        final ExpansionURL downwardsQueryURL = new ExpansionURL(almaID, this.almaProperties);
 
         LOGGER.debug(String.format("Base URL for Request Handler is %s", downwardsQueryURL));
-        final HttpGet httpGet = createHttpGet(downwardsQueryURL);
+        final HttpGet httpGet = createHttpGet(downwardsQueryURL.toURL());
         httpGet.run();
 
         final Throwable throwable = httpGet.getThrowable();

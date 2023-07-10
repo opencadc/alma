@@ -3,6 +3,7 @@ name: Java+Docker CI
 on:
   pull_request:
   push:
+  release:
 
 jobs:
   #
@@ -26,6 +27,64 @@ jobs:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
 
+  # BUILD UNPUBLISHED LIBRARIES.  REMOVE WHEN PUBLISHED! #
+
+  install-cadc-conesearch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 11
+      # Install cadc-conesearch
+      - name: build, test, and install cadc-conesearch
+        run: cd ../ && git clone -b conesearch https://github.com/at88mph/dal.git && cd dal && ./gradlew --info -b cadc-dali/build.gradle clean build install && ./gradlew --info -b cadc-conesearch/build.gradle clean build install
+      # Upload cadc-conesearch artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: cadc-dali
+          path: /home/runner/.m2/repository/org/opencadc/cadc-dali
+      - uses: actions/upload-artifact@v2
+        with:
+          name: cadc-conesearch
+          path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
+  # END BUILD UNPUBLISHED LIBRARIES.  REMOVE WHEN PUBLISHED! #
+
+  # Temporarily depends on unpublished cadc-dali and cadc-conesearch libraries.
+  build-cone:
+    needs:
+      - install-alma-lib
+      - install-cadc-conesearch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+      - uses: actions/download-artifact@v2
+        with:
+          name: alma-lib
+          path: /home/runner/.m2/repository/org/opencadc/alma-lib
+      - uses: actions/download-artifact@v2
+        with:
+          name: cadc-dali
+          path: /home/runner/.m2/repository/org/opencadc/cadc-dali
+      - uses: actions/download-artifact@v2
+        with:
+          name: cadc-conesearch
+          path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
+      - name: build and test cone
+        run: gradle --info -b cone/build.gradle clean build test
+      # Upload WAR artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: cone-artifact
+          path: ./cone/build/libs/cone.war
+
   build-datalink:
     needs: install-alma-lib
     uses: ./.github/workflows/gradle.yml
@@ -40,12 +99,29 @@ jobs:
       name: sia
       artifact-name: sia2
 
+  # Temporarily depends on unpublished cadc-tap-server-oracle library.
   build-tap:
-    needs: install-alma-lib
-    uses: ./.github/workflows/gradle.yml
-    with:
-      name: tap
-      artifact-name: tap
+    needs:
+      - install-alma-lib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+      - uses: actions/download-artifact@v2
+        with:
+          name: alma-lib
+          path: /home/runner/.m2/repository/org/opencadc/alma-lib
+      - name: build and test tap
+        run: gradle --info -b tap/build.gradle clean build test
+      # Upload WAR artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tap-artifact
+          path: ./tap/build/libs/tap.war
 
   build-soda:
     needs: install-alma-lib
@@ -66,11 +142,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: 11
+          java-version: 17
       # This will install WCSLib 5.15 to include WCS cutouts.  This is a very old version, but it's what is deployed on
       # the NGAS nodes.
       - name: install WCSLIB (libwcs5-15)
@@ -100,6 +176,14 @@ jobs:
   #
   # Package jobs
   #
+  package-cone:
+    needs: build-cone
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      name: cone
+      artifact-name: cone
+
   package-datalink:
     needs: build-datalink
     uses: ./.github/workflows/docker.yml

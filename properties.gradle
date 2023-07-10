@@ -1,7 +1,7 @@
-sourceCompatibility = 11
+sourceCompatibility = 17
 
 // Applies to all web applications and the alma-lib library.
-version = '2.1.0'
+version = '2.2.1'
 
 task printVersion {
     doLast {

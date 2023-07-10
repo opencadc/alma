@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2020.                            (c) 2020.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,36 +66,40 @@
  ************************************************************************
  */
 
-package org.opencadc.alma.data;
+package org.opencadc.alma;
 
-import ca.nrc.cadc.rest.InlineContentHandler;
-import ca.nrc.cadc.rest.RestAction;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import ca.nrc.cadc.util.StringUtil;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
+import java.util.regex.Pattern;
 
+/**
+ * Represents an SPW ID (Energy, or Spectral Window, ID) to use in querying the Request Handler to get its hierarchy.
+ */
+public class SpectralWindowID implements AlmaID {
+    static final Pattern ENERGY_SPW_ID_PATTERN =
+            Pattern.compile("uid[_:]+[_/]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+[_/]+\\w[0-9a-fA-F]+\\.source.*\\.spw");
 
-public abstract class BaseAction extends RestAction {
-    private static final Logger LOGGER = LogManager.getLogger(BaseAction.class);
+    private final String id;
 
+    /**
+     * Constructor.
+     * @param id    The ID.
+     */
+    SpectralWindowID(final String id) {
+        this.id = id;
+    }
 
     @Override
-    protected InlineContentHandler getInlineContentHandler() {
-        return null;
+    public String getID() {
+        return this.id;
     }
 
-    protected File getFile() {
-        final String requestedFilePath = syncInput.getParameter("file");
-        LOGGER.debug("Searching for file " + requestedFilePath);
-
-        return new File(requestedFilePath);
+    @Override
+    public String toString() {
+        return this.id;
     }
 
-    protected List<String> getParametersNullSafe(final String key) {
-        final List<String> params = syncInput.getParameters(key);
-        return (params == null) ? Collections.emptyList() : params;
+    static boolean matches(final String id) {
+        return StringUtil.hasText(id) && ENERGY_SPW_ID_PATTERN.matcher(id).find();
     }
 }

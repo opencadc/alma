@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2019.                            (c) 2019.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -69,63 +68,22 @@
 
 package org.opencadc.alma;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.net.URI;
-
-import static org.junit.Assert.*;
-
-
-public class AlmaUIDTest {
-
-    @Before
-    public void setup() {
-        Configurator.setLevel(AlmaUID.class.getCanonicalName(), Level.DEBUG);
+/**
+ * Represents an AlmaID that is not meant to be queried on.  Can be used as-is.
+ */
+public class NoOpAlmaID implements AlmaID {
+    private final String id;
+    NoOpAlmaID(final String id) {
+        this.id = id;
     }
 
-    @Test
-    public void constructFromDesanitizedMOUSID() {
-        final AlmaUID testSubject = new AlmaUID("uid://C0/C1/C2");
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getUID());
+    @Override
+    public String getID() {
+        return this.id;
     }
 
-    @Test
-    public void constructFromSanitizedMOUSID() {
-        final AlmaUID testSubject = new AlmaUID("uid___C0_C1_C2");
-        assertEquals("Wrong ID", "uid___C0_C1_C2", testSubject.getUID());
-    }
-
-    @Test
-    public void constructFromURI() {
-        final AlmaUID testSubject = new AlmaUID("uid://C0/C1/C2");
-        assertEquals("Wrong ID", "uid://C0/C1/C2", testSubject.getUID());
-    }
-
-    @Test
-    public void constructFromBadInput() {
-        try {
-            new AlmaUID("");
-            fail("Should throw IllegalArgumentException.");
-        } catch (IllegalArgumentException e) {
-            // Good.
-        }
-
-        try {
-            new AlmaUID(null);
-            fail("Should throw IllegalArgumentException.");
-        } catch (IllegalArgumentException e) {
-            // Good.
-        }
-    }
-
-    @Test
-    public void constructFromTarfileID() {
-        final AlmaUID testSubject = new AlmaUID("2016.1.00161.S_uid___A002_Xc4f3ae_X537a.asdm.sdm.tar");
-        assertEquals("Wrong MOUS ID.",
-                     "uid___A002_Xc4f3ae_X537a",
-                     testSubject.getArchiveUID().toString());
+    @Override
+    public String getEndpointID() {
+        throw new UnsupportedOperationException("NoOpID - cannot get tree.");
     }
 }

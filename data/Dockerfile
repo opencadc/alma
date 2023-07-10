@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk11-openjdk-slim as build
+FROM tomcat:9-jdk17-openjdk-slim as build
 
 RUN apt-get update \
     && apt-get install -y bzip2 curl gcc make sudo
@@ -12,7 +12,7 @@ RUN cd /tmp \
     && make \
     && make install
 
-FROM tomcat:9-jdk11-openjdk-slim
+FROM tomcat:9-jdk17-openjdk-slim
 
 RUN rm -rf webapps/*
 

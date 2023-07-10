@@ -81,8 +81,8 @@ build_tomcat:
   before_script:
     - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin ${CI_REGISTRY}
   script:
-    - docker build --no-cache --pull --network host -t opencadc/alma-tomcat:9-jdk11-openjdk-slim -f docker/tomcat/Dockerfile docker/tomcat/
-    - docker push opencadc/alma-tomcat:9-jdk11-openjdk-slim
+    - docker build --no-cache --pull --network host -t opencadc/alma-tomcat:9-jdk17-openjdk-slim -f docker/tomcat/Dockerfile docker/tomcat/
+    - docker push opencadc/alma-tomcat:9-jdk17-openjdk-slim
   services:
     - docker:dind
 
