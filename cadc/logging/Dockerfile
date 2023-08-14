@@ -8,7 +8,7 @@ COPY config ./config
 COPY lib ./lib
 COPY priv ./priv
 COPY mix.exs .
-COPY mix.lock .
+#COPY mix.lock .
 
 RUN mix local.hex --force \
     && mix local.rebar --force \
