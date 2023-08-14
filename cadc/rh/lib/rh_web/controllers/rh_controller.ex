@@ -11,7 +11,7 @@ defmodule RhWeb.RhController do
   end
 
   def expand_spw(conn, %{"uid" => uid}) do
-    visit(conn, "https://2023mar.asa-test.hq.eso.org/rh/spw/expand/#{uid}/downwards")
+    visit(conn, "https://2023aug.asa-test.hq.eso.org/rh/spw/expand/#{uid}/downwards")
   end
   
   defp visit(conn, url) do
