@@ -4,7 +4,7 @@ defmodule Rh.MixProject do
   def project do
     [
       app: :rh,
-      version: "0.4",
+      version: "0.4.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
