@@ -73,10 +73,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaProperties;
 import org.opencadc.alma.AlmaID;
+import org.opencadc.alma.ObsUnitSetID;
 import org.opencadc.alma.SpectralWindowID;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents a URL to get the JSON expansion document of an ID from the RequestHandler.
@@ -99,12 +103,17 @@ public class ExpansionURL {
     private static final String SPW_ENDPOINT = "spw";
     private static final String OUS_ENDPOINT = "ous";
 
+    private static final Map<Class<? extends AlmaID>, String> ALMA_ID_ENDPOINT_MAPPING = new HashMap<>();
+
     private final AlmaID almaID;
     private final AlmaProperties almaProperties;
 
     public ExpansionURL(final AlmaID almaID, final AlmaProperties almaProperties) {
         this.almaID = almaID;
         this.almaProperties = almaProperties;
+
+        ALMA_ID_ENDPOINT_MAPPING.put(SpectralWindowID.class, ExpansionURL.SPW_ENDPOINT);
+        ALMA_ID_ENDPOINT_MAPPING.put(ObsUnitSetID.class, ExpansionURL.OUS_ENDPOINT);
     }
 
 
@@ -118,9 +127,8 @@ public class ExpansionURL {
         final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
         LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
 
-        final String contextEndpoint = (almaID instanceof SpectralWindowID) ? SPW_ENDPOINT : OUS_ENDPOINT;
-
-        return new URL(String.format(DOWNWARDS_ENDPOINT_TEMPLATE, baseServiceURL.toExternalForm(), contextEndpoint,
+        return new URL(String.format(DOWNWARDS_ENDPOINT_TEMPLATE, baseServiceURL.toExternalForm(),
+                                     ExpansionURL.ALMA_ID_ENDPOINT_MAPPING.get(almaID.getClass()),
                                      almaID.getEndpointID()));
     }
 }

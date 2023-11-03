@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2021.                            (c) 2021.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -68,97 +68,62 @@
 
 package org.opencadc.datalink;
 
-import ca.nrc.cadc.net.HttpGet;
-import ca.nrc.cadc.net.ResourceNotFoundException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.opencadc.alma.AlmaID;
 import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.SpectralWindowID;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
+import java.io.IOException;
 
-/**
- * DataLink query to parse and handle the JSON from ALMA's Data Portal service.
- */
-public abstract class DataLinkQuery extends RequestHandlerQuery {
-    private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
-            "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
-            + "\"children\":[],\"allMousUids\":[]}";
-    static final String CHILDREN_KEY = "children";
+public class ObsUnitSetQuery extends DataLinkQuery {
 
-    private static final Logger LOGGER = Logger.getLogger(DataLinkQuery.class);
+    private static final String NAME_KEY = "name";
 
-    public DataLinkQuery(final AlmaProperties almaProperties) {
+    public ObsUnitSetQuery(final AlmaProperties almaProperties) {
         super(almaProperties);
     }
 
-    /**
-     * Obtain the HierarchyItem representing the top level downwards from the given UID.
-     *
-     * @param almaID The UID to start from.
-     * @return HierarchyItem for the UID, or a NotFound HierarchyItem.
-     */
-    public HierarchyItem query(final AlmaID almaID) {
-        try (final InputStream jsonInputStream = downwardsJSONStream(almaID)) {
-            final JSONObject document = new JSONObject(new JSONTokener(jsonInputStream));
-            return HierarchyItem.fromJSONObject(getBaseDocument(almaID, document));
-        } catch (IOException ioException) {
-            LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.\n\n%s",
-                                       almaID.getID(), ioException));
-            return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
-                                                                             almaID.getID())));
+    @Override
+    protected JSONObject getBaseDocument(final AlmaID almaID, final JSONObject document) {
+        if (!matchesEntry(almaID, document)) {
+            final JSONObject baseDocument = getBaseDocument(almaID, document.getJSONArray(DataLinkQuery.CHILDREN_KEY));
+            if (baseDocument == null) {
+                throw new IllegalArgumentException("Unable to query for " + almaID);
+            } else {
+                return baseDocument;
+            }
+        } else {
+            return document;
         }
     }
 
     /**
-     * Obtain the main document for the requested ID.  Walk the JSON document until one of the <code>children</code>'s
-     * ID matches the requested ID, then use the children of that entry to create Links.
-     *
-     * @param almaID   The ALMA ID to check.
-     * @param document The Document received from the data source.
-     * @return JSONObject, or null if the ID cannot be found.
-     * @throws IOException If no document found for the given ID.
+     * Scan the child objects for the matching ALMA ID.
+     * @param almaID        The ID to match.
+     * @param children      The current set of child objects.
+     * @return  JSONObject matching, or null if none found.
      */
-    protected abstract JSONObject getBaseDocument(final AlmaID almaID, final JSONObject document)
-            throws IOException;
-
-    /**
-     * Obtain an InputStream to JSON data representing the hierarchy of elements.
-     *
-     * @param almaID The UID to query for.
-     * @return InputStream to feed to a JSON Object.
-     * @throws IOException Any errors are passed back up the stack.
-     */
-    InputStream downwardsJSONStream(final AlmaID almaID) throws IOException {
-        final ExpansionURL downwardsQueryURL = new ExpansionURL(almaID, this.almaProperties);
-        LOGGER.debug(String.format("Base URL for Request Handler is %s", downwardsQueryURL));
-
-        final URL getURL;
-
-        try {
-            getURL = downwardsQueryURL.toURL();
-        } catch (ResourceNotFoundException resourceNotFoundException) {
-            LOGGER.fatal("Unable to find Registry lookup.");
-            throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
+    private JSONObject getBaseDocument(final AlmaID almaID, final JSONArray children) {
+        for (final Object nextObject : children) {
+            if (nextObject instanceof JSONObject nextJSONObject) {
+                if (matchesEntry(almaID, nextJSONObject)) {
+                    return nextJSONObject;
+                }
+            }
         }
 
-        final HttpGet httpGet = createHttpGet(getURL);
-        httpGet.run();
+        return null;
+    }
 
-        final Throwable throwable = httpGet.getThrowable();
-        if (throwable != null) {
-            throw new IOException(throwable.getMessage(), throwable);
-        } else {
-            return httpGet.getInputStream();
+    boolean matchesEntry(final AlmaID almaID, final JSONObject document) {
+        final String objectName = document.get(ObsUnitSetQuery.NAME_KEY).toString();
+        final String sanitizedID = almaID.sanitize();
+
+        try {
+            return AlmaIDFactory.createID(objectName).sanitize().equals(sanitizedID);
+        } catch (IllegalArgumentException illegalArgumentException) {
+            return false;
         }
     }
 }
