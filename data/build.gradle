@@ -36,6 +36,7 @@ war {
 apply from: '../int_test.gradle'
 
 dependencies {
+    implementation 'gov.nasa.gsfc.heasarc:nom-tam-fits:1.18.1'
     implementation 'org.opencadc:alma-lib:' + version
     implementation 'org.opencadc:cadc-access-control:[1.1.23,1.2.0)'
     implementation 'org.opencadc:cadc-dali:[1.2.10,2.0)'
@@ -44,7 +45,6 @@ dependencies {
     implementation 'org.opencadc:cadc-rest:[1.2.19,)'
     implementation 'org.opencadc:cadc-soda-server:[1.2.0,2.0.0)'
     implementation 'org.opencadc:cadc-vosi:[1.4.3,1.5.0)'
-    implementation 'gov.nasa.gsfc.heasarc:nom-tam-fits:1.18.1'
 
     testImplementation 'junit:junit:[4.12,5.0)'
     testImplementation 'org.mockito:mockito-core:[3.6.0,4)'

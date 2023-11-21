@@ -1,4 +1,4 @@
-# ALMA TAP (2.1.0)
+# ALMA TAP (2.3.0)
 
 [IVOA TAP](http://ivoa.net/Documents/TAP/) service for the [ALMA Science Archive](https://almascience.org).
 
@@ -18,7 +18,7 @@ Building the service creates a WAR artifact. From the root fo the
 $ gradle --info clean build test
 ```
 
-to create the `build/libs/tap.war`.
+to create the `build/libs/tap.war` file.
 
 ## Configuration
 
@@ -31,12 +31,20 @@ the service.  It will expect System Properties to be set to find the database.
 $ ... -Dalma.tapuser.username=searchuser -Dalma.tapuser.password=searchuserpwd -Dalma.tapuser.driverClassName=oracle.jdbc.OracleDriver -Dalma.tapuser.url=jdbc:oracle:thin:@oracle-host/ALMADB
 ```
 
-| Property name                  | Purpose                         | Example                                  |
-| ------------------------------ | ------------------------------- | ---------------------------------------- |
-| `alma.tapuser.driverClassName` | The JDBC Driver Java class name | oracle.jdbc.OracleDriver                 |
-| `alma.tapuser.username`        | The database username for login | almauser                                 |
-| `alma.tapuser.password`        | The database password for login | almapasswd                               |
-| `alma.tapuser.url`             | The JDBC URL for connecting     | jdbc:oracle:thin:@host:1521/DATABASE_SID |
+| Property name                       | Purpose                                                                          | Example                                  |
+|-------------------------------------|----------------------------------------------------------------------------------|------------------------------------------|
+| `alma.tapuser.driverClassName`      | The JDBC Driver Java class name for TAP queries                                  | oracle.jdbc.OracleDriver                 |
+| `alma.tapuser.username`             | The database username for login for TAP queries                                  | almauser                                 |
+| `alma.tapuser.password`             | The database password for login for TAP queries                                  | almapasswd                               |
+| `alma.tapuser.url`                  | The JDBC URL for connecting for TAP queries                                      | jdbc:oracle:thin:@host:1521/DATABASE_SID |
+| `alma.tapuser.maxConnections`       | The maximum number of connections for TAP queries                                | 4                                        |
+| `alma.tapuser.maxWaitMilliseconds`  | The maximum number of milliseconds to wait for a new connection for TAP queries  | 20000                                    |
+| `alma.tapuploadadm.driverClassName`      | The JDBC Driver Java class name for TAP uploads                                  | oracle.jdbc.OracleDriver                 |
+| `alma.tapuploadadm.username`             | The database username for login for TAP uploads                                  | almauser                                 |
+| `alma.tapuploadadm.password`             | The database password for login for TAP uploads                                  | almapasswd                               |
+| `alma.tapuploadadm.url`                  | The JDBC URL for connecting for TAP uploads                                      | jdbc:oracle:thin:@host:1521/DATABASE_SID |
+| `alma.tapuploadadm.maxConnections`       | The maximum number of connections for TAP uploads                                | 4                                        |
+| `alma.tapuploadadm.maxWaitMilliseconds`  | The maximum number of milliseconds to wait for a new connection for TAP uploads  | 20000                                    |
 
 ### Asynchronous Queries
 
@@ -55,7 +63,7 @@ temporarily on disk using the [`cadc-tap-tmp`](https://github.com/opencadc/tap/t
 See [Configuration](#configuration) for database options.
 
 ```sh
-docker pull opencadc/alma-tap:2.1.0
+docker pull opencadc/alma-tap:2.3.0
 ```
 
 ### Building for Docker
@@ -63,11 +71,11 @@ docker pull opencadc/alma-tap:2.1.0
 After the [Build](#build) step above, we can create a Docker deployment like so:
 
 ```sh
-$ docker build -t opencadc/alma-tap:2.1.0 .
+$ docker build -t opencadc/alma-tap:2.3.0 .
 ```
 
 ```sh
-docker run --name tap -p 8080:8080 -e CATALINA_OPTS="-Dalma.tapuser.driverClassName=org.postgres.jdbc.Driver -D..." opencadc/alma-tap:2.1.0
+docker run --name tap -p 8080:8080 -e CATALINA_OPTS="-Dalma.tapuser.driverClassName=org.postgres.jdbc.Driver -D..." opencadc/alma-tap:2.3.0
 ```
 
 The necessary Docker images will be downloaded, including the large
