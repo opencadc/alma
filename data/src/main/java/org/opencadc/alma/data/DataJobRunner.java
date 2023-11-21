@@ -80,13 +80,13 @@ import ca.nrc.cadc.uws.Parameter;
 import ca.nrc.cadc.uws.ParameterUtil;
 import ca.nrc.cadc.uws.server.JobRunner;
 import ca.nrc.cadc.uws.server.JobUpdater;
-import nom.tam.util.RandomAccessDataObject;
-import nom.tam.util.RandomAccessFileExt;
+import nom.tam.util.RandomAccessFileIO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.logging.web.ByteCountingSyncOutput;
 import org.opencadc.fits.FitsOperations;
 import org.opencadc.fits.NoOverlapException;
+import org.opencadc.fits.RandomAccessStorageObject;
 import org.opencadc.soda.SodaParamValidator;
 import org.opencadc.soda.server.Cutout;
 
@@ -185,7 +185,7 @@ public class DataJobRunner implements JobRunner {
     void write(final ByteCountOutputStream byteCountOutputStream) throws ResourceNotFoundException, IOException,
                                                                          NoOverlapException {
         final SodaCutout sodaCutout = new SodaCutout();
-        final RandomAccessDataObject randomAccessDataObject = getRandomAccessDataObject();
+        final RandomAccessFileIO randomAccessFileIO = getRandomAccessDataObject();
 
         if (sodaCutout.hasNoOperations()) {
             LOGGER.debug("FitsOperations.empty: START");
@@ -193,7 +193,7 @@ public class DataJobRunner implements JobRunner {
             final int bufferSize = 64 * 1024; // 64KB buffer has proven a good performance size.
             final byte[] buffer = new byte[bufferSize];
             int byteCount;
-            while ((byteCount = randomAccessDataObject.read(buffer)) >= 0) {
+            while ((byteCount = randomAccessFileIO.read(buffer)) >= 0) {
                 byteCountOutputStream.write(buffer, 0, byteCount);
             }
             LOGGER.debug("FitsOperations.empty: OK");
@@ -203,7 +203,7 @@ public class DataJobRunner implements JobRunner {
                 throw new IllegalArgumentException("Conflicting SODA parameters found: " + conflicts);
             }
 
-            final FitsOperations fitsOperations = getOperator(randomAccessDataObject);
+            final FitsOperations fitsOperations = getOperator(randomAccessFileIO);
 
             if (sodaCutout.hasSUB() || sodaCutout.hasWCS()) {
                 final Cutout cutout = new Cutout();
@@ -293,13 +293,13 @@ public class DataJobRunner implements JobRunner {
      *
      * @return FitsOperations instance.  Never null.
      */
-    FitsOperations getOperator(final RandomAccessDataObject randomAccessDataObject) {
+    FitsOperations getOperator(final RandomAccessFileIO randomAccessDataObject) {
         return new FitsOperations(randomAccessDataObject);
     }
 
-    RandomAccessDataObject getRandomAccessDataObject() throws ResourceNotFoundException {
+    RandomAccessFileIO getRandomAccessDataObject() throws ResourceNotFoundException {
         try {
-            return new RandomAccessFileExt(getFile(), "r");
+            return new RandomAccessStorageObject(getFile(), "r");
         } catch (FileNotFoundException fileNotFoundException) {
             throw new ResourceNotFoundException(fileNotFoundException.getMessage());
         }

@@ -84,14 +84,15 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
-public class DataLinkQueryTest {
+public class ObsUnitSetQueryTest {
     @Test
-    public void query() throws Exception {
+    public void queryTopLevel() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
-        final File testFile = FileUtil.getFileFromResource(DataLinkQueryTest.class.getSimpleName() + ".json",
-                                                           DataLinkQueryTest.class);
+        final File testFile = FileUtil.getFileFromResource(ObsUnitSetQueryTest.class.getSimpleName()
+                                                           + ".json",
+                                                           ObsUnitSetQueryTest.class);
         final JSONObject testDocument = new JSONObject(new JSONTokener(new FileReader(testFile)));
-        final DataLinkQuery testSubject = new DataLinkQuery(null) {
+        final ObsUnitSetQuery testSubject = new ObsUnitSetQuery(null) {
             /**
              * Obtain an InputStream to JSON data representing the hierarchy of elements.
              *
@@ -110,14 +111,37 @@ public class DataLinkQueryTest {
 
         Assert.assertEquals("Wrong document.", HierarchyItem.fromJSONObject(testDocument),
                             resultHierarchyItem);
+    }
 
-        final AlmaID testAlmaIDTwo = AlmaIDFactory.createID("2011.0.00101.S_uid___A002_X30a93d_X43e.asdm.sdm.tar");
-        final HierarchyItem resultSubHierarchyItem = testSubject.query(testAlmaIDTwo);
+    @Test
+    public void queryDrillDown() throws Exception {
+        System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
+        final File testFile = FileUtil.getFileFromResource(ObsUnitSetQueryTest.class.getSimpleName()
+                                                           + ".json",
+                                                           ObsUnitSetQueryTest.class);
+        final JSONObject testDocument = new JSONObject(new JSONTokener(new FileReader(testFile)));
+        final ObsUnitSetQuery testSubject = new ObsUnitSetQuery(null) {
+            /**
+             * Obtain an InputStream to JSON data representing the hierarchy of elements.
+             *
+             * @param almaID The UID to query for.
+             * @return InputStream to feed to a JSON Object.
+             *
+             * @throws IOException Any errors are passed back up the stack.
+             */
+            @Override
+            InputStream downwardsJSONStream(AlmaID almaID) throws IOException {
+                return new FileInputStream(testFile);
+            }
+        };
+
+        final AlmaID testAlmaID = AlmaIDFactory.createID("2011.0.00101.S_uid___A002_X30a93d_X43e.asdm.sdm.tar");
+        final HierarchyItem resultSubHierarchyItem = testSubject.query(testAlmaID);
         HierarchyItem expectedSubHierarchyItem = null;
 
         for (final Object o : testDocument.getJSONArray("children")) {
             final JSONObject jsonObject = (JSONObject) o;
-            if (testAlmaIDTwo.sanitize().equals(jsonObject.get("name").toString())) {
+            if (testAlmaID.sanitize().equals(jsonObject.get("name").toString())) {
                 expectedSubHierarchyItem = HierarchyItem.fromJSONObject(jsonObject);
             }
         }

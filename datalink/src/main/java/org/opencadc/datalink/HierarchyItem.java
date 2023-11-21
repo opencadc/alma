@@ -101,7 +101,8 @@ public class HierarchyItem {
      * @return A new HierarchyItem instance.  Never null.
      */
     public static HierarchyItem fromJSONObject(final JSONObject document) {
-        final String itemID = document.get("id").toString();
+        final Object itemIDObject = document.get("id");
+        final String itemID = JSONObject.NULL == itemIDObject ? null : itemIDObject.toString();
         final JSONArray childrenJSONArray = document.getJSONArray("children");
         final List<HierarchyItem> childrenList = new ArrayList<>(childrenJSONArray.length());
 

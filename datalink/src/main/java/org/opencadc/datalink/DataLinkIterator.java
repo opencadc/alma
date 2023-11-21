@@ -101,9 +101,9 @@ public class DataLinkIterator implements Iterator<DataLink> {
     @Override
     public boolean hasNext() {
         if (dataLinkQueue.isEmpty()) {
-            final DataLinkQuery dataLinkQuery = createQuery();
             if (datasetIDIterator.hasNext()) {
                 final AlmaID nextAlmaID = toAlmaID(datasetIDIterator.next());
+                final DataLinkQuery dataLinkQuery = createQuery(nextAlmaID);
                 final HierarchyItem hierarchyItem = dataLinkQuery.query(nextAlmaID);
                 final HierarchyVisitor hierarchyVisitor =
                         new HierarchyVisitor(nextAlmaID, hierarchyItem, this.almaProperties, this.dataLinkURLBuilder);
@@ -125,10 +125,11 @@ public class DataLinkIterator implements Iterator<DataLink> {
 
     /**
      * Tests can override this.
+     * @param almaID    The ALMA ID to query for.  This will decide the type of query to perform.
      * @return  DataLinkQuery instance.
      */
-    DataLinkQuery createQuery() {
-        return new DataLinkQuery(this.almaProperties);
+    DataLinkQuery createQuery(final AlmaID almaID) {
+        return DataLinkQueryFactory.getDataLinkQuery(almaID, this.almaProperties);
     }
 
     /**

@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2021.                            (c) 2021.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -68,97 +68,38 @@
 
 package org.opencadc.datalink;
 
-import ca.nrc.cadc.net.HttpGet;
 import ca.nrc.cadc.net.ResourceNotFoundException;
+import org.json.JSONObject;
+import org.opencadc.alma.AlmaID;
+import org.opencadc.alma.AlmaProperties;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 
-import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.opencadc.alma.AlmaID;
-import org.opencadc.alma.AlmaIDFactory;
-import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.SpectralWindowID;
-import org.opencadc.alma.deliverable.RequestHandlerQuery;
-
-
-/**
- * DataLink query to parse and handle the JSON from ALMA's Data Portal service.
- */
-public abstract class DataLinkQuery extends RequestHandlerQuery {
-    private static final String UNKNOWN_HIERARCHY_DOCUMENT_STRING =
-            "{\"id\":null,\"name\":\"%s\",\"type\":\"ASDM\",\"sizeInBytes\":-1,\"permission\":\"UNKNOWN\","
-            + "\"children\":[],\"allMousUids\":[]}";
-    static final String CHILDREN_KEY = "children";
-
-    private static final Logger LOGGER = Logger.getLogger(DataLinkQuery.class);
-
-    public DataLinkQuery(final AlmaProperties almaProperties) {
+public class SpectralWindowQuery extends DataLinkQuery {
+    public SpectralWindowQuery(final AlmaProperties almaProperties) {
         super(almaProperties);
     }
 
     /**
-     * Obtain the HierarchyItem representing the top level downwards from the given UID.
-     *
-     * @param almaID The UID to start from.
-     * @return HierarchyItem for the UID, or a NotFound HierarchyItem.
-     */
-    public HierarchyItem query(final AlmaID almaID) {
-        try (final InputStream jsonInputStream = downwardsJSONStream(almaID)) {
-            final JSONObject document = new JSONObject(new JSONTokener(jsonInputStream));
-            return HierarchyItem.fromJSONObject(getBaseDocument(almaID, document));
-        } catch (IOException ioException) {
-            LOGGER.error(String.format("JSON for %s not found or there was an error acquiring it.\n\n%s",
-                                       almaID.getID(), ioException));
-            return HierarchyItem.fromJSONObject(new JSONObject(String.format(UNKNOWN_HIERARCHY_DOCUMENT_STRING,
-                                                                             almaID.getID())));
-        }
-    }
-
-    /**
-     * Obtain the main document for the requested ID.  Walk the JSON document until one of the <code>children</code>'s
-     * ID matches the requested ID, then use the children of that entry to create Links.
-     *
+     * For Spectral Window Queries, we're interested in the grandchildren.
+     * <p></p>
      * @param almaID   The ALMA ID to check.
      * @param document The Document received from the data source.
-     * @return JSONObject, or null if the ID cannot be found.
-     * @throws IOException If no document found for the given ID.
+     * @return  The JSONObject of the grandchildren's parent.
+     * @throws IOException  If no grand children found.
      */
-    protected abstract JSONObject getBaseDocument(final AlmaID almaID, final JSONObject document)
-            throws IOException;
-
-    /**
-     * Obtain an InputStream to JSON data representing the hierarchy of elements.
-     *
-     * @param almaID The UID to query for.
-     * @return InputStream to feed to a JSON Object.
-     * @throws IOException Any errors are passed back up the stack.
-     */
-    InputStream downwardsJSONStream(final AlmaID almaID) throws IOException {
-        final ExpansionURL downwardsQueryURL = new ExpansionURL(almaID, this.almaProperties);
-        LOGGER.debug(String.format("Base URL for Request Handler is %s", downwardsQueryURL));
-
-        final URL getURL;
-
-        try {
-            getURL = downwardsQueryURL.toURL();
-        } catch (ResourceNotFoundException resourceNotFoundException) {
-            LOGGER.fatal("Unable to find Registry lookup.");
-            throw new RuntimeException(resourceNotFoundException.getMessage(), resourceNotFoundException);
+    @Override
+    protected JSONObject getBaseDocument(final AlmaID almaID, final JSONObject document)
+            throws IOException {
+        // Immediate children.
+        for (final Object nextObject : document.getJSONArray(DataLinkQuery.CHILDREN_KEY)) {
+            if (nextObject instanceof JSONObject nextJSONObject) {
+                if (!nextJSONObject.getJSONArray(DataLinkQuery.CHILDREN_KEY).isEmpty()) {
+                    return nextJSONObject;
+                }
+            }
         }
 
-        final HttpGet httpGet = createHttpGet(getURL);
-        httpGet.run();
-
-        final Throwable throwable = httpGet.getThrowable();
-        if (throwable != null) {
-            throw new IOException(throwable.getMessage(), throwable);
-        } else {
-            return httpGet.getInputStream();
-        }
+        throw new IOException("No entries found for " + almaID);
     }
 }

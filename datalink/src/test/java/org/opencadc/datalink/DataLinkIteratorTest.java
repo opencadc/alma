@@ -195,7 +195,7 @@ public class DataLinkIteratorTest {
     public void runThroughFiltering() throws Throwable {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
-        final DataLinkQuery mockDataLinkQuery = mock(DataLinkQuery.class);
+        final DataLinkQuery mockObsUnitSetQuery = mock(ObsUnitSetQuery.class);
         final Iterator<String> dataSetIDIterator = Collections.singletonList("uid://A001/X879/X8f1").iterator();
         final AlmaID id = AlmaIDFactory.createID("uid://A001/X879/X8f1");
         final URL datalinkURL = new URL("https://alma.com/datalink");
@@ -205,7 +205,7 @@ public class DataLinkIteratorTest {
         final URL requestHanlderURL = new URL("https://alma.com/rh");
 
         final HierarchyItem hierarchy = fromJSONFile(DataLinkIteratorTest.class.getSimpleName() + ".json");
-        when(mockDataLinkQuery.query(id)).thenReturn(hierarchy);
+        when(mockObsUnitSetQuery.query(id)).thenReturn(hierarchy);
         when(mockAlmaProperties.lookupDataLinkServiceURL()).thenReturn(datalinkURL);
         when(mockAlmaProperties.lookupSodaServiceURL()).thenReturn(sodaURL);
         when(mockAlmaProperties.lookupDataPortalURL()).thenReturn(dataPortalURL);
@@ -221,8 +221,8 @@ public class DataLinkIteratorTest {
             }
 
             @Override
-            DataLinkQuery createQuery() {
-                return mockDataLinkQuery;
+            DataLinkQuery createQuery(final AlmaID almaID) {
+                return mockObsUnitSetQuery;
             }
         }.forEachRemaining(resultDataLinks::add);
         final String itemFileNameTemplate = "%s.%d.json";
