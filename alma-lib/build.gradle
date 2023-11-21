@@ -14,27 +14,20 @@ repositories {
     mavenLocal()
 }
 
+apply from: '../properties.gradle'
+
 // Minimal publishing required to run publishToMavenLocal
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        maven(MavenPublication) {
+            groupId = 'org.opencadc'
+            version = version
+            sourceCompatibility = sourceCompatibility
 
-            versionMapping {
-                usage('java-api') {
-                    fromResolutionOf('runtimeClasspath')
-                }
-                usage('java-runtime') {
-                    fromResolutionResult()
-                }
-            }
+            from components.java
         }
     }
 }
-
-group = 'org.opencadc'
-
-apply from: '../properties.gradle'
 
 dependencies {
     implementation 'org.opencadc:cadc-registry:[1.7.2,2.0)'

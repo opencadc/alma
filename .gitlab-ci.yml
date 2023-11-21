@@ -19,7 +19,7 @@ build_data:
     paths:
       - data/build
   script:
-    # This will install cadc-data-ops-fits 0.2.3 to include WCS cutouts.
+    # This will install WCSLib include WCS cutouts.
     - export CURR_DIR
     - apt-get update && apt-get install -y curl gcc git make
     - curl -Lv -o /tmp/wcslib.tar.bz2 https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/wcslib/5.15-1/wcslib_5.15.orig.tar.bz2
