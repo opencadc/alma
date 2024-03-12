@@ -121,9 +121,11 @@ CREATE OR REPLACE FORCE VIEW obscore (
     science.gal_latitude,
     science.band_list,
     -- Convert frequency_resolution to metres as per ObsCore expectations.
-    CASE WHEN science.frequency_resolution IS NOT NULL AND science.frequency_max IS NOT NULL AND science.frequency_min IS NOT NULL
+    CASE WHEN energy.frequency_max IS NOT NULL AND energy.frequency_min IS NOT NULL AND energy.resolution_max IS NOT NULL AND energy.resolution_min IS NOT NULL
     THEN
-      (0.25 * 2.99792458e+11 * science.frequency_resolution / ((science.frequency_min + science.frequency_max) * (science.frequency_min + science.frequency_max)))
+      -- 1.49896229e-7 is the condensed unit conversion to Hz
+      -- c / 1e18 * 1e3 / 2 (299792458.0 / 1e18 * 1e3 / 2)
+      1.49896229e-7 / (energy.frequency_max * energy.frequency_min) * (energy.resolution_max + energy.resolution_min)
     ELSE
       NULL
     END,

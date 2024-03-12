@@ -27,7 +27,7 @@ dependencies {
     implementation 'org.opencadc:cadc-uws-server:[1.2.14,1.3.0)'
     implementation 'org.opencadc:cadc-vosi:[1.3.4,2.0)'
 
-    runtimeOnly 'org.opencadc:alma-lib:[2.2.0,2.3.0)'
+    runtimeOnly 'org.opencadc:alma-lib:' + version
 }
 
 war {
