@@ -91,7 +91,7 @@ CREATE OR REPLACE FORCE VIEW obscore (
     (science.fov / 3600),
     science.spatial_bounds,
     science.footprint,
-    science.frequency_resolution,
+    (energy.resolution_min + energy.resolution_max) / 2,
     NULL,
     NULL,
     energy.channel_num,
