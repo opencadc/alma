@@ -8,4 +8,5 @@
 **/.classpath
 **/bin
 **/build
+docker/
 alma-db-dumps.sh
