@@ -65,15 +65,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: cadc-dali
           path: /home/runner/.m2/repository/org/opencadc/cadc-dali
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: cadc-conesearch
           path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
@@ -111,7 +111,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
@@ -158,7 +158,7 @@ jobs:
           && cd wcslib-5.15 \
           && ./configure --prefix=/usr \
           && make && sudo make install
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
