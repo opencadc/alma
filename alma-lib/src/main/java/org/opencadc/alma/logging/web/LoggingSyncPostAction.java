@@ -74,13 +74,13 @@ import ca.nrc.cadc.rest.SyncOutput;
 import ca.nrc.cadc.uws.ErrorSummary;
 import ca.nrc.cadc.uws.Job;
 import ca.nrc.cadc.uws.web.SyncPostAction;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.logging.LoggingEvent;
 import org.opencadc.alma.logging.LoggingEventKey;
 
-import javax.servlet.http.HttpServletResponse;
 import java.security.AccessControlException;
 
 

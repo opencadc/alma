@@ -1,4 +1,8 @@
-FROM elixir:slim
+FROM elixir:1.18-slim
+
+RUN apt update \
+  && apt install -y ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 ENV MIX_ENV=prod

@@ -84,7 +84,7 @@ public class ByteCountingSyncOutput extends SyncOutput {
     private int statusCode;
 
     public ByteCountingSyncOutput(final SyncOutput syncOutput) {
-        super(null);
+        super();
 
         this.syncOutput = syncOutput;
     }

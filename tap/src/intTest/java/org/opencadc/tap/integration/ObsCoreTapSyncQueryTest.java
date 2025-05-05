@@ -85,6 +85,7 @@ import java.net.URI;
  */
 public class ObsCoreTapSyncQueryTest extends TapSyncQueryTest {
     private static final Logger log = Logger.getLogger(ObsCoreTapSyncQueryTest.class);
+    private static final URI SERVICE_URI = URI.create(System.getProperty("SERVICE_ID", "ivo://almascience.org/tap"));
 
     static {
         Log4jInit.setLevel("ca.nrc.cadc.tap.integration", Level.INFO);
@@ -92,7 +93,7 @@ public class ObsCoreTapSyncQueryTest extends TapSyncQueryTest {
     }
 
     public ObsCoreTapSyncQueryTest() {
-        super(URI.create("ivo://almascience.org/tap"));
+        super(ObsCoreTapSyncQueryTest.SERVICE_URI);
 
         // re-use SyncResultTest files
         File testFile = FileUtil.getFileFromResource("SyncResultTest-abs.properties", ObsCoreTapSyncQueryTest.class);
