@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk17
+FROM tomcat:9-jdk21
 
 # Allow it to be set at build time.
 ARG TOMCAT_USER=tomcat
@@ -10,7 +10,12 @@ RUN groupadd ${TOMCAT_USER} \
 
 # Create expected config director for all application config.
 RUN mkdir -p config \
-  && chown -R tomcat:tomcat /usr/local/tomcat
+  && chown -R ${TOMCAT_USER}:${TOMCAT_USER} /usr/local/tomcat \
+  && apt update \
+  && apt install -y sudo \
+  && rm -rf /var/apt/lists/* \
+  && echo "${TOMCAT_USER} ALL=NOPASSWD: /usr/sbin/update-ca-certificates" > /etc/sudoers.d/tomcat \
+  && echo "${TOMCAT_USER} ALL=NOPASSWD: /opt/java/openjdk/bin/keytool" >> /etc/sudoers.d/tomcat
 
 USER ${TOMCAT_USER}
 

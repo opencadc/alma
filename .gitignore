@@ -9,4 +9,5 @@
 **/bin
 **/build
 docker/
+docker-compose.yml
 alma-db-dumps.sh

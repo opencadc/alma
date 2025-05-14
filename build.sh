@@ -2,12 +2,12 @@
 
 PROJECT_DIR=$(pwd)
 
-cd ${PROJECT_DIR}/alma-lib && gradle -i clean install
+cd ${PROJECT_DIR}/alma-lib && gradle -i clean test publishToMavenLocal
 
-for i in datalink obscore reg sia soda;
+for i in datalink obscore reg sia soda tap;
 do
-  cd ${PROJECT_DIR}/${i} && gradle -i clean build;
-  VERSION=`find build/libs -type f | head | awk -F "##" '{print $2}' | awk -F ".war" '{print $1}'`;
+  cd ${PROJECT_DIR}/${i} && gradle -i clean build test;
+  VERSION=`cat ../properties.gradle| grep -e "^version" | awk -F \' '{print $2}'`;
   echo "**";
   echo "** Building opencadc/alma-${i}:${VERSION}";
   echo "**";

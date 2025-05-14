@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk17 as build
+FROM tomcat:9-jdk21 AS build
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y bzip2 curl gcc libc-dev libtool make sudo
@@ -12,7 +12,7 @@ RUN cd /tmp \
     && make \
     && make install
 
-FROM tomcat:9-jdk17
+FROM tomcat:9-jdk21
 
 RUN rm -rf webapps/*
 
@@ -33,7 +33,15 @@ RUN groupadd ${TOMCAT_USER} \
 
 # Create expected config director for all application config.
 RUN mkdir -p config \
-  && chown -R tomcat:tomcat /usr/local/tomcat
+  && chown -R ${TOMCAT_USER}:${TOMCAT_USER} /usr/local/tomcat
+
+RUN mkdir -p config \
+  && chown -R ${TOMCAT_USER}:${TOMCAT_USER} /usr/local/tomcat \
+  && apt update \
+  && apt install -y sudo \
+  && rm -rf /var/apt/lists/* \
+  && echo "${TOMCAT_USER} ALL=NOPASSWD: /usr/sbin/update-ca-certificates" > /etc/sudoers.d/tomcat \
+  && echo "${TOMCAT_USER} ALL=NOPASSWD: /opt/java/openjdk/bin/keytool" >> /etc/sudoers.d/tomcat
 
 USER ${TOMCAT_USER}
 
