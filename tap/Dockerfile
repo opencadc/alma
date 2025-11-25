@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk17
+FROM tomcat:9-jdk21
 
 # Allow it to be set at build time.
 ARG TOMCAT_USER=tomcat
@@ -7,9 +7,6 @@ ARG TOMCAT_USER=tomcat
 RUN groupadd ${TOMCAT_USER} \
     && useradd --home-dir /usr/local/tomcat --shell /sbin/nologin \
         --no-create-home --no-user-group --no-log-init ${TOMCAT_USER}
-
-# Add the Oracle JDBC driver here.
-ADD https://download.oracle.com/otn-pub/otn_software/jdbc/1922/ojdbc10.jar /usr/local/tomcat/lib/ojdbc10.jar
 
 # Create expected config director for all application config.
 RUN mkdir -p config \
