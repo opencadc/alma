@@ -24,7 +24,7 @@ jobs:
           java-version: 21
       # Install alma-lib
       - name: build, test, and install alma-lib
-        run: ./gradlew --info -b alma-lib/build.gradle clean build test publishToMavenLocal
+        run: ./gradlew --info --build-file alma-lib/build.gradle clean build test publishToMavenLocal
       # Upload alma-lib artifact
       - uses: actions/upload-artifact@v6
         with:
@@ -47,7 +47,7 @@ jobs:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test cone
-        run: ./gradlew --info -b cone/build.gradle clean build test
+        run: ./gradlew --info --build-file cone/build.gradle clean build test
       # Upload WAR artifact
       - uses: actions/upload-artifact@v6
         with:
@@ -84,7 +84,7 @@ jobs:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test tap
-        run: ./gradlew --info -b tap/build.gradle clean build test
+        run: ./gradlew --info --build-file tap/build.gradle clean build test
       # Upload WAR artifact
       - uses: actions/upload-artifact@v6
         with:
@@ -131,7 +131,7 @@ jobs:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test data
-        run: ./gradlew --info -b data/build.gradle clean build test
+        run: ./gradlew --info --build-file data/build.gradle clean build test
       # Upload WAR artifact
       - uses: actions/upload-artifact@v6
         with:

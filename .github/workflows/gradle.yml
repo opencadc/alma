@@ -25,7 +25,7 @@ jobs:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test ${{ inputs.name }}
-        run: gradle --info -b ${{ inputs.name }}/build.gradle clean build test
+        run: ./gradlew --info --build-file ${{ inputs.name }}/build.gradle clean build test
       # Upload WAR artifact
       - uses: actions/upload-artifact@v6
         with:
