@@ -20,14 +20,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 21
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v7
         with:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
       - name: build and test ${{ inputs.name }}
         run: gradle --info -b ${{ inputs.name }}/build.gradle clean build test
       # Upload WAR artifact
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ inputs.name }}-artifact
           path: ./${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war

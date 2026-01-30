@@ -26,7 +26,7 @@ jobs:
       - name: build, test, and install alma-lib
         run: gradle --info -b alma-lib/build.gradle clean build test publishToMavenLocal
       # Upload alma-lib artifact
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v6
         with:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
@@ -169,7 +169,7 @@ jobs:
       - name: build and test data
         run: gradle --info -b data/build.gradle clean build test
       # Upload WAR artifact
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v6
         with:
           name: data-artifact
           path: data/build/libs/data.war
