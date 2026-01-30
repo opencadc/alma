@@ -46,14 +46,6 @@ jobs:
         with:
           name: alma-lib
           path: /home/runner/.m2/repository/org/opencadc/alma-lib
-      - uses: actions/download-artifact@v7
-        with:
-          name: cadc-dali
-          path: /home/runner/.m2/repository/org/opencadc/cadc-dali
-      - uses: actions/download-artifact@v7
-        with:
-          name: cadc-conesearch
-          path: /home/runner/.m2/repository/org/opencadc/cadc-conesearch
       - name: build and test cone
         run: ./gradlew --info -b cone/build.gradle clean build test
       # Upload WAR artifact
@@ -76,7 +68,6 @@ jobs:
       name: sia
       artifact-name: sia2
 
-  # Temporarily depends on unpublished cadc-tap-server-oracle library.
   build-tap:
     needs:
       - install-alma-lib
