@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk17 as build
+FROM tomcat:9-jdk21 as build
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y bzip2 curl gcc libc-dev libtool make sudo
@@ -12,7 +12,7 @@ RUN cd /tmp \
     && make \
     && make install
 
-FROM tomcat:9-jdk17
+FROM tomcat:9-jdk21
 
 RUN rm -rf webapps/*
 

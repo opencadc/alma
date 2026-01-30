@@ -119,7 +119,7 @@ public class ConeSearchRunner implements JobRunner {
 
     @Override
     public void run() {
-        LOGGER.debug("RUN ConeSearchRunner: " + job.ownerSubject);
+        LOGGER.debug("RUN ConeSearchRunner: {}", job.owner);
 
         this.logInfo = new JobLogInfo(job);
 
@@ -198,7 +198,7 @@ public class ConeSearchRunner implements JobRunner {
                 syncOutput.setCode(400);
                 writer.write(t, syncOutput.getOutputStream());
             } catch (IOException ioe) {
-                LOGGER.debug("Error writing error document " + ioe.getMessage());
+                LOGGER.debug("Error writing error document {}", ioe.getMessage());
             }
 
             final ErrorSummary errorSummary = new ErrorSummary(t.getMessage(), ErrorType.FATAL, url);
@@ -206,7 +206,7 @@ public class ConeSearchRunner implements JobRunner {
                 jobUpdater.setPhase(job.getID(), ExecutionPhase.EXECUTING, ExecutionPhase.ERROR,
                                     errorSummary, new Date());
             } catch (Throwable oops) {
-                LOGGER.debug("failed to set final error status after " + t, oops);
+                LOGGER.debug("failed to set final error status after {}", t, oops);
             }
         }
     }

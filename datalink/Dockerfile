@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk17
+FROM tomcat:9-jdk21
 
 # Allow it to be set at build time.
 ARG TOMCAT_USER=tomcat

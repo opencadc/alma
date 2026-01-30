@@ -23,40 +23,43 @@ on:
 
 jobs:
   docker-build-publish:
-    # github.ref == 'refs/heads/master' ||
-    if: github.event_name == 'release'
+    if: github.event_name == 'schedule' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker BuildX
-        uses: docker/setup-buildx-action@v2
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v2
+      - name: Compute quarter tag
+        id: quarter
+        run: |
+          YEAR=$(date -u +%Y)
+          MONTH=$(date -u +%m)
+          Q=$(( (10#$MONTH - 1) / 3 + 1 ))
+          echo "tag=quarter-${YEAR}Q${Q}" >> $GITHUB_OUTPUT
+      - name: Create tag
+        run: |
+          git tag ${{ steps.quarter.outputs.tag }}
+          git push origin ${{ steps.quarter.outputs.tag }}
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker BuildX
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.CI_REGISTRY_USER }}
           password: ${{ secrets.CI_REGISTRY_PASSWORD }}
-      -
-        name: Download the WAR file to be put into the Docker image
-        uses: actions/download-artifact@v4.1.7
+      - name: Download the WAR file to be put into the Docker image
+        uses: actions/download-artifact@v7
         with:
           name: ${{ inputs.name }}-artifact
           path: ${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war
-      -
-        name: Set Docker tag
+      - name: Set Docker tag
         run: |
           TAG=${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)"
           echo "::set-env name=DOCKER_TAG::$TAG"
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: ${{ inputs.name }}
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.DOCKER_TAG }}
+          push: true
+          tags: ${{ steps.quarter.outputs.tag }}

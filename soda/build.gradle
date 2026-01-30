@@ -38,8 +38,9 @@ apply from: '../int_test.gradle'
 dependencies {
     implementation 'org.opencadc:alma-lib:' + version
     implementation 'org.opencadc:cadc-dali:[1.2.10,2.0)'
-    implementation 'org.opencadc:cadc-log:[1.1.7,2.0)'
+    implementation 'org.opencadc:cadc-log:[1.2.4,1.3.0)'
     implementation 'org.opencadc:cadc-soda-server:[1.2.1,1.3.0)'
+    implementation 'org.opencadc:cadc-util:[1.12.14,1.13.0)'
     implementation 'org.opencadc:cadc-vosi:[1.4.3,1.5.0)'
 
     testImplementation 'junit:junit:[4.12,5.0)'
@@ -48,9 +49,9 @@ dependencies {
     testImplementation 'org.opencadc:cadc-test-vosi:[1.0.2,)'
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     // Reset the report destinations so that intTests go to their own page
-    reports.html.destination = file(reporting.baseDir.getAbsolutePath() + '/' + name)
+    reports.html.outputLocation = layout.buildDirectory.dir("reports/" + name)
 
     // Assign all Java system properties from the command line to the tests
     systemProperties System.properties as Map<String, ?>
