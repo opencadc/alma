@@ -1,0 +1,55 @@
+name: ALMA Build stack
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  #
+  # Build jobs
+  #
+  install-alma-lib:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 21
+      # Install alma-lib
+      - name: build, test, and install alma-lib
+        run: ./gradlew --info --build-file alma-lib/build.gradle clean build test publishToMavenLocal
+      # Upload alma-lib artifact
+      - uses: actions/upload-artifact@v6
+        with:
+          name: alma-lib
+          path: /home/runner/.m2/repository/org/opencadc/alma-lib
+
+  #
+  # Build individual services
+  #
+  build-services:
+    strategy:
+      matrix:
+        service:
+          - name: cone
+            artifact: cone
+          - name: datalink
+            artifact: datalink
+          - name: sia
+            artifact: sia2
+          - name: tap
+            artifact: tap
+          - name: soda
+            artifact: soda
+          - name: reg
+            artifact: reg
+          - name: data
+            artifact: data
+    uses: ./.github/workflows/gradle-build.yml
+    needs: install-alma-lib
+    with:
+      name: ${{ matrix.service.name }}
+      artifact-name: ${{ matrix.service.artifact }}
