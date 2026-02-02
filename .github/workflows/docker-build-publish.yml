@@ -54,3 +54,4 @@ jobs:
           context: ${{ inputs.name }}
           push: true
           tags: ${{ inputs.tag }}
+          platforms: linux/amd64,linux/arm64
