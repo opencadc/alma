@@ -98,3 +98,8 @@ Internal service to run on a storage (NGAS) node and execute the cutout code dir
 #### soda (ivo://almascience.org/soda) opencadc/alma-soda:2026q1
 
 IVOA SODA service.  This will use the `reg` service to locate the Request Handler service, and the back-end SODA service.
+
+## Releases
+The ALMA IVOA services are released on a quarterly (every three months) basis, namely to obtain the current underlying
+image (Tomcat 9 with JDK 21) and ensure current CVE fixes.  These images are automatically built and
+pushed to Docker Hub under the `opencadc` organization.
