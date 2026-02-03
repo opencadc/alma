@@ -66,7 +66,7 @@ jobs:
           YEAR=$(date -u +%Y)
           MONTH=$(date -u +%m)
           Q=$(( (10#$MONTH - 1) / 3 + 1 ))
-          echo "tag=quarter-${YEAR}Q${Q}" >> $GITHUB_OUTPUT
+          echo "tag=${YEAR}q${Q}" >> $GITHUB_OUTPUT
 
   package-services:
     strategy:
@@ -109,6 +109,5 @@ jobs:
       - name: Tag repository
         run: |
           git tag ${{ needs.release-tag.outputs.tag }}
-#          git push origin ${{ needs.release-tag.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
