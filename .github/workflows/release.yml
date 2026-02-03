@@ -98,7 +98,10 @@ jobs:
 
   tag-release:
     runs-on: ubuntu-latest
-    needs: release-tag
+    needs:
+      - build-services
+      - release-tag
+      - package-services
     steps:
       - name: Checkout for tagging
         uses: actions/checkout@v6
