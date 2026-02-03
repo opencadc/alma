@@ -99,13 +99,14 @@ jobs:
     needs: release-tag
     steps:
       - name: Checkout for tagging
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
       - name: Tag repository
         run: |
           git tag ${{ needs.release-tag.outputs.tag }}
-          git push origin ${{ needs.release-tag.outputs.tag }}
+          git push origin HEAD:${{ needs.release-tag.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
