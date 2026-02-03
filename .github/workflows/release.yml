@@ -109,6 +109,6 @@ jobs:
       - name: Tag repository
         run: |
           git tag ${{ needs.release-tag.outputs.tag }}
-          git push origin ${{ needs.release-tag.outputs.tag }}
+#          git push origin ${{ needs.release-tag.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
