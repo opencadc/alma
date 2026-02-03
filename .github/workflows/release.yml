@@ -57,9 +57,11 @@ jobs:
   # Create tag here to tag repository once.
   release-tag:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.quarter-tag.outputs.tag }}
     steps:
-      - name: Compute quarter tag
-        id: quarter
+      - name: Compute quarterly tag
+        id: quarter-tag
         run: |
           YEAR=$(date -u +%Y)
           MONTH=$(date -u +%m)
@@ -99,7 +101,7 @@ jobs:
     needs: release-tag
     steps:
       - name: Checkout for tagging
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.ref }}
@@ -107,6 +109,6 @@ jobs:
       - name: Tag repository
         run: |
           git tag ${{ needs.release-tag.outputs.tag }}
-          git push origin HEAD:${{ needs.release-tag.outputs.tag }}
+          git push origin ${{ needs.release-tag.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
