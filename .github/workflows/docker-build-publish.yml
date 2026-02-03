@@ -46,7 +46,7 @@ jobs:
           path: ${{ inputs.name }}/build/libs/${{ inputs.artifact-name }}.war
       - name: Set Docker tag
         run: |
-          TAG=${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${{ inputs.name }}:"$(gradle -b ${{ inputs.name }}/build.gradle -q printVersion)"
+          TAG=${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${{ inputs.name }}:"$(./gradlew --build-file ${{ inputs.name }}/build.gradle -q printVersion)"
           echo "::set-env name=DOCKER_TAG::$TAG"
       - name: Build and push
         uses: docker/build-push-action@v3
