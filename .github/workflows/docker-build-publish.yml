@@ -50,4 +50,3 @@ jobs:
           context: ${{ inputs.name }}
           push: true
           tags: ${{ secrets.CI_REGISTRY_ORGANIZATION }}/alma-${{ inputs.name }}:${{ inputs.tag }}
-          platforms: linux/amd64,linux/arm64

@@ -1,4 +1,4 @@
-FROM tomcat:9-jdk21 as build
+FROM tomcat:9-jdk21 AS build
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y bzip2 curl gcc libc-dev libtool make sudo
