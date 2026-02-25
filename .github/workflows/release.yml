@@ -141,7 +141,7 @@ jobs:
                 text:
                   type: "mrkdwn"
                   text: ":wave:<https://github.com/opencadc|OpenCADC> has pushed the following Images to <https://hub.docker.com/orgs/opencadc/|OpenCADC Docker Hub>:"
-              - type: "table",
+              - type: "table"
                 column_settings:
                   - is_wrapped: true
                 rows:
