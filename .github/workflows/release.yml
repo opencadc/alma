@@ -145,7 +145,7 @@ jobs:
                 column_settings:
                   - is_wrapped: true
                 rows:
-                  - type: "raw_text",
+                  - type: "raw_text"
                     text: "Image Tag"
                   - type: "raw_text"
                     text: "opencadc/alma-cone:${{ needs.release-tag.outputs.tag }}"
