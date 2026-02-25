@@ -147,17 +147,17 @@ jobs:
                 rows:
                   - type: "raw_text",
                     text: "Image Tag"
-                  - type: "raw_text",
+                  - type: "raw_text"
                     text: "opencadc/alma-cone:${{ needs.release-tag.outputs.tag }}"
-                  - type: "raw_text",
+                  - type: "raw_text"
                     text: "opencadc/alma-datalink:${{ needs.release-tag.outputs.tag }}"
-                  - type: "raw_text",
+                  - type: "raw_text"
                     text: "opencadc/alma-sia:${{ needs.release-tag.outputs.tag }}"
-                  - type: "raw_text",
+                  - type: "raw_text"
                     text: "opencadc/alma-tap:${{ needs.release-tag.outputs.tag }}"
-                  - type: "raw_text",
+                  - type: "raw_text"
                     text: "opencadc/alma-soda:${{ needs.release-tag.outputs.tag }}"
-                  - type: "raw_text",
+                  - type: "raw_text"
                     text: "opencadc/alma-reg:${{ needs.release-tag.outputs.tag }}"
-                  - type: "raw_text",
+                  - type: "raw_text"
                     text: "opencadc/alma-data:${{ needs.release-tag.outputs.tag }}"
