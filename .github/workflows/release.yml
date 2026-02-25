@@ -118,3 +118,46 @@ jobs:
           git push origin ${{ needs.release-tag.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  slack-release-notification:
+    runs-on: ubuntu-latest
+    needs:
+      - tag-release
+    steps:
+      - name: Post message to a Slack channel
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text: "ALMA Service Release for ${{ needs.release-tag.outputs.tag }}"
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":rocket: New ALMA IVOA Services quarterly release for ${{ needs.release-tag.outputs.tag }} is now available!"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: ":wave:<https://github.com/opencadc|OpenCADC> has pushed the following Images to <https://hub.docker.com/orgs/opencadc/|OpenCADC Docker Hub>:"
+              - type: "table",
+                column_settings:
+                  - is_wrapped: true
+                rows:
+                  - type: "raw_text",
+                    text: "Image Tag"
+                  - type: "raw_text",
+                    text: "opencadc/alma-cone:${{ needs.release-tag.outputs.tag }}"
+                  - type: "raw_text",
+                    text: "opencadc/alma-datalink:${{ needs.release-tag.outputs.tag }}"
+                  - type: "raw_text",
+                    text: "opencadc/alma-sia:${{ needs.release-tag.outputs.tag }}"
+                  - type: "raw_text",
+                    text: "opencadc/alma-tap:${{ needs.release-tag.outputs.tag }}"
+                  - type: "raw_text",
+                    text: "opencadc/alma-soda:${{ needs.release-tag.outputs.tag }}"
+                  - type: "raw_text",
+                    text: "opencadc/alma-reg:${{ needs.release-tag.outputs.tag }}"
+                  - type: "raw_text",
+                    text: "opencadc/alma-data:${{ needs.release-tag.outputs.tag }}"
