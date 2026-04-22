@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  version: '0.2.0'
+  version: '@version@'
   title: File operations in ALMA
   description: 'A programmatic interface for storing, retrieving and managing artifacts at a storage site.<br/><br/>Clients may authenticate to this service in one of three ways:<br/>1.  By supplying an authentication token and using it as the auth-token parameter in the path.  URLs containing auth-tokens can be retrieved from the global locate service.<br/>2.  By providing a cookie in the Cookie header<br/>3.  By using a client certificate over SSL.'
 basePath: '/@app_name@'

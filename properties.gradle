@@ -1,10 +1,30 @@
-sourceCompatibility = 21
+import java.util.Calendar
+import java.util.GregorianCalendar
+import java.util.TimeZone
 
-// Applies to all web applications and the alma-lib library.
-version = '2.3.1'
-
-tasks.register('printVersion') {
-    doLast {
-        println version
+// Same quarterly label as the "Compute quarterly tag" step in
+// .github/workflows/release.yml (YEARqQ with Q 1-4, UTC). Used for alma-lib
+// and per-service WARs so Swagger (service.json) and Docker image tags match.
+// Override: -PdeploymentVersion=2026q1 or env ALMA_DEPLOYMENT_VERSION
+//
+// Exposed on ext for leaf build.gradle files and nested Copy closures, where
+// plain `version` is not always resolved (see project.ext.deploymentVersion).
+ext.computeDeploymentVersion = {
+    def explicit = findProperty('deploymentVersion') ?: System.getenv('ALMA_DEPLOYMENT_VERSION')
+    if (explicit) {
+        return explicit
     }
+    def cal = new GregorianCalendar(TimeZone.getTimeZone('UTC'))
+    int year = cal.get(Calendar.YEAR)
+    int month = cal.get(Calendar.MONTH) + 1
+    int q = (month - 1).intdiv(3) + 1
+    return "${year}q${q}"
+}
+// Ant ReplaceTokens requires String token values (GString from "${...}" fails).
+ext.deploymentVersion = ext.computeDeploymentVersion().toString()
+version = ext.deploymentVersion
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }

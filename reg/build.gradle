@@ -17,13 +17,13 @@ apply from: '../properties.gradle'
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'reg', version: version])
+            filter(ReplaceTokens, tokens: [app_name: 'reg', version: project.ext.deploymentVersion])
         }
     }
     archiveFileName = 'reg.war'
 
     manifest {
-        attributes "Implementation-Version": version
+        attributes "Implementation-Version": project.ext.deploymentVersion
         attributes "Implementation-Title": "Registry"
     }
 

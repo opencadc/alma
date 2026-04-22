@@ -17,13 +17,13 @@ apply from: '../properties.gradle'
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'sia2', version: version])
+            filter(ReplaceTokens, tokens: [app_name: 'sia2', version: project.ext.deploymentVersion])
         }
     }
     archiveFileName = 'sia2.war'
 
     manifest {
-        attributes "Implementation-Version": version
+        attributes "Implementation-Version": project.ext.deploymentVersion
         attributes "Implementation-Title": "SIAv2"
     }
 
@@ -36,7 +36,7 @@ war {
 apply from: '../int_test.gradle'
 
 dependencies {
-    implementation 'org.opencadc:alma-lib:' + version
+    implementation 'org.opencadc:alma-lib:' + project.ext.deploymentVersion
     implementation 'org.opencadc:cadc-cdp:[1.2.3,2.0)'
     implementation 'org.opencadc:cadc-log:[1.1.7,1.2.0)'
     implementation 'org.opencadc:cadc-sia:[1.1.9,2.0)'
