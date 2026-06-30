@@ -21,7 +21,7 @@ publishing {
     publications {
         maven(MavenPublication) {
             groupId = 'org.opencadc'
-            version = version
+            version = project.version
             sourceCompatibility = sourceCompatibility
 
             from components.java

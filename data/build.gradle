@@ -16,14 +16,14 @@ apply from: '../properties.gradle'
 
 war {
     eachFile {
-        if (it.name == 'capabilities.xml' || it.name == 'service.yaml') {
-            filter(ReplaceTokens, tokens: [app_name: 'data', version: version])
+        if (it.name == 'service.yaml') {
+            filter(ReplaceTokens, tokens: [app_name: 'data', version: project.ext.deploymentVersion])
         }
     }
     archiveFileName = 'data.war'
 
     manifest {
-        attributes "Implementation-Version": version
+        attributes "Implementation-Version": project.ext.deploymentVersion
         attributes "Implementation-Title": "Data"
     }
 
@@ -36,11 +36,11 @@ war {
 apply from: '../int_test.gradle'
 
 dependencies {
-    implementation 'gov.nasa.gsfc.heasarc:nom-tam-fits:1.21.2'
-    implementation 'org.opencadc:alma-lib:' + version
+    implementation 'gov.nasa.gsfc.heasarc:nom-tam-fits:1.22.0'
+    implementation 'org.opencadc:alma-lib:' + project.ext.deploymentVersion
     implementation 'org.opencadc:cadc-access-control:[1.1.31,1.2.0)'
     implementation 'org.opencadc:cadc-dali:[1.2.10,2.0)'
-    implementation 'org.opencadc:cadc-data-ops-fits:[0.3.0,0.4.0)'
+    implementation 'org.opencadc:cadc-data-ops-fits:[0.4.2,0.5.0)'
     implementation 'org.opencadc:cadc-log:[1.1.7,2.0)'
     implementation 'org.opencadc:cadc-rest:[1.2.19,)'
     implementation 'org.opencadc:cadc-soda-server:[1.2.0,2.0.0)'

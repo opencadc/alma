@@ -17,13 +17,13 @@ apply from: '../properties.gradle'
 war {
     eachFile {
         if (it.name.equals('capabilities.xml') || it.name.equals('service.json')) {
-            filter(ReplaceTokens, tokens: [app_name: 'datalink', version: version])
+            filter(ReplaceTokens, tokens: [app_name: 'datalink', version: project.ext.deploymentVersion])
         }
     }
     archiveFileName = 'datalink.war'
 
     manifest {
-        attributes "Implementation-Version": version
+        attributes "Implementation-Version": project.ext.deploymentVersion
         attributes "Implementation-Title": "DataLink"
     }
 
@@ -38,7 +38,7 @@ apply from: '../docker.gradle'
 
 dependencies {
     implementation 'org.json:json:20231013'
-    implementation 'org.opencadc:alma-lib:' + version
+    implementation 'org.opencadc:alma-lib:' + project.ext.deploymentVersion
     implementation 'org.opencadc:cadc-datalink-server:[1.1.4,1.2.0)'
     implementation 'org.opencadc:cadc-log:[1.1.7,1.2.0)'
     implementation 'org.opencadc:cadc-registry:[1.7.1,1.8.0)'
