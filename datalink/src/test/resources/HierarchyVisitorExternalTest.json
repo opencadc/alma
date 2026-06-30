@@ -1,0 +1,40 @@
+{
+  "id": null,
+  "name": "uid://A001/X15a0/X150",
+  "type": "MOUS",
+  "sizeInBytes": -1,
+  "permission": "ALLOWED",
+  "children": [
+    {
+      "id": null,
+      "name": "2021.1.00172.L_uid___A001_X15a0_X150_external_lp_slongmore_001_of_001.tar",
+      "type": "EXTERNAL_TARFILE",
+      "sizeInBytes": 2477506560,
+      "permission": "ALLOWED",
+      "children": [
+        {
+          "id": "member.uid___A001_X15a0_X150.lp_slongmore.G359.448m0.183.7m.86.0-86.4GHz.cube.pbcor.fits",
+          "name": "member.uid___A001_X15a0_X150.lp_slongmore.G359.448m0.183.7m.86.0-86.4GHz.cube.pbcor.fits",
+          "type": "EXTERNAL",
+          "sizeInBytes": 332758080,
+          "permission": "ALLOWED",
+          "children": [],
+          "allMousUids": []
+        },
+        {
+          "id": "member.uid___A001_X15a0_X150.lp_slongmore.README.txt",
+          "name": "member.uid___A001_X15a0_X150.lp_slongmore.README.txt",
+          "type": "EXTERNAL",
+          "sizeInBytes": 1247,
+          "permission": "ALLOWED",
+          "children": [],
+          "allMousUids": []
+        }
+      ],
+      "allMousUids": []
+    }
+  ],
+  "allMousUids": [
+    "uid://A001/X15a0/X150"
+  ]
+}

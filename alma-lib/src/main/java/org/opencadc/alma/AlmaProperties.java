@@ -152,8 +152,11 @@ public class AlmaProperties extends PropertiesReader {
 
         if (!StringUtil.hasText(configuredValue)) {
             throw new IllegalStateException(
-                    String.format("\nRequested property value was not found.  Ensure the %s is set in the "
-                                  + "%s file.\n", key, DEFAULT_PROPERTIES_FILE_NAME));
+                    String.format("""
+                            
+                            Requested property value was not found.  Ensure the %s is set in the \
+                            %s file.
+                            """, key, DEFAULT_PROPERTIES_FILE_NAME));
         } else {
             return configuredValue;
         }
@@ -179,8 +182,8 @@ public class AlmaProperties extends PropertiesReader {
 
     URL lookupServiceURL(final URI serviceURI, final URI standardID) {
         LOGGER.debug(String.format("Looking up {\"serviceURI\":\"%s\", \"standardID\":\"%s\"}", serviceURI, standardID));
-        final URL serviceURL = createRegistryClient().getServiceURL(serviceURI, standardID, AuthMethod.ANON,
-                                                                    Standards.INTERFACE_PARAM_HTTP);
+        final URL serviceURL = createRegistryClient().getServiceURL(serviceURI, standardID,
+                Standards.INTERFACE_PARAM_HTTP);
         LOGGER.debug(String.format("Looking up OK {\"serviceURI\":\"%s\", \"standardID\":\"%s\", \"serviceURL\":\"%s\"}",
                                    serviceURI, standardID, serviceURL));
 

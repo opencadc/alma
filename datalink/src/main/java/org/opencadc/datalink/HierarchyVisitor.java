@@ -112,11 +112,20 @@ public class HierarchyVisitor {
             final boolean isAccepted = type.isLeaf() || type.isOus() || type.isTarfile() || type.isAuxiliary()
                                        || type.isDocumentation();
             if (LOGGER.isDebugEnabled() && !isAccepted) {
-                LOGGER.debug(String.format("Rejecting %s.", h.getID()));
+                LOGGER.debug("Rejecting {}.", h.getID());
             }
             return isAccepted;
-        }).forEach(h -> dataLinkQueue.addAll(new HierarchyVisitor(this.almaID, h, this.almaProperties,
-                                                                  this.dataLinkURLBuilder).createDataLinks()));
+        }).forEach(h -> {
+            final HierarchyVisitor childVisitor =
+                    new HierarchyVisitor(this.almaID, h, this.almaProperties, this.dataLinkURLBuilder);
+            dataLinkQueue.addAll(childVisitor.createDataLinks());
+            // Pipeline tarfiles (PIPELINE_PRODUCT_TARFILE, PIPELINE_AUXILIARY_TARFILE) expose their
+            // contents only via the recursive DataLink created in createDataLinks(). External tarfiles
+            // must also emit individual EXTERNAL child links at the OUS level.
+            if (h.getType() == HierarchyItem.Type.EXTERNAL_TARFILE) {
+                childVisitor.visitChildren(dataLinkQueue);
+            }
+        });
     }
 
     /**

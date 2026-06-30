@@ -1,8 +1,11 @@
 FROM tomcat:9-jdk21
+
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
 ARG TOMCAT_USER=tomcat
 
-# APT over HTTPS (restricted networks) and sudo so the runtime user can refresh the
-# trust store after adding PEMs under /usr/local/share/ca-certificates/.
+# APT over HTTPS for restricted networks.
 RUN set -eux; \
     if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then \
       sed -i '/^URIs:/s|http://|https://|g' /etc/apt/sources.list.d/ubuntu.sources; \
@@ -15,7 +18,6 @@ RUN set -eux; \
         "$f"; \
     done; \
     apt-get update; \
-    apt-get install --no-install-recommends -y sudo; \
     rm -rf /var/lib/apt/lists/*
 
 # Create tomcat user:group
@@ -23,10 +25,8 @@ RUN groupadd ${TOMCAT_USER} \
     && useradd --home-dir /usr/local/tomcat --shell /sbin/nologin \
         --no-create-home --no-user-group --no-log-init ${TOMCAT_USER}
 
-RUN printf '%s\n' "${TOMCAT_USER} ALL=(root) NOPASSWD: /usr/sbin/update-ca-certificates" \
-        > /etc/sudoers.d/tomcat-update-ca \
-    && chmod 0440 /etc/sudoers.d/tomcat-update-ca \
-    && visudo -cf /etc/sudoers.d/tomcat-update-ca
+COPY docker/entrypoint.sh docker/update-trust-stores.sh /usr/local/sbin/
+RUN chmod 755 /usr/local/sbin/entrypoint.sh /usr/local/sbin/update-trust-stores.sh
 
 # Create expected config director for all application config.
 RUN mkdir -p config \
@@ -49,3 +49,8 @@ RUN sed -i 's| \
 RUN rm -rf webapps/*
 
 COPY build/libs/*.war webapps/
+
+USER root
+
+ENTRYPOINT ["/usr/local/sbin/entrypoint.sh"]
+CMD ["catalina.sh", "run"]

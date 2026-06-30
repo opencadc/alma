@@ -22,6 +22,7 @@
             <param-name>logLevelPackages</param-name>
             <param-value>
                 ca.nrc.cadc.datalink
+                org.opencadc.alma
                 org.opencadc.datalink
             </param-value>
         </init-param>

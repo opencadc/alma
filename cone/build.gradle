@@ -14,6 +14,7 @@ repositories {
 
 apply from: '../properties.gradle'
 apply from: '../int_test.gradle'
+apply from: '../docker.gradle'
 
 dependencies {
     // Use JUnit test framework.

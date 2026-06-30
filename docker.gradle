@@ -1,0 +1,9 @@
+tasks.register('copyDockerScripts', Copy) {
+    from "${rootProject.projectDir}/docker"
+    into "${project.projectDir}/docker"
+    include 'entrypoint.sh', 'update-trust-stores.sh'
+}
+
+tasks.named('build').configure {
+    finalizedBy 'copyDockerScripts'
+}
