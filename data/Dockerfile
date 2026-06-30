@@ -78,10 +78,8 @@ RUN groupadd ${TOMCAT_USER} \
     && useradd --home-dir /usr/local/tomcat --shell /sbin/nologin \
         --no-create-home --no-user-group --no-log-init ${TOMCAT_USER}
 
-RUN printf '%s\n' "${TOMCAT_USER} ALL=(root) NOPASSWD: /usr/sbin/update-ca-certificates" \
-        > /etc/sudoers.d/tomcat-update-ca \
-    && chmod 0440 /etc/sudoers.d/tomcat-update-ca \
-    && visudo -cf /etc/sudoers.d/tomcat-update-ca
+COPY docker/entrypoint.sh docker/update-trust-stores.sh /usr/local/sbin/
+RUN chmod 755 /usr/local/sbin/entrypoint.sh /usr/local/sbin/update-trust-stores.sh
 
 # Create expected config director for all application config.
 RUN mkdir -p config \
@@ -104,3 +102,8 @@ RUN sed -i 's| \
 RUN rm -rf webapps/*
 
 COPY build/libs/*.war webapps/
+
+USER root
+
+ENTRYPOINT ["/usr/local/sbin/entrypoint.sh"]
+CMD ["catalina.sh", "run"]
