@@ -8,5 +8,8 @@
 **/.classpath
 **/bin
 **/build
-docker/
+datalink/docker/
+tap/docker/
+cone/docker/
+sia/docker/
 alma-db-dumps.sh

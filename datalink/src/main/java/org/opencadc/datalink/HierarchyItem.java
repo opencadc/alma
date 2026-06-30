@@ -353,6 +353,7 @@ public class HierarchyItem {
         public boolean isTarfile() {
             return this == PIPELINE_AUXILIARY_TARFILE
                    || this == PIPELINE_PRODUCT_TARFILE
+                   || this == ADMIT_TARFILE
                    || this == EXTERNAL_TARFILE;
         }
 

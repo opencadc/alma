@@ -34,6 +34,7 @@ war {
 }
 
 apply from: '../int_test.gradle'
+apply from: '../docker.gradle'
 
 dependencies {
     implementation 'org.opencadc:alma-lib:' + project.ext.deploymentVersion

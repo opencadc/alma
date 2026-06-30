@@ -34,6 +34,7 @@ war {
 }
 
 apply from: '../int_test.gradle'
+apply from: '../docker.gradle'
 
 dependencies {
     implementation 'org.json:json:20231013'
