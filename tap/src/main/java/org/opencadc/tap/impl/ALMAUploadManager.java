@@ -73,6 +73,7 @@ import ca.nrc.cadc.tap.db.TapConstants;
 import ca.nrc.cadc.tap.schema.ColumnDesc;
 import ca.nrc.cadc.tap.schema.TableDesc;
 import ca.nrc.cadc.tap.schema.TapDataType;
+import ca.nrc.cadc.tap.upload.UploadLimits;
 import org.apache.log4j.Logger;
 
 import java.util.Arrays;
@@ -82,6 +83,19 @@ import java.util.List;
 public class ALMAUploadManager extends BasicUploadManager {
     private static final Logger LOGGER = Logger.getLogger(ALMAUploadManager.class);
 
+    /** Row limit aligned with TAPRegExt uploadLimit in capabilities.xml. */
+    private static final int UPLOAD_ROW_LIMIT = 100_000;
+
+    /** Default VOTable byte limit per BasicUploadManager / cadc-tap-server. */
+    private static final long UPLOAD_BYTE_LIMIT = 10L * 1024L * 1024L;
+
+    private static final UploadLimits UPLOAD_LIMITS;
+
+    static {
+        UPLOAD_LIMITS = new UploadLimits(UPLOAD_BYTE_LIMIT);
+        UPLOAD_LIMITS.rowLimit = UPLOAD_ROW_LIMIT;
+    }
+
     // TAP-1.0 xtypes that can just be dropped from ColumnDesc
     private static final List<String> OLD_XTYPES = Arrays.asList(
             TapConstants.TAP10_CHAR, TapConstants.TAP10_VARCHAR,
@@ -90,7 +104,7 @@ public class ALMAUploadManager extends BasicUploadManager {
             TapConstants.TAP10_SMALLINT);
 
     public ALMAUploadManager() {
-        super(10000);
+        super(UPLOAD_LIMITS);
     }
 
     @Override

@@ -48,7 +48,11 @@ $ ... -Dalma.tapuser.username=searchuser -Dalma.tapuser.password=searchuserpwd -
 
 ### Asynchronous Queries
 
-The TAP service supports asynchronous queries using POST with the /async endpoint, as well as a file upload option.  This is all stored
+The TAP service supports asynchronous queries using POST with the `/async` endpoint, and **VOTable table upload** via the `UPLOAD` parameter on both `/sync` and `/async` (inline, `http`, and `https` locations per TAP 1.1 §2.7.6). Uploaded tables are exposed in ADQL as `tap_upload.<name>` (schema `TAP_UPLOAD` in Oracle) using the `jdbc/tapuploadadm` datasource. Row and byte limits match `uploadLimit` in `/capabilities` (100 000 rows; 10 MiB VOTable payload).
+
+Integration tests: `ObsCoreTapSyncUploadTest`, `ObsCoreTapAsyncUploadTest` (require a running service and upload DB privileges). For `http`/`https` upload tests, the WAR serves `upload-fixtures/TAPUploadTest-1.xml`.
+
+Asynchronous query results and inline uploads are stored
 temporarily on disk using the [`cadc-tap-tmp`](https://github.com/opencadc/tap/tree/master/cadc-tap-tmp) library.  This library expects to find the `cadc-tap-tmp.properties` file in the `/usr/local/tomcat/config` directory and should contain two entries:
 
 | Property name                     | Purpose                                     | Example                          |
