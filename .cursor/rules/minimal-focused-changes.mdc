@@ -1,0 +1,16 @@
+---
+description: Prefer minimal, focused diffs; preserve patterns and avoid drive-by changes
+alwaysApply: true
+---
+
+# Minimal, Focused Changes
+
+- Prefer minimal, focused changes.
+- Avoid unnecessary refactoring.
+- Do not modify unrelated files.
+- Preserve existing functionality and established patterns.
+- Avoid introducing new dependencies unless genuinely necessary.
+- Do not make architectural changes without first discussing them.
+- Preserve existing formatting conventions.
+
+When fixing a bug or adding a feature, match the surrounding code’s naming, structure, and abstractions. Reuse existing helpers rather than reimplementing similar logic.
