@@ -68,11 +68,11 @@
 
 package org.opencadc.tap.impl;
 
-import ca.nrc.cadc.tap.BasicUploadManager;
 import ca.nrc.cadc.tap.db.TapConstants;
 import ca.nrc.cadc.tap.schema.ColumnDesc;
 import ca.nrc.cadc.tap.schema.TableDesc;
 import ca.nrc.cadc.tap.schema.TapDataType;
+import ca.nrc.cadc.tap.upload.OracleUploadManager;
 import ca.nrc.cadc.tap.upload.UploadLimits;
 import org.apache.log4j.Logger;
 
@@ -80,7 +80,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class ALMAUploadManager extends BasicUploadManager {
+public class ALMAUploadManager extends OracleUploadManager {
     private static final Logger LOGGER = Logger.getLogger(ALMAUploadManager.class);
 
     /** Row limit aligned with TAPRegExt uploadLimit in capabilities.xml. */
