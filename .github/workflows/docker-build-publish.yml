@@ -16,6 +16,10 @@ on:
       tag:
         required: true
         type: string
+      war-required:
+        required: false
+        type: boolean
+        default: true
     secrets:
       CI_REGISTRY_USER:
         required: true
@@ -40,6 +44,7 @@ jobs:
           username: ${{ secrets.CI_REGISTRY_USER }}
           password: ${{ secrets.CI_REGISTRY_PASSWORD }}
       - name: Download the WAR file to be put into the Docker image
+        if: ${{ inputs.war-required }}
         uses: actions/download-artifact@v7
         with:
           name: ${{ inputs.name }}-artifact

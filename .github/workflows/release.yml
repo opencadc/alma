@@ -48,8 +48,6 @@ jobs:
             artifact: tap
           - name: soda
             artifact: soda
-          - name: reg
-            artifact: reg
           - name: data
             artifact: data
     uses: ./.github/workflows/gradle-build.yml
@@ -88,6 +86,7 @@ jobs:
             artifact: soda
           - name: reg
             artifact: reg
+            war-required: false
           - name: data
             artifact: data
     uses: ./.github/workflows/docker-build-publish.yml
@@ -97,6 +96,7 @@ jobs:
     with:
       name: ${{ matrix.service.name }}
       artifact-name: ${{ matrix.service.artifact }}
+      war-required: ${{ matrix.service.war-required != false }}
       tag: ${{ needs.release-tag.outputs.tag }}
     secrets: inherit
 

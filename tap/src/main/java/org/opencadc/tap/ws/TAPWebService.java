@@ -75,6 +75,8 @@ import ca.nrc.cadc.vosi.AvailabilityPlugin;
 import ca.nrc.cadc.vosi.avail.CheckDataSource;
 import ca.nrc.cadc.vosi.avail.CheckException;
 import org.apache.log4j.Logger;
+import org.opencadc.alma.AlmaProperties;
+import org.opencadc.tap.impl.ALMAUploadManager;
 
 
 /**
@@ -117,11 +119,7 @@ public class TAPWebService implements AvailabilityPlugin {
         try {
             // Test query using standard TAP data source
             check(TAPDS_TEST);
-
-            // Won't run in Travis.
-            if (!omitALMATest()) {
-                check(ALMA_TEST);
-            }
+            check(ALMA_TEST);
         } catch (CheckException ce) {
             // tests determined that the resource is not working
             isGood = false;
@@ -132,6 +130,10 @@ public class TAPWebService implements AvailabilityPlugin {
             isGood = false;
             note = "test failed, reason: " + t;
         }
+        final long uploadByteLimit =
+                new AlmaProperties().getTAPUploadByteLimit(ALMAUploadManager.DEFAULT_UPLOAD_BYTE_LIMIT);
+        note = note + String.format("%nTAP UPLOAD VOTable size limit: %d bytes (see /capabilities uploadLimit).",
+                                    uploadByteLimit);
         return new Availability(isGood, note);
     }
 
@@ -148,15 +150,6 @@ public class TAPWebService implements AvailabilityPlugin {
 
     private void check(final String query) throws CheckException {
         new CheckDataSource(TAPDS_NAME, query).check();
-    }
-
-    /**
-     * Omit this test in Travis since the ALMA database is unreachable.
-     *
-     * @return True if the omit-alma-test system property is set.
-     */
-    private boolean omitALMATest() {
-        return Boolean.parseBoolean(System.getProperty(OMIT_ALMA_TEST_PROPERTY));
     }
 
     @Override

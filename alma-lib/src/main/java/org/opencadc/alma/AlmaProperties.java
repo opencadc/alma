@@ -69,7 +69,6 @@
 
 package org.opencadc.alma;
 
-import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
@@ -97,6 +96,7 @@ public class AlmaProperties extends PropertiesReader {
     static final String ALMA_SODA_SERVICE_URI = "almaSODAServiceURI";
     static final String ALMA_DATAPORTAL_SERVICE_URI = "almaDataPortalServiceURI";
     static final String ALMA_LOGGING_SERVICE_URL = "almaLoggingServiceURL";
+    static final String ALMA_TAP_UPLOAD_BYTE_LIMIT = "almaTAPUploadByteLimit";
 
 
     public AlmaProperties() {
@@ -141,6 +141,16 @@ public class AlmaProperties extends PropertiesReader {
             throw new IllegalStateException(String.format("Property %s is not a properly formatted URL.",
                                                           ALMA_LOGGING_SERVICE_URL));
         }
+    }
+
+    /**
+     * Return the count of bytes allowed for a single TAP upload.
+     * @param defaultValue  As passed in from the upload manager.
+     * @return  Long value of the configured property, or the default value if not configured.
+     */
+    public long getTAPUploadByteLimit(final long defaultValue) {
+        final String configuredValue = this.getFirstPropertyValue(ALMA_TAP_UPLOAD_BYTE_LIMIT, Long.toString(defaultValue));
+        return Long.parseLong(configuredValue);
     }
 
     URI ensureRequiredURI(final String key) {

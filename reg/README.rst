@@ -1,14 +1,22 @@
-ALMA Registry Service (1.0.1)
----------------------
+ALMA Registry Service deployment
+--------------------------------
 
-This project is the base for a future IVOA registry service at ALMA. It could support:
+This module packages the official OpenCADC registry image with ALMA-specific
+configuration only. There is no Java build; the WAR and server come from
+``images.opencadc.org/core/reg``.
 
-- complete service lookup via RegTAP API
-- publishing CADC registry records via OAI-PMH or some other protocol (TBD)
+Runtime configuration
+~~~~~~~~~~~~~~~~~~~~~
 
-For now, it serves a canned query result (resource-caps):
+The Docker image adds two files under ``/config`` (see ``docker/`` in this module):
 
-<resourceID> = <capabilities URL>
+- ``reg-resource-caps.properties`` — VOSI capabilities URLs for IVOA services
+  (served at ``/reg/resource-caps``).
+- ``reg-applications.properties`` — UI / application feature URLs
+  (served at ``/reg/applications``).
 
-and, for data collections, also hosts the capabilities document that describes services
-that can be used with a publisherID value from the collection.
+Build the image from the ``reg`` directory::
+
+  docker build -t opencadc/alma-reg:latest .
+
+See the root ``README.md`` for the expected property entries and service URIs.

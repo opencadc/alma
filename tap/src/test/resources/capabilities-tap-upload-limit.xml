@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vosi:capabilities
+        xmlns:tr="http://www.ivoa.net/xml/TAPRegExt/v1.0"
+        xmlns:vosi="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
+        xmlns:vs="http://www.ivoa.net/xml/VODataService/v1.1"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <capability standardID="ivo://ivoa.net/std/TAP" xsi:type="tr:TableAccess">
+        <interface xsi:type="vs:ParamHTTP" role="std">
+            <accessURL use="base">https://example.net/tap</accessURL>
+        </interface>
+        <language>
+            <name>ADQL</name>
+            <version>2.0</version>
+        </language>
+        <uploadLimit>
+            <default unit="byte">10485760</default>
+            <hard unit="byte">10485760</hard>
+        </uploadLimit>
+    </capability>
+</vosi:capabilities>
