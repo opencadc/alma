@@ -30,7 +30,7 @@ that will be looked up in the Registry to obtain an actual URL.
 | `almaSODAServiceURI`            | User facing (Front-end) SODA service     |
 | `almaDataPortalServiceURI`      | Data Portal service for DataLink entries |   
 | `almaLoggingServiceURL`         | Full URL to the remote logging service to POST to |
-| `almaTAPUploadByteLimit`        | Upload limit, in bytes, for TAP Table Uploads.  Defaults to 10MB. |
+| `almaTAPUploadByteLimit`        | Upload limit, in bytes, for TAP Table Uploads.  Defaults to 10MB (10 * 1024 * 1024). |
 
 
 ### Docker Services
