@@ -19,6 +19,7 @@ that will be looked up in the Registry to obtain an actual URL.
   almaSODAServiceURI=ivo://almascience.org/soda
   almaDataPortalServiceURI=ivo://almascience.org/dataportal
   almaLoggingServiceURL=https://example.org/logging/entry
+  almaTAPUploadByteLimit=2097152
 ```
 
 | Property                      | Description                              |
@@ -29,6 +30,7 @@ that will be looked up in the Registry to obtain an actual URL.
 | `almaSODAServiceURI`            | User facing (Front-end) SODA service     |
 | `almaDataPortalServiceURI`      | Data Portal service for DataLink entries |   
 | `almaLoggingServiceURL`         | Full URL to the remote logging service to POST to |
+| `almaTAPUploadByteLimit`        | Upload limit, in bytes, for TAP Table Uploads.  Defaults to 10MB. |
 
 
 ### Docker Services
