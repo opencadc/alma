@@ -76,13 +76,10 @@ import java.io.InputStream;
 import java.net.URL;
 
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.opencadc.alma.AlmaID;
-import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
-import org.opencadc.alma.SpectralWindowID;
 import org.opencadc.alma.deliverable.RequestHandlerQuery;
 
 

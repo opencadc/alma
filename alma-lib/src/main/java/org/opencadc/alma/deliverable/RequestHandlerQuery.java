@@ -83,6 +83,9 @@ public abstract class RequestHandlerQuery {
     }
 
     protected HttpGet createHttpGet(final URL requestHandlerEndpointURL) {
-        return new HttpGet(requestHandlerEndpointURL, true);
+        final HttpGet httpGet = new HttpGet(requestHandlerEndpointURL, true);
+        httpGet.setReadTimeout(420_000); // 7 minutes
+
+        return httpGet;
     }
 }

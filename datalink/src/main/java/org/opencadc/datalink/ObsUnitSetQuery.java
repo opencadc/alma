@@ -110,6 +110,13 @@ public class ObsUnitSetQuery extends DataLinkQuery {
                 if (matchesEntry(almaID, nextJSONObject)) {
                     return nextJSONObject;
                 }
+                if (nextJSONObject.has(DataLinkQuery.CHILDREN_KEY)) {
+                    final JSONObject baseDocument =
+                            getBaseDocument(almaID, nextJSONObject.getJSONArray(DataLinkQuery.CHILDREN_KEY));
+                    if (baseDocument != null) {
+                        return baseDocument;
+                    }
+                }
             }
         }
 
