@@ -44,13 +44,21 @@ import ca.nrc.cadc.tap.integration.TapAsyncUploadTest;
 import ca.nrc.cadc.util.FileUtil;
 import ca.nrc.cadc.util.Log4jInit;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import ca.nrc.cadc.uws.ExecutionPhase;
+import ca.nrc.cadc.uws.Job;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.File;
+import java.net.URL;
+import java.util.Map;
 
 /**
  * TAP async UPLOAD conformance (inline param rewrite and HTTP URL) per TAP §2.7.6.
  */
 public class ObsCoreTapAsyncUploadTest extends TapAsyncUploadTest {
+    private static final Logger log = Logger.getLogger(ObsCoreTapAsyncUploadTest.class);
 
     static {
         Log4jInit.setLevel("org.opencadc.tap", Level.INFO);
@@ -66,6 +74,31 @@ public class ObsCoreTapAsyncUploadTest extends TapAsyncUploadTest {
             setTestURL(TapUploadTestSupport.getFixtureUrl());
         } catch (Exception e) {
             throw new IllegalStateException("failed to resolve upload fixture URL", e);
+        }
+    }
+
+    @Test
+    public void testUploadExceedsHardByteLimit() throws Exception {
+        if (TapUploadTestSupport.skipHardUploadByteLimitTest(log)) {
+            return;
+        }
+        final long hardLimit = TapUploadTestSupport.readHardUploadByteLimit();
+        final File votable = TapUploadTestSupport.createOversizedUploadVotableForCapabilitiesLimit();
+        try {
+            final Map<String, Object> params =
+                    TapUploadTestSupport.inlineUploadJobParams(votable, "oversized");
+            final URL jobUrl = createAsyncParamJob("testUploadExceedsHardByteLimit", params);
+            Assert.assertNotNull(jobUrl);
+            final Job job = executeAsyncJob("testUploadExceedsHardByteLimit", jobUrl, 120L);
+            Assert.assertEquals(ExecutionPhase.ERROR, job.getExecutionPhase());
+            final String errorSummary = String.valueOf(job.getErrorSummary());
+            Assert.assertTrue("expected byte-limit rejection in async job: " + errorSummary,
+                    errorSummary.contains("exceeds maximum of " + hardLimit + " bytes")
+                            || errorSummary.contains("exceeds maximum"));
+        } finally {
+            if (!votable.delete()) {
+                votable.deleteOnExit();
+            }
         }
     }
 }

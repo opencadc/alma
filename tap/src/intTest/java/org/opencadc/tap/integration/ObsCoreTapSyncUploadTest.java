@@ -110,6 +110,26 @@ public class ObsCoreTapSyncUploadTest extends TapSyncUploadTest {
     }
 
     @Test
+    public void testUploadExceedsHardByteLimit() throws Exception {
+        if (TapUploadTestSupport.skipHardUploadByteLimitTest(log)) {
+            return;
+        }
+        final long hardLimit = TapUploadTestSupport.readHardUploadByteLimit();
+        final File votable = TapUploadTestSupport.createOversizedUploadVotableForCapabilitiesLimit();
+        try {
+            final Map<String, Object> params =
+                    TapUploadTestSupport.inlineUploadJobParams(votable, "oversized");
+            final JobResultWrapper result =
+                    createAndExecuteSyncParamJobPOST("testUploadExceedsHardByteLimit", params);
+            TapUploadTestSupport.assertUploadRejectedForByteLimit(result, hardLimit);
+        } finally {
+            if (!votable.delete()) {
+                votable.deleteOnExit();
+            }
+        }
+    }
+
+    @Test
     public void testUploadJoinWithFilter() {
         try {
             File votable = FileUtil.getFileFromResource("TAPUploadTest-1.xml", ObsCoreTapSyncUploadTest.class);
