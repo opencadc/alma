@@ -87,10 +87,10 @@ public interface AlmaID {
     }
 
     default String sanitize() {
-        return this.getID().replace(':', '_').replaceAll("/", "_");
+        return this.getID().replace(':', '_').replace("/", "_");
     }
 
     default String desanitize() {
-        return this.getID().replace("uid___", "uid://").replaceAll("_", "/");
+        return this.getID().replace("uid___", "uid://").replace("_", "/");
     }
 }

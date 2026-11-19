@@ -198,11 +198,11 @@ public class DataLinkIteratorTest {
         final DataLinkQuery mockObsUnitSetQuery = mock(ObsUnitSetQuery.class);
         final Iterator<String> dataSetIDIterator = Collections.singletonList("uid://A001/X879/X8f1").iterator();
         final AlmaID id = AlmaIDFactory.createID("uid://A001/X879/X8f1");
-        final URL datalinkURL = new URL("https://alma.com/datalink");
-        final URL sodaURL = new URL("https://alma.com/soda");
-        final URL dataPortalURL = new URL("https://alma.com/dataportal");
+        final URL datalinkURL = URI.create("https://alma.com/datalink").toURL();
+        final URL sodaURL = URI.create("https://alma.com/soda").toURL();
+        final URL dataPortalURL = URI.create("https://alma.com/dataportal").toURL();
         final URI sodaURI = URI.create("ivo://alma.com/soda");
-        final URL requestHanlderURL = new URL("https://alma.com/rh");
+        final URL requestHanlderURL = URI.create("https://alma.com/rh").toURL();
 
         final HierarchyItem hierarchy = fromJSONFile(DataLinkIteratorTest.class.getSimpleName() + ".json");
         when(mockObsUnitSetQuery.query(id)).thenReturn(hierarchy);
@@ -232,37 +232,37 @@ public class DataLinkIteratorTest {
                 fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
                                                index++));
         expectedDataLinks.add(createDataLink(id, "text/plain",
-                                             new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
-                                                                   hierarchyItemOne.getName())),
+                                             URI.create(String.format("%s/%s", dataPortalURL.toExternalForm(),
+                                                     hierarchyItemOne.getName())).toURL(),
                                              DataLink.Term.DOCUMENTATION));
 
         final HierarchyItem hierarchyItemTwo =
                 fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
                                                index++));
         final DataLink thisLink = createDataLink(id, "application/x-tar",
-                                                 new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
-                                                                       hierarchyItemTwo.getName())),
+                                                 URI.create(String.format("%s/%s", dataPortalURL.toExternalForm(),
+                                                                       hierarchyItemTwo.getName())).toURL(),
                                                  DataLink.Term.THIS);
         final DataLink recursiveThisLink = createDataLink(id,
                                                           "application/x-votable+xml;content=datalink",
                                                           null, DataLink.Term.THIS);
         final ServiceDescriptor serviceDescriptor =
-                new ServiceDescriptor(new URL(datalinkURL.toExternalForm() + "?ID=" + id));
+                new ServiceDescriptor(URI.create(datalinkURL.toExternalForm() + "?ID=" + id).toURL());
         serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
 
         recursiveThisLink.serviceDef = serviceDescriptor.id;
         recursiveThisLink.contentType = "application/x-votable+xml;content=datalink";
         expectedDataLinks.add(recursiveThisLink);
 
-        thisLink.descriptor = new ServiceDescriptor(new URL(datalinkURL + "?ID=" + hierarchyItemTwo.getName()));
+        thisLink.descriptor = new ServiceDescriptor(URI.create(datalinkURL + "?ID=" + hierarchyItemTwo.getName()).toURL());
         expectedDataLinks.add(thisLink);
 
         final HierarchyItem hierarchyItemThree =
                 fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
                                            index++));
         expectedDataLinks.add(createDataLink(id, "application/x-tar",
-                                             new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
-                                                                   hierarchyItemThree.getName())),
+                                             URI.create(String.format("%s/%s", dataPortalURL.toExternalForm(),
+                                                                   hierarchyItemThree.getName())).toURL(),
                                              DataLink.Term.AUXILIARY));
 
         // The rest are progenitors.
@@ -271,8 +271,8 @@ public class DataLinkIteratorTest {
                     fromJSONFile(String.format(itemFileNameTemplate, DataLinkIteratorTest.class.getSimpleName(),
                                                index++));
             expectedDataLinks.add(createDataLink(id, "application/x-tar",
-                                                 new URL(String.format("%s/%s", dataPortalURL.toExternalForm(),
-                                                                       nextHierarchyItem.getName())),
+                                                 URI.create(String.format("%s/%s", dataPortalURL.toExternalForm(),
+                                                                       nextHierarchyItem.getName())).toURL(),
                                                  DataLink.Term.PROGENITOR));
         }
 
