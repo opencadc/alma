@@ -76,6 +76,7 @@ import org.junit.Test;
 import org.junit.Assert;
 import org.opencadc.alma.AlmaProperties;
 
+import java.net.URI;
 import java.net.URL;
 
 import static org.mockito.Mockito.*;
@@ -90,9 +91,9 @@ public class DataLinkURLBuilderTest {
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
         final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
 
-        final URL serviceEndpoint = new URL("https://myhost.com/datalink/endpoint");
-        final URL dataPortalEndpoint = new URL("https://myhost.com/mydownloads");
-        final URL sodaEndpoint = new URL("https://myhost.com/soda/sync");
+        final URL serviceEndpoint = URI.create("https://myhost.com/datalink/endpoint").toURL();
+        final URL dataPortalEndpoint = URI.create("https://myhost.com/mydownloads").toURL();
+        final URL sodaEndpoint = URI.create("https://myhost.com/soda/sync").toURL();
 
         when(mockAlmaProperties.lookupDataLinkServiceURL()).thenReturn(serviceEndpoint);
         when(mockAlmaProperties.lookupSodaServiceURL()).thenReturn(sodaEndpoint);
@@ -117,9 +118,9 @@ public class DataLinkURLBuilderTest {
     public void createRecursiveDataLinkURL() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
-        final URL serviceEndpoint = new URL("https://myhost.com/datalink/endpoint");
-        final URL dataPortalEndpoint = new URL("https://myhost.com/dataportal/download");
-        final URL sodaEndpoint = new URL("https://myhost.com/soda/sync");
+        final URL serviceEndpoint = URI.create("https://myhost.com/datalink/endpoint").toURL();
+        final URL dataPortalEndpoint = URI.create("https://myhost.com/dataportal/download").toURL();
+        final URL sodaEndpoint = URI.create("https://myhost.com/soda/sync").toURL();
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
         final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
 
@@ -144,9 +145,9 @@ public class DataLinkURLBuilderTest {
     public void createCutoutLinkURL() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
-        final URL serviceEndpoint = new URL("https://myhost.com/datalink/endpoint");
-        final URL dataPortalEndpoint = new URL("https://myhost.com/dataportal/download");
-        final URL sodaEndpoint = new URL("https://myhost.com/soda/endpoint");
+        final URL serviceEndpoint = URI.create("https://myhost.com/datalink/endpoint").toURL();
+        final URL dataPortalEndpoint = URI.create("https://myhost.com/dataportal/download").toURL();
+        final URL sodaEndpoint = URI.create("https://myhost.com/soda/endpoint").toURL();
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
         final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
 
@@ -169,9 +170,9 @@ public class DataLinkURLBuilderTest {
     public void createRecursiveDataLinkURLWithQuery() throws Exception {
         System.setProperty(PropertiesReader.CONFIG_DIR_SYSTEM_PROPERTY, "src/test/resources");
 
-        final URL serviceEndpoint = new URL("https://myhost.com/datalink/endpoint?recurse=true");
-        final URL dataPortalEndpoint = new URL("https://myhost.com/dataportal/download");
-        final URL sodaEndpoint = new URL("https://myhost.com/soda/endpoint");
+        final URL serviceEndpoint = URI.create("https://myhost.com/datalink/endpoint?recurse=true").toURL();
+        final URL dataPortalEndpoint = URI.create("https://myhost.com/dataportal/download").toURL();
+        final URL sodaEndpoint = URI.create("https://myhost.com/soda/endpoint").toURL();
         final AlmaProperties mockAlmaProperties = mock(AlmaProperties.class);
         final HierarchyItem mockHierarchyItem = mock(HierarchyItem.class);
 

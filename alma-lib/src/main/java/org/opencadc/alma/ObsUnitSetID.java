@@ -132,7 +132,7 @@ public class ObsUnitSetID implements AlmaID {
         return this.id;
     }
 
-    static boolean matches(final String id) {
+    public static boolean matches(final String id) {
         return StringUtil.hasText(id) && OUS_UID_PATTERN.matcher(id).find();
     }
 }

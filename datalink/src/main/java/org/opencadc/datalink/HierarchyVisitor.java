@@ -73,6 +73,7 @@ import ca.nrc.cadc.util.StringUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencadc.alma.AlmaID;
+import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
 
 import java.net.MalformedURLException;
@@ -137,37 +138,38 @@ public class HierarchyVisitor {
     List<DataLink> createDataLinks() {
         final List<DataLink> dataLinkCollection = new ArrayList<>();
         final HierarchyItem.Type deliverableType = hierarchyItem.getType();
+        final boolean ousContainer = isOusContainer();
 
-        if (hierarchyItem.fileMissing()) {
+        if (hierarchyItem.fileMissing() && !ousContainer) {
             dataLinkCollection.add(createNotFoundDataLink());
         } else {
             final DataLink.Term dataLinkTerm = determineSemantic(hierarchyItem);
-            final DataLink dataLink = createDataLink(dataLinkTerm);
-            dataLinkCollection.add(dataLink);
+            DataLink dataLink = null;
 
-            try {
-                if (hierarchyItem.hasChildren()) {
-                    final DataLink recursiveDataLink = new DataLink(this.almaID.getID(), dataLinkTerm);
-                    final ServiceDescriptor serviceDescriptor =
-                            new ServiceDescriptor(createRecursiveURL());
-                    final String[] pathSegments = dataLink.accessURL.getPath().split("/");
-                    // Use just the filename.
-                    serviceDescriptor.id = String.format("DataLink.%s", pathSegments[pathSegments.length - 1]);
-                    serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
+            if (!hierarchyItem.fileMissing()) {
+                dataLink = createDataLink(dataLinkTerm);
+                dataLinkCollection.add(dataLink);
+            }
 
-                    recursiveDataLink.descriptor = serviceDescriptor;
-                    recursiveDataLink.serviceDef = serviceDescriptor.id;
-                    recursiveDataLink.contentType = "application/x-votable+xml;content=datalink";
-
-                    setDescription(dataLink, null, null);
-
-                    dataLinkCollection.add(recursiveDataLink);
+            if (hierarchyItem.hasChildren()) {
+                try {
+                    dataLinkCollection.add(createRecursiveDataLink(dataLinkTerm, dataLink));
+                    if (dataLink != null) {
+                        setDescription(dataLink, null, null);
+                    }
+                } catch (MalformedURLException e) {
+                    LOGGER.error("Access URL creation failed.", e);
+                    final String errorMessage = String.format("Unable to create Service Descriptor URL for %s/%s|%s.",
+                                                              hierarchyItem.getSubDirectory(), hierarchyItem.getName(),
+                                                              hierarchyItem.getFileClass());
+                    if (dataLink != null) {
+                        dataLink.errorMessage = errorMessage;
+                    } else {
+                        final DataLink errorDataLink = new DataLink(this.almaID.getID(), DataLink.Term.ERROR);
+                        errorDataLink.errorMessage = errorMessage;
+                        dataLinkCollection.add(errorDataLink);
+                    }
                 }
-            } catch (MalformedURLException e) {
-                LOGGER.error("Access URL creation failed.", e);
-                dataLink.errorMessage = String.format("Unable to create Service Descriptor URL for %s/%s|%s.",
-                                                      hierarchyItem.getSubDirectory(), hierarchyItem.getName(),
-                                                      hierarchyItem.getFileClass());
             }
         }
 
@@ -291,6 +293,30 @@ public class HierarchyVisitor {
         }
 
         return dataLink;
+    }
+
+    private boolean isOusContainer() {
+        return hierarchyItem.getType().isOus() && hierarchyItem.hasChildren();
+    }
+
+    private DataLink createRecursiveDataLink(final DataLink.Term dataLinkTerm, final DataLink downloadDataLink)
+            throws MalformedURLException {
+        final DataLink recursiveDataLink = new DataLink(this.almaID.getID(), dataLinkTerm);
+        final ServiceDescriptor serviceDescriptor = new ServiceDescriptor(createRecursiveURL());
+        if (downloadDataLink != null && downloadDataLink.accessURL != null) {
+            final String[] pathSegments = downloadDataLink.accessURL.getPath().split("/");
+            serviceDescriptor.id = String.format("DataLink.%s", pathSegments[pathSegments.length - 1]);
+        } else {
+            serviceDescriptor.id =
+                    String.format("DataLink.%s", AlmaIDFactory.createID(hierarchyItem.getName()).sanitize());
+        }
+        serviceDescriptor.standardID = Standards.DATALINK_LINKS_10;
+
+        recursiveDataLink.descriptor = serviceDescriptor;
+        recursiveDataLink.serviceDef = serviceDescriptor.id;
+        recursiveDataLink.contentType = "application/x-votable+xml;content=datalink";
+
+        return recursiveDataLink;
     }
 
     private URL createRecursiveURL() throws MalformedURLException {

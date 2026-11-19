@@ -37,10 +37,10 @@ apply from: '../int_test.gradle'
 apply from: '../docker.gradle'
 
 dependencies {
-    implementation 'org.json:json:20231013'
+    implementation 'org.json:json:20260814'
     implementation 'org.opencadc:alma-lib:' + project.ext.deploymentVersion
     implementation 'org.opencadc:cadc-datalink-server:[1.1.4,1.2.0)'
-    implementation 'org.opencadc:cadc-log:[1.1.7,1.2.0)'
+    implementation 'org.opencadc:cadc-log:[1.2.4,1.3.0)'
     implementation 'org.opencadc:cadc-registry:[1.7.1,1.8.0)'
     implementation 'org.opencadc:cadc-util:[1.10.0,2.0)'
     implementation 'org.opencadc:cadc-vosi:[1.3.4,2.0)'

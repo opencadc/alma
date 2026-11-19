@@ -1,0 +1,29 @@
+{
+  "id": null,
+  "name": "uid://A001/X1590/X30a9",
+  "type": "GOUS",
+  "sizeInBytes": -1,
+  "permission": "ALLOWED",
+  "children": [
+    {
+      "id": null,
+      "name": "uid://A001/X1590/X30aa",
+      "type": "MOUS",
+      "sizeInBytes": -1,
+      "permission": "ALLOWED",
+      "children": [
+        {
+          "id": "member.uid___A001_X1590_X30aa.README.txt",
+          "name": "member.uid___A001_X1590_X30aa.README.txt",
+          "type": "PIPELINE_AUXILIARY_README",
+          "sizeInBytes": 1024,
+          "permission": "ALLOWED",
+          "children": [],
+          "allMousUids": []
+        }
+      ],
+      "allMousUids": []
+    }
+  ],
+  "allMousUids": []
+}

@@ -71,12 +71,15 @@ package org.opencadc.datalink;
 
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import org.apache.log4j.Logger;
+import org.opencadc.alma.AlmaID;
 import org.opencadc.alma.AlmaIDFactory;
 import org.opencadc.alma.AlmaProperties;
 import ca.nrc.cadc.util.StringUtil;
+import org.opencadc.alma.ObsUnitSetID;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 
@@ -99,11 +102,13 @@ public class DataLinkURLBuilder {
     }
 
     URL createRecursiveDataLinkURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
-        return createServiceLinkURL(hierarchyItem, dataLinkServiceEndpoint);
+        final AlmaID almaID = AlmaIDFactory.createID(hierarchyItem.getName());
+        final String idQueryParameter = ObsUnitSetID.matches(almaID.getID()) ? almaID.desanitize() : almaID.sanitize();
+        return createServiceLinkURL(idQueryParameter, dataLinkServiceEndpoint);
     }
 
     URL createCutoutLinkURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
-        return createServiceLinkURL(hierarchyItem, cutoutServiceEndpoint);
+        return createServiceLinkURL(AlmaIDFactory.createID(hierarchyItem.getName()).sanitize(), cutoutServiceEndpoint);
     }
 
     URL createDownloadURL(final HierarchyItem hierarchyItem) throws MalformedURLException {
@@ -114,23 +119,21 @@ public class DataLinkURLBuilder {
 
         LOGGER.debug(String.format("Sanitized URL is %s from type %s.", sanitizedURL, type));
 
-        return new URL(String.join("/", new String[] {
-                sanitizePath(new URL(sanitizedURL).toExternalForm()),
+        return URI.create(String.join("/",
+                sanitizePath(URI.create(sanitizedURL).toURL().toExternalForm()),
 
                 // For ASDMs, the Display Name is the right now to shove out as it's sanitized.
                 sanitizePath(type == HierarchyItem.Type.ASDM ?
-                             hierarchyItem.getName() : AlmaIDFactory.createID(hierarchyItem.getName()).sanitize())
-        }));
+                             hierarchyItem.getName() : AlmaIDFactory.createID(hierarchyItem.getName()).sanitize()))).toURL();
     }
 
-    private URL createServiceLinkURL(final HierarchyItem hierarchyItem, final URL serviceURLEndpoint)
+    private URL createServiceLinkURL(final String idQueryParameter, final URL serviceURLEndpoint)
             throws MalformedURLException {
         final String urlFile = String.format("%s%sID=%s", serviceURLEndpoint.getFile(),
                                              StringUtil.hasText(serviceURLEndpoint.getQuery()) ? "&" : "?",
-                                             AlmaIDFactory.createID(hierarchyItem.getName()).sanitize());
-
-        return new URL(serviceURLEndpoint.getProtocol(), serviceURLEndpoint.getHost(),
-                       serviceURLEndpoint.getPort(), urlFile);
+                                             idQueryParameter);
+        final URI serviceURI = URI.create(serviceURLEndpoint.toExternalForm());
+        return serviceURI.resolve(urlFile).toURL();
     }
 
     private String sanitizePath(final String pathItem) {

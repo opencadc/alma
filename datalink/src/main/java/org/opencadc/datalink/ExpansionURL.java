@@ -77,8 +77,8 @@ import org.opencadc.alma.ObsUnitSetID;
 import org.opencadc.alma.SpectralWindowID;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -127,8 +127,8 @@ public class ExpansionURL {
         final URL baseServiceURL = this.almaProperties.lookupRequestHandlerURL();
         LOGGER.debug(String.format("Using Base Request Handler URL %s", baseServiceURL));
 
-        return new URL(String.format(DOWNWARDS_ENDPOINT_TEMPLATE, baseServiceURL.toExternalForm(),
+        return URI.create(String.format(DOWNWARDS_ENDPOINT_TEMPLATE, baseServiceURL.toExternalForm(),
                                      ExpansionURL.ALMA_ID_ENDPOINT_MAPPING.get(almaID.getClass()),
-                                     almaID.getEndpointID()));
+                                     almaID.getEndpointID())).toURL();
     }
 }
