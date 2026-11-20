@@ -139,9 +139,10 @@
         </outputLimit>
         <!-- outputLimit for sync queries: no limit -->
 
+        <!-- VOTable upload payload (bytes); TapCapGetAction sets default/hard from almaTAPUploadByteLimit at runtime -->
         <uploadLimit>
-            <default unit="row">100000</default>
-            <hard unit="row">100000</hard>
+            <default unit="byte">10485760</default>
+            <hard unit="byte">10485760</hard>
         </uploadLimit>
 
     </capability>

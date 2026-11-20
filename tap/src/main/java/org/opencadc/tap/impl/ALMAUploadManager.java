@@ -68,19 +68,27 @@
 
 package org.opencadc.tap.impl;
 
-import ca.nrc.cadc.tap.BasicUploadManager;
 import ca.nrc.cadc.tap.db.TapConstants;
 import ca.nrc.cadc.tap.schema.ColumnDesc;
 import ca.nrc.cadc.tap.schema.TableDesc;
 import ca.nrc.cadc.tap.schema.TapDataType;
+import ca.nrc.cadc.tap.upload.OracleUploadManager;
+import ca.nrc.cadc.tap.upload.UploadLimits;
 import org.apache.log4j.Logger;
+import org.opencadc.alma.AlmaProperties;
 
 import java.util.Arrays;
 import java.util.List;
 
 
-public class ALMAUploadManager extends BasicUploadManager {
+/**
+ * Upload manager for ALMA TAP.  Minor xtype handling and upload limits.
+ */
+public class ALMAUploadManager extends OracleUploadManager {
     private static final Logger LOGGER = Logger.getLogger(ALMAUploadManager.class);
+
+    /** Default VOTable byte limit per BasicUploadManager / cadc-tap-server.  Default value is 10 MB. */
+    public static final long DEFAULT_UPLOAD_BYTE_LIMIT = 10L * 1024L * 1024L;
 
     // TAP-1.0 xtypes that can just be dropped from ColumnDesc
     private static final List<String> OLD_XTYPES = Arrays.asList(
@@ -89,8 +97,11 @@ public class ALMAUploadManager extends BasicUploadManager {
             TapConstants.TAP10_BIGINT, TapConstants.TAP10_INTEGER,
             TapConstants.TAP10_SMALLINT);
 
+    /**
+     * Construct everything here.  This allows re-reading the properties in case they've changed.
+     */
     public ALMAUploadManager() {
-        super(10000);
+        super(new UploadLimits(new AlmaProperties().getTAPUploadByteLimit(DEFAULT_UPLOAD_BYTE_LIMIT)));
     }
 
     @Override

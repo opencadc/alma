@@ -22,7 +22,7 @@ public class VosiCapabilitiesTest extends CapabilitiesTest {
 }
 ```
 
-Existing examples: `tap/`, `sia/`, `soda/`, `datalink/`, `reg/` under `src/intTest/java/.../Vosi*Test.java`.
+Existing examples: `tap/`, `sia/`, `soda/`, `datalink/` under `src/intTest/java/.../Vosi*Test.java`.
 
 ## Requirement → test mapping
 

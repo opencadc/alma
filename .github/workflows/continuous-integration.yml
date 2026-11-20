@@ -44,8 +44,6 @@ jobs:
             artifact: tap
           - name: soda
             artifact: soda
-          - name: reg
-            artifact: reg
           - name: data
             artifact: data
     uses: ./.github/workflows/gradle-build.yml
@@ -53,3 +51,10 @@ jobs:
     with:
       name: ${{ matrix.service.name }}
       artifact-name: ${{ matrix.service.artifact }}
+
+  build-reg-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build reg config image
+        run: docker build --pull -f reg/Dockerfile reg

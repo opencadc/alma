@@ -133,7 +133,7 @@
         </init-param>
         <init-param>
             <param-name>get</param-name>
-            <param-value>ca.nrc.cadc.vosi.CapGetAction</param-value>
+            <param-value>org.opencadc.tap.ws.TapCapGetAction</param-value>
         </init-param>
         <init-param>
             <param-name>head</param-name>
